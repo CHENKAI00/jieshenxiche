@@ -11,11 +11,63 @@ Page({
     quickMember: null,
     quickBalance: '0.00',
     services: [],
+    bookings: [],
+  },
+
+  async loadBookings() {
+    try {
+      const d = await api.staffBookings('');
+      const today = d.today;
+      const rows = (d.list || []).filter((b) => b.date === today);
+      this.setData({
+        bookings: rows.map((b) => ({
+          ...b,
+          platePretty: b.plateNo ? `${b.plateNo.slice(0, 2)}·${b.plateNo.slice(2)}` : '—',
+          tagType: { pending: 'warning', confirmed: 'primary', serving: 'primary', done: 'success', cancelled: 'default' }[b.status] || 'default',
+          plain: b.status !== 'serving',
+          canCancel: b.status === 'pending' || b.status === 'confirmed',
+        })),
+      });
+    } catch (e) {}
+  },
+
+  async advance(e) {
+    const { id, s } = e.currentTarget.dataset;
+    try {
+      await api.staffBookingStatus(id, s);
+      wx.showToast({ title: '已更新', icon: 'success' });
+      this.loadBookings();
+      this.refresh();
+    } catch (err) {}
+  },
+
+  async finish(e) {
+    const id = e.currentTarget.dataset.id;
+    const svc = this.data.bookings.find((b) => b.id === id);
+    wx.showModal({
+      title: '完成并核销',
+      content: `${svc.serviceName}\n扣次数还是余额支付？`,
+      confirmText: '扣次数',
+      cancelText: '余额支付',
+      success: async (r) => {
+        try {
+          const out = await api.staffBookingFinish(id, r.confirm);
+          wx.showModal({
+            title: '核销完成',
+            content: `${out.service} · ${out.payType}\n余额 ¥${fmt.money(out.balance)} · 洗车 ${out.washCount} / 打蜡 ${out.waxCount}`,
+            showCancel: false,
+          });
+          this.loadBookings();
+          this.refresh();
+        } catch (err) {}
+      },
+    });
   },
 
   onShow() {
     if (!guardStaff()) return;
     this.refresh();
+    this.loadBookings();
     this.checkHealth();
     this.loadMeta();
   },

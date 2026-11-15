@@ -102,6 +102,15 @@ module.exports = {
   customerBind: (payload) => request('/api/v1/customer/bind', { method: 'POST', data: payload, loading: true, tip: '绑定中' }),
   customerUnbind: () => request('/api/v1/customer/unbind', { method: 'POST', loading: true, tip: '解绑中' }),
   customerServices: () => request('/api/v1/customer/services'),
+  // ===== 预约 =====
+  bookingSlots: (date) => request(`/api/v1/customer/slots?date=${encodeURIComponent(date || '')}`),
+  createBooking: (payload) => request('/api/v1/customer/bookings', { method: 'POST', data: payload, loading: true, tip: '提交预约' }),
+  myBookings: () => request('/api/v1/customer/bookings'),
+  cancelBooking: (id) => request(`/api/v1/customer/bookings/${id}/cancel`, { method: 'POST', loading: true, tip: '取消中' }),
+  // ===== 门店端预约 =====
+  staffBookings: (date) => request(`/api/v1/staff/bookings?date=${encodeURIComponent(date || '')}`),
+  staffBookingStatus: (id, status) => request(`/api/v1/staff/bookings/${id}/status`, { method: 'POST', data: { status }, loading: true }),
+  staffBookingFinish: (id, useCount) => request(`/api/v1/staff/bookings/${id}/finish`, { method: 'POST', data: { useCount }, loading: true, tip: '核销中' }),
   uploadPlate,
   // ===== 业务接口 =====
   meta: () => request('/api/v1/ocr/meta'),

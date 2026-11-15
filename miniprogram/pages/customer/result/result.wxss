@@ -1,0 +1,47 @@
+.hero {
+  padding: 90rpx 40rpx 50rpx;
+  text-align: center;
+}
+.check {
+  width: 150rpx; height: 150rpx;
+  margin: 0 auto 34rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #17c3b2, #0b7bd8);
+  position: relative;
+  animation: pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1);
+  box-shadow: 0 16rpx 40rpx rgba(11, 123, 216, 0.3);
+}
+.circle {
+  position: absolute; inset: 12rpx;
+  border-radius: 50%;
+  border: 4rpx solid rgba(255, 255, 255, 0.35);
+}
+.tick {
+  position: absolute;
+  left: 46rpx; top: 56rpx;
+  width: 56rpx; height: 30rpx;
+  border-left: 10rpx solid #fff;
+  border-bottom: 10rpx solid #fff;
+  transform: rotate(-45deg);
+  border-radius: 4rpx;
+  animation: draw 0.4s 0.2s both;
+}
+@keyframes pop {
+  0% { transform: scale(0.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes draw {
+  0% { width: 0; height: 0; opacity: 0; }
+  100% { width: 56rpx; height: 30rpx; opacity: 1; }
+}
+.title { font-size: 44rpx; font-weight: 700; color: #0b2b4a; }
+.desc { font-size: 26rpx; color: #7b8a9a; margin-top: 14rpx; line-height: 1.6; }
+
+.info { margin: 0 28rpx; }
+.row { display: flex; justify-content: space-between; padding: 18rpx 0; border-bottom: 1rpx solid #f3f6f9; font-size: 26rpx; }
+.row:last-child { border-bottom: none; }
+.k { color: #7b8a9a; }
+.mono { font-family: "SF Mono", Menlo, monospace; font-size: 24rpx; }
+
+.actions { padding: 44rpx 28rpx 0; }
+.tip { text-align: center; color: #a8b4c0; font-size: 21rpx; margin-top: 40rpx; padding: 0 40rpx; line-height: 1.7; }

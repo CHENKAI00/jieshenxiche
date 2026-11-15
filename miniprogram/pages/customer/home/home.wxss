@@ -72,3 +72,13 @@
 
 .tip-card { background: #f9fbfe; }
 .loading { text-align: center; color: #7b8a9a; font-size: 26rpx; padding: 120rpx 0; }
+
+.booking-card {
+  background: linear-gradient(135deg, #eef7ff, #e8fbf7);
+  border: 2rpx solid #d6ecff;
+  border-radius: 20rpx;
+  padding: 22rpx 24rpx;
+  margin-bottom: 20rpx;
+}
+.bk-title { font-size: 27rpx; font-weight: 600; color: #0b2b4a; }
+.bk-go { font-size: 24rpx; color: #0b7bd8; font-weight: 600; }

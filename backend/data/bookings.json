@@ -1,0 +1,20 @@
+{
+  "items": [
+    {
+      "id": "BKMWHZLFXZM3P",
+      "openid": "mock_bk",
+      "plateNo": "粤B12345",
+      "serviceId": "wax",
+      "serviceName": "打蜡",
+      "price": 98,
+      "mins": 45,
+      "date": "2026-11-16",
+      "time": "10:00",
+      "remark": "车牌有泥",
+      "status": "done",
+      "createdAt": "2026-11-15 23:25:56",
+      "updatedAt": "2026-11-15 23:25:59",
+      "operator": "门店"
+    }
+  ]
+}

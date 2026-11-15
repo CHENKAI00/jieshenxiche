@@ -1,0 +1,38 @@
+.od { padding-top: 0; padding-bottom: 20rpx; }
+
+.empty-wrap { padding-top: 80rpx; text-align: center; }
+
+.order {
+  margin: 22rpx 28rpx 0;
+  background: #fff;
+  border-radius: 22rpx;
+  padding: 26rpx 26rpx 18rpx;
+  box-shadow: 0 8rpx 26rpx rgba(11, 43, 74, 0.06);
+}
+.head { display: flex; align-items: center; justify-content: space-between; }
+.svc { font-size: 32rpx; font-weight: 700; color: #16232f; }
+.price { font-size: 30rpx; font-weight: 700; color: #e8543a; }
+.meta { font-size: 24rpx; color: #7b8a9a; margin-top: 12rpx; }
+.dot { margin: 0 10rpx; color: #cfd8e3; }
+.mono { font-family: "SF Mono", Menlo, monospace; letter-spacing: 1rpx; }
+
+.steps { margin: 26rpx -10rpx 0; }
+.cancelled-tip {
+  margin-top: 20rpx;
+  background: #f7f8fa;
+  color: #8a97a6;
+  font-size: 23rpx;
+  padding: 16rpx 18rpx;
+  border-radius: 12rpx;
+}
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  margin-top: 18rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #f3f6f9;
+}
+.foot .small { font-size: 21rpx; color: #a8b4c0; flex: 1; }
+.gap { height: 130rpx; }

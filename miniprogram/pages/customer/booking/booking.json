@@ -1,0 +1,13 @@
+{
+  "usingComponents": {
+    "customer-tabbar": "/components/customer-tabbar/index",
+    "van-notice-bar": "/miniprogram_npm/@vant/weapp/notice-bar/index",
+    "van-cell": "/miniprogram_npm/@vant/weapp/cell/index",
+    "van-cell-group": "/miniprogram_npm/@vant/weapp/cell-group/index",
+    "van-field": "/miniprogram_npm/@vant/weapp/field/index",
+    "van-button": "/miniprogram_npm/@vant/weapp/button/index",
+    "van-calendar": "/miniprogram_npm/@vant/weapp/calendar/index",
+    "van-action-sheet": "/miniprogram_npm/@vant/weapp/action-sheet/index"
+  },
+  "navigationBarTitleText": "预约到店"
+}

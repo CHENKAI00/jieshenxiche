@@ -11,6 +11,8 @@ const statsRouter = require('./routes/stats');
 const catalogRouter = require('./routes/catalog');
 const adminRouter = require('./routes/admin');
 const customerRouter = require('./routes/customer');
+const customerBookingRouter = require('./routes/customerBooking');
+const staffBookingRouter = require('./routes/staffBooking');
 
 const app = express();
 app.use(cors());
@@ -40,6 +42,9 @@ app.use('/api/v1/ocr', staffAuth, ocrRouter);
 app.use('/api/v1/catalog', catalogRouter);
 // 车主端：用 x-openid 鉴权（wx.login 拿到的 openid），与员工口令完全隔离
 app.use('/api/v1/customer', customerRouter);
+// 预约：车主端下单 / 门店端推进状态（两个独立路由，鉴权方式不同）
+app.use('/api/v1/customer', customerBookingRouter);
+app.use('/api/v1/staff', staffAuth, staffBookingRouter);
 app.use('/api/v1/member', staffAuth, memberRouter);
 app.use('/api/v1/wash', staffAuth, washRouter);
 app.use('/api/v1/stats', staffAuth, statsRouter);

@@ -5,7 +5,8 @@ Component({
   data: {
     items: [
       { key: 'home', text: '我的卡', ico: '💳', url: '/pages/customer/home/home' },
-      { key: 'services', text: '店内项目', ico: '🧽', url: '/pages/customer/services/services' },
+      { key: 'booking', text: '预约', ico: '📅', url: '/pages/customer/booking/booking' },
+      { key: 'orders', text: '订单', ico: '🧾', url: '/pages/customer/orders/orders' },
       { key: 'mine', text: '我的', ico: '👤', url: '/pages/customer/mine/mine' },
     ],
   },

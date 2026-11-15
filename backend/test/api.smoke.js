@@ -10,6 +10,7 @@ const path = require('path');
 
 // 项目目录用临时文件，避免测试改到真实 data/services.json
 process.env.CATALOG_FILE = path.join(os.tmpdir(), `js-catalog-test-${Date.now()}.json`);
+process.env.BOOKINGS_FILE = path.join(os.tmpdir(), `js-bookings-test-${Date.now()}.json`);
 fs.copyFileSync(path.join(__dirname, '..', 'data', 'services.json'), process.env.CATALOG_FILE);
 
 /* ---------------- 内存假库（对齐 v3 的 17 字段） ---------------- */
@@ -319,8 +320,43 @@ function ok(name, cond, extra = '') {
   j = await r.json();
   ok('后台核销走同一业务链路', r.status === 200 && j.washCount === 2);
 
+  // 16. 预约：时段 → 下单 → 重复 409 → 门店确认 → 取消
+  await fetch(`${base}/customer/bind`, { method: 'POST', headers: { 'x-openid': 'mock_last4', 'content-type': 'application/json' }, body: JSON.stringify({ plateNo: '粤B12345', phone: '8000' }) });
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+  r = await fetch(`${base}/customer/slots?date=${tomorrow}`, { headers: { 'x-openid': 'mock_last4' } });
+  j = await r.json();
+  ok('预约时段返回剩余量', r.status === 200 && j.slots.length === 9 && j.slots[0].left === 3);
+
+  r = await fetch(`${base}/customer/bookings`, { method: 'POST', headers: { 'x-openid': 'mock_last4', 'content-type': 'application/json' }, body: JSON.stringify({ serviceId: 'wax', date: tomorrow, time: '10:00', remark: '有泥' }) });
+  j = await r.json();
+  const bkId = j.booking && j.booking.id;
+  ok('车主下单成功（待确认）', r.status === 201 && !!bkId && j.booking.status === 'pending' && j.booking.statusText === '待确认', bkId);
+
+  r = await fetch(`${base}/customer/bookings`, { method: 'POST', headers: { 'x-openid': 'mock_last4', 'content-type': 'application/json' }, body: JSON.stringify({ serviceId: 'wax', date: tomorrow, time: '10:00' }) });
+  ok('同时段重复下单 409', r.status === 409);
+
+  r = await fetch(`${base}/staff/bookings?date=${tomorrow}`, { headers: H });
+  j = await r.json();
+  ok('门店端能看到预约', r.status === 200 && j.list.some((b) => b.id === bkId));
+
+  r = await fetch(`${base}/staff/bookings/${bkId}/status`, { method: 'POST', headers: H, body: JSON.stringify({ status: 'confirmed' }) });
+  j = await r.json();
+  ok('门店确认预约', r.status === 200 && j.booking.status === 'confirmed');
+
+  r = await fetch(`${base}/staff/bookings/${bkId}/status`, { method: 'POST', headers: H, body: JSON.stringify({ status: 'done' }) });
+  ok('状态机拦截非法跳转（待到店→已完成）', r.status === 400);
+
+  r = await fetch(`${base}/customer/bookings`, { headers: { 'x-openid': 'mock_last4' } });
+  j = await r.json();
+  ok('我的预约列表带状态文案', j.list.length === 1 && j.list[0].statusText === '待到店');
+
+  r = await fetch(`${base}/customer/bookings/${bkId}/cancel`, { method: 'POST', headers: { 'x-openid': 'mock_last4' } });
+  j = await r.json();
+  ok('车主取消预约', r.status === 200 && j.booking.status === 'cancelled');
+
   server.close();
   fs.unlinkSync(process.env.CATALOG_FILE);
+  if (fs.existsSync(process.env.BOOKINGS_FILE)) fs.unlinkSync(process.env.BOOKINGS_FILE);
   const failed = results.filter((x) => !x.pass);
   console.log(`\n${results.length - failed.length}/${results.length} 通过`);
   process.exit(failed.length ? 1 : 0);

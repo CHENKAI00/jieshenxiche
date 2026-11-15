@@ -1,4 +1,7 @@
 <view class="page cpage">
+  <van-notice-bar left-icon="volume-o" color="#0b7bd8" background="#eaf4ff"
+    text="到店前先预约，免排队：选项目 → 选时段 → 到店直接开工" />
+
   <view wx:if="{{loading}}" class="loading">正在读取我的会员卡…</view>
 
   <block wx:if="{{!loading}}">
@@ -33,16 +36,39 @@
         </view>
       </view>
 
+      <view class="booking-card" wx:if="{{activeBooking}}" bindtap="goOrders">
+        <view class="between">
+          <view class="col">
+            <text class="bk-title">📅 {{activeBooking.serviceName}} · {{activeBooking.dateText}} {{activeBooking.time}}</text>
+            <text class="small" style="margin-top:6rpx">预约状态：{{activeBooking.statusText}}</text>
+          </view>
+          <text class="bk-go">查看 ›</text>
+        </view>
+      </view>
+
       <view class="quick">
+        <view class="q" bindtap="goBooking">
+          <view class="q-ico">📅</view>
+          <view class="q-t">预约到店</view>
+          <view class="q-d">选时段免排队</view>
+        </view>
         <view class="q" bindtap="goServices">
           <view class="q-ico">🧽</view>
           <view class="q-t">店内项目</view>
           <view class="q-d">洗车 / 打蜡 / 抛光</view>
         </view>
+      </view>
+
+      <view class="quick">
         <view class="q" bindtap="callStore">
           <view class="q-ico">📞</view>
           <view class="q-t">联系门店</view>
-          <view class="q-d">预约 / 咨询</view>
+          <view class="q-d">咨询 / 改约</view>
+        </view>
+        <view class="q" bindtap="goOrders">
+          <view class="q-ico">🧾</view>
+          <view class="q-t">我的订单</view>
+          <view class="q-d">进度实时看</view>
         </view>
       </view>
 

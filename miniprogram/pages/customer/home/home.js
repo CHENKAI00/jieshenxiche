@@ -9,6 +9,7 @@ Page({
     member: {},
     balanceText: '0.00',
     lastAgo: '',
+    activeBooking: null,
   },
 
   onShow() {
@@ -31,10 +32,29 @@ Page({
         loading: false,
       });
       app.globalData.customerBound = !!d.bound;
+      if (d.bound) this.loadActiveBooking();
     } catch (e) {
       this.setData({ loading: false, bound: false });
     }
   },
+
+  async loadActiveBooking() {
+    try {
+      const d = await api.myBookings();
+      const active = (d.list || []).find((b) => ['pending', 'confirmed', 'serving'].includes(b.status));
+      if (!active) return this.setData({ activeBooking: null });
+      const dt = new Date(`${active.date}T00:00:00+08:00`);
+      this.setData({
+        activeBooking: {
+          ...active,
+          dateText: `${dt.getMonth() + 1}月${dt.getDate()}日`,
+        },
+      });
+    } catch (e) {}
+  },
+
+  goBooking() { wx.reLaunch({ url: '/pages/customer/booking/booking' }); },
+  goOrders() { wx.reLaunch({ url: '/pages/customer/orders/orders' }); },
 
   onPullDownRefresh() {
     this.load().then(() => wx.stopPullDownRefresh()).catch(() => wx.stopPullDownRefresh());

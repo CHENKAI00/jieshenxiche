@@ -35,3 +35,9 @@
 .flow-amt.in { color: #0f9b8e; }
 
 .foot { text-align: center; color: #b3bfcc; font-size: 20rpx; padding-top: 8rpx; }
+
+.bk-item { padding: 18rpx 0; border-bottom: 1rpx solid #f4f7fa; }
+.bk-item:last-child { border-bottom: none; }
+.bk-time { font-family: "SF Mono", Menlo, monospace; font-size: 30rpx; font-weight: 700; color: #0b2b4a; }
+.bk-svc { font-size: 26rpx; color: #35485a; }
+.bk-actions { display: flex; gap: 12rpx; flex: none; }

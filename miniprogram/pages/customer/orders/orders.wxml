@@ -1,0 +1,48 @@
+<view class="page od">
+  <van-tabs active="{{tab}}" bind:change="onTab" color="#0b7bd8" sticky
+            background="#f4f7fb" line-width="40">
+    <van-tab title="进行中"></van-tab>
+    <van-tab title="全部"></van-tab>
+  </van-tabs>
+
+  <view wx:if="{{loaded && list.length === 0}}" class="empty-wrap">
+    <van-empty description="{{tab === 0 ? '还没有进行中的预约' : '还没有预约记录'}}" />
+    <van-button type="primary" round size="small" bind:click="goBooking">去预约</van-button>
+  </view>
+
+  <view wx:for="{{list}}" wx:key="id" class="order">
+    <view class="head">
+      <view class="row" style="gap:12rpx">
+        <text class="svc">{{item.serviceName}}</text>
+        <van-tag type="{{item.tagType}}" plain="{{item.plain}}">{{item.statusText}}</van-tag>
+      </view>
+      <text class="price">¥{{item.price}}</text>
+    </view>
+
+    <view class="meta">
+      <text class="mono">{{item.dateText}}</text>
+      <text class="dot">·</text>
+      <text>{{item.time}}</text>
+      <text class="dot">·</text>
+      <text>{{item.platePretty}}</text>
+    </view>
+    <view wx:if="{{item.remark}}" class="meta">备注：{{item.remark}}</view>
+
+    <view wx:if="{{item.status !== 'cancelled'}}" class="steps">
+      <van-steps active="{{item.step}}" steps="{{stepLabels}}" active-color="#0b7bd8"
+                 inactive-color="#dcdfe6" active-icon="checked" />
+    </view>
+    <view wx:else class="cancelled-tip">这单已取消，可重新预约</view>
+
+    <view class="foot">
+      <text class="small">{{item.hint}}</text>
+      <van-button wx:if="{{item.canCancel}}" size="small" plain round
+                  bind:click="cancel" data-id="{{item.id}}">取消</van-button>
+      <van-button wx:if="{{item.status === 'done'}}" size="small" round type="primary"
+                  bind:click="rebook" data-index="{{index}}">再来一次</van-button>
+    </view>
+  </view>
+
+  <view class="gap"></view>
+  <customer-tabbar active="orders" />
+</view>

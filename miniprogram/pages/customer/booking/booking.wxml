@@ -1,0 +1,59 @@
+<view class="page bk">
+  <van-notice-bar left-icon="info-o" color="#0b7bd8" background="#eaf4ff"
+    text="预约到店免排队：选项目 → 选日期时段 → 到店直接开工" />
+
+  <van-cell-group inset title="预约项目" custom-class="grp">
+    <van-cell title="{{service.name || '请选择项目'}}" is-link bind:click="openService"
+              value="{{service.price ? '¥' + service.price + ' · ' + service.mins + '分钟' : '未选择'}}" />
+  </van-cell-group>
+
+  <van-cell-group inset title="预约日期">
+    <van-cell title="到店日期" is-link value="{{dateText || '请选择'}}" bind:click="openCalendar" />
+  </van-cell-group>
+
+  <view class="sec">
+    <text class="sec-t">到店时段</text>
+    <text class="sec-s">每小时 3 台，约满即止</text>
+  </view>
+  <view class="slots">
+    <view wx:for="{{slots}}" wx:key="time"
+          class="slot {{time === item.time ? 'on' : ''}} {{item.left <= 0 ? 'full' : ''}}"
+          data-time="{{item.time}}" bindtap="pickTime">
+      <view class="slot-t">{{item.time}}</view>
+      <view class="slot-l">{{item.left > 0 ? '余 ' + item.left : '已满'}}</view>
+    </view>
+    <view wx:if="{{!slots.length}}" class="slot-empty">先选日期，再看当天时段</view>
+  </view>
+
+  <van-cell-group inset title="备注">
+    <van-field value="{{remark}}" placeholder="车况、特殊要求（选填）" maxlength="60"
+               border="{{false}}" bind:change="onRemark" />
+  </van-cell-group>
+
+  <view class="summary">
+    <view class="row">
+      <text class="k">项目</text><text class="v">{{service.name || '—'}}</text>
+    </view>
+    <view class="row">
+      <text class="k">到店</text><text class="v">{{dateText || '—'}} {{time || ''}}</text>
+    </view>
+    <view class="row">
+      <text class="k">费用</text><text class="v price">¥{{service.price || 0}}<text class="small"> 到店扣次或余额支付</text></text>
+    </view>
+  </view>
+
+  <view class="bottom">
+    <van-button type="primary" round block loading="{{submitting}}" bind:click="submit">确认预约</van-button>
+    <view class="tip">预约免费，到店按次数卡或余额结算</view>
+  </view>
+
+  <van-calendar show="{{showCal}}" type="single" color="#0b7bd8"
+    min-date="{{minDate}}" max-date="{{maxDate}}"
+    bind:confirm="onPickDate" bind:close="closeCal" />
+
+  <van-action-sheet show="{{showSvc}}" actions="{{svcActions}}" cancel-text="取消"
+    bind:select="onPickSvc" bind:close="closeSvc" description="选择本次要做的项目" />
+
+  <view class="gap"></view>
+  <customer-tabbar active="booking" />
+</view>

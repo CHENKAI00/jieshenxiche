@@ -32,13 +32,15 @@ jieshenxiche/
 │   └── test/api.smoke.js        30 条端到端断言（不需要数据库）
 └── miniprogram/                 微信开发者工具直接导入
     ├── app.js / app.json / app.wxss
+    ├── miniprogram_npm/@vant/weapp/  Vant Weapp 组件（已内置，无需构建 npm）
     ├── utils/api.js             请求封装（x-token / x-openid、图片绝对地址）
     ├── utils/role.js            角色守卫（门店端 / 车主端互不串门）
     ├── components/customer-tabbar/  车主端底部导航（我的卡 / 项目 / 我的）
     ├── pages/role               启动页：选身份（车主 / 门店员工）
     ├── pages/  index 首页 · scan 拍车牌 · catalog 店内项目 · member 会员卡
     │           recharge 充值 · records 会员名录 · admin 门店工作台 · mine 我的
-    └── pages/customer/  home 我的卡 · bind 绑车 · services 项目 · mine 我的
+    └── pages/customer/  home 我的卡 · booking 预约 · orders 订单 · result 结果页
+                         bind 绑车 · services 项目 · mine 我的
 ```
 
 ---
@@ -56,8 +58,8 @@ jieshenxiche/
 
 | 身份 | 底部导航 | 能做什么 |
 | --- | --- | --- |
-| 门店员工 | 首页 / 拍车牌 / 项目 / 门店 / 我的 | 拍车牌查会员、核销（扣次数或余额）、充值开卡、建档、看门店数据 |
-| 车主 | 我的卡 / 店内项目 / 我的 | 看余额、剩余次数、洗车/打蜡次数、最近到店；逛项目；绑定/解绑 |
+| 门店员工 | 首页 / 拍车牌 / 项目 / 门店 / 我的 | 拍车牌查会员、核销（扣次数或余额）、充值开卡、建档、**今日预约看板（确认/开工/完成核销）** |
+| 车主 | 我的卡 / 预约 / 订单 / 我的 | 看余额、剩余次数、洗车/打蜡、最近到店；**选时段预约**；看订单进度；绑定/解绑 |
 
 登录与绑定（**没有任何按次收费的接口**）：
 
@@ -108,14 +110,42 @@ wx.chooseMedia 拍照 → wx.uploadFile → POST /api/v1/ocr/plate
 → 结果卡片；未建档一键建档；识别失败弹手输，不挡业务
 ```
 
-## 四、店内项目陈列（小程序「项目」页）
+## 四、界面方案：Vant Weapp 打底 + 两个地方做重（预约日历 / 订单状态）
+
+组件层用 **Vant Weapp（已内置在 `miniprogram/miniprogram_npm/`，不需要在开发者工具里「构建 npm」）**，
+表单、单元格、按钮、标签、空状态、步骤条全部走 Vant；自研只做业务外壳，不再手写基础控件。
+
+「炫酷」只花在两个地方：
+
+1. **预约日历交互**
+   - `van-calendar` 单日选择，限 30 天内，最小日期=今天
+   - 选完日期立刻拉当天时段：每小时 3 台，卡片显示「余 N / 已满」，已满置灰不可点，选中高亮
+   - 项目用 `van-action-sheet` 选（名称 + 价格/时长），底部实时汇总「项目/到店时间/费用」
+   - 下单成功走**独立结果页**：CSS 打勾动画 + 预约编号 + 到店提醒
+
+2. **订单状态可视化**
+   - `van-tabs` 分「进行中 / 全部」，状态用 `van-tag` 区分（待确认=橙、待到店/服务中=蓝、已完成=绿、已取消=灰）
+   - 每张订单内嵌 `van-steps` 四步进度（预约提交 → 门店确认 → 到店服务 → 已完成），`active` 跟随真实状态
+   - 底部给「取消预约」/「再来一次」的下一步动作，减少来回跳页
+
+动态效果只在结果页（打勾描边 + 弹入）和首页公告条用了一点点，不做大面积动效堆砌。
+
+**预约与订单的数据存在 `backend/data/bookings.json`**（和项目目录一样，不新增表），状态机：
+
+```
+pending(待确认) → confirmed(待到店) → serving(服务中) → done(已完成)
+                 任意未完成 → cancelled(已取消)
+门店「完成核销」会走和前台一样的核销链路（扣次数或余额）
+```
+
+## 五、店内项目陈列（小程序「项目」页）
 
 - 项目来自 `backend/data/services.json`，**后台增删改后小程序刷新即生效**。
 - 卡片展示：封面图（无图用 emoji 渐变占位）、名称、分类（洗车/美容）、价格、时长、说明、计次规则。
 - 点卡片 → 输车牌 → 选「扣次数 / 余额支付」→ 当场核销，核销后回显余额与洗车/打蜡次数。
 - 分类页签由项目数据自动聚合（洗车 / 美容 / 其他）。
 
-## 五、Web 后台管理系统（`/admin/`）
+## 六、Web 后台管理系统（`/admin/`）
 
 | 模块 | 能力 |
 | --- | --- |
@@ -131,7 +161,7 @@ wx.chooseMedia 拍照 → wx.uploadFile → POST /api/v1/ocr/plate
 
 ---
 
-## 六、数据库：`jieshenxiche` 库 + `js_member` 一张表（18 字段）
+## 七、数据库：`jieshenxiche` 库 + `js_member` 一张表（18 字段）
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
@@ -169,7 +199,7 @@ v3 迁移时旧的 `total_count` 会一次性折算进 `wash_count`（打蜡从 
 
 ---
 
-## 七、接口一览（前缀 `/api/v1`，请求头 `x-token`）
+## 八、接口一览（前缀 `/api/v1`，请求头 `x-token`）
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
@@ -185,6 +215,11 @@ v3 迁移时旧的 `total_count` 会一次性折算进 `wash_count`（打蜡从 
 | POST | `/wash/recharge` | 充值 `{plateNo,amount,giftAmount,times,months}` |
 | GET | `/stats/overview` · `/stats/recent` | 小程序看板 / 最近到店 |
 | POST | `/customer/staff-login` | 员工口令登录（老板端入口）`{password}` |
+| GET | `/customer/slots?date=` | 当天可约时段与剩余量 |
+| POST/GET | `/customer/bookings` | 下单 / 我的预约 |
+| POST | `/customer/bookings/:id/cancel` | 取消预约 |
+| GET | `/staff/bookings?date=` | 门店预约看板 |
+| POST | `/staff/bookings/:id/status` · `/finish` | 推进状态 / 完成并核销 |
 | POST | `/customer/login` | 车主 wx.login 换 openid `{code}` |
 | POST | `/customer/bind` · `/customer/unbind` | 绑定 / 解绑爱车（车牌 + 手机号校验） |
 | GET | `/customer/me` · `/customer/services` | 车主首页数据 / 店内项目 |
@@ -207,7 +242,7 @@ v3 迁移时旧的 `total_count` 会一次性折算进 `wash_count`（打蜡从 
 
 ---
 
-## 八、跑起来
+## 九、跑起来
 
 ```bash
 cd backend
@@ -222,9 +257,9 @@ npm test             # 30 条断言，不需要数据库
 
 ---
 
-## 九、已验证
+## 十、已验证
 
-`npm test` → **46/46 通过**（内存假库 + 临时项目文件，跑真实路由与业务代码）：
+`npm test` → **54/54 通过**（内存假库 + 临时项目文件，跑真实路由与业务代码）：
 
 ```
 车牌归一化 / 新能源绿牌 / OCR 纠偏 / 无口令 401
@@ -235,6 +270,7 @@ npm test             # 30 条断言，不需要数据库
 后台：错误口令 401 / 登录 / 看板 / 新增 / 改价+下架 / 下架不进小程序 / 排序 / 删除 / 会员检索 / 后台核销
 车主端：mock 登录换 openid / 未绑定 bound=false / 无 openid 401 / 手机号不匹配 403 / 绑定成功 / 重复绑定幂等 / 解绑
 绑定增强：后 4 位可绑定 / 后 4 位不匹配 403 / 员工口令登录（错 401、对返回 token）
+预约：时段剩余量 / 下单 / 同时段重复 409 / 门店可见 / 确认 / 状态机拦非法跳转 / 我的列表 / 取消
 ```
 
 **真实环境联调（MySQL 8.0.43）**：登录返回 token、上传 PNG 后 `/uploads/xxx.png` 200、新增项目、核销后
@@ -242,7 +278,7 @@ npm test             # 30 条断言，不需要数据库
 
 ---
 
-## 十、部署到服务器（nohup 常驻）
+## 十一、部署到服务器（nohup 常驻）
 
 服务器上跑的是 `backend/`，`deploy/` 里是配套脚本（Node ≥ 18）。
 
@@ -311,7 +347,7 @@ cp deploy/nginx-jieshenxiche.conf /etc/nginx/conf.d/
 
 > 自测阶段可以先不配域名：小程序填 `http://<服务器IP>:8099`，开发者工具勾「不校验合法域名」即可。
 
-## 十一、还能接着做
+## 十二、还能接着做
 
 - **微信支付**：充值页「确认收款」换 `wx.requestPayment`（后端统一下单 + 回调）。
 - **项目进库**：要按项目做报表时，把 `data/services.json` 换成 `js_service` 表，接口不变。

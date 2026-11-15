@@ -49,6 +49,36 @@
 
   <view class="card">
     <view class="between">
+      <view class="h2">今日预约（{{bookings.length}}）</view>
+      <text class="small" bindtap="loadBookings">刷新</text>
+    </view>
+    <view wx:if="{{bookings.length === 0}}" class="empty">今天还没有预约</view>
+    <view wx:for="{{bookings}}" wx:key="id" class="bk-item">
+      <view class="between">
+        <view class="col">
+          <view class="row" style="gap:10rpx">
+            <text class="bk-time">{{item.time}}</text>
+            <text class="bk-svc">{{item.serviceName}}</text>
+            <van-tag type="{{item.tagType}}" plain="{{item.plain}}">{{item.statusText}}</van-tag>
+          </view>
+          <text class="small" style="margin-top:6rpx">{{item.platePretty}}{{item.remark ? ' · ' + item.remark : ''}}</text>
+        </view>
+        <view class="bk-actions">
+          <van-button wx:if="{{item.status === 'pending'}}" size="mini" type="primary" round
+                      data-id="{{item.id}}" data-s="confirmed" bind:click="advance">确认</van-button>
+          <van-button wx:if="{{item.status === 'confirmed'}}" size="mini" type="primary" round
+                      data-id="{{item.id}}" data-s="serving" bind:click="advance">开工</van-button>
+          <van-button wx:if="{{item.status === 'serving'}}" size="mini" type="success" round
+                      data-id="{{item.id}}" bind:click="finish">完成核销</van-button>
+          <van-button wx:if="{{item.canCancel}}" size="mini" plain round
+                      data-id="{{item.id}}" data-s="cancelled" bind:click="advance">取消</van-button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="between">
       <view class="h2">最近到店</view>
       <text class="small" bindtap="refresh">刷新</text>
     </view>
