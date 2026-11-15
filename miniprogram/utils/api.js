@@ -97,6 +97,7 @@ module.exports = {
   catalog: () => request('/api/v1/catalog'),
   // ===== 车主端 =====
   customerLogin: (code) => request('/api/v1/customer/login', { method: 'POST', data: { code } }),
+  phoneLogin: (payload) => request('/api/v1/customer/phone-login', { method: 'POST', data: payload, loading: true, tip: '识别身份中' }),
   customerMe: () => request('/api/v1/customer/me'),
   customerBind: (payload) => request('/api/v1/customer/bind', { method: 'POST', data: payload, loading: true, tip: '绑定中' }),
   customerUnbind: () => request('/api/v1/customer/unbind', { method: 'POST', loading: true, tip: '解绑中' }),

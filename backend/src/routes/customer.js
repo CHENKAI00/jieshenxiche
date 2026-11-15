@@ -21,7 +21,29 @@ router.post('/login', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-/** POST /api/v1/customer/bind  { plateNo, phone }  → 绑定自己的车 */
+/**
+ * POST /api/v1/customer/phone-login
+ * { code, openid, phone? }
+ *   code   = getPhoneNumber 回调里的 code（正式环境）
+ *   phone  = 调试用（未配置 AppID/Secret 时必填）
+ * 返回 { role: 'staff'|'customer', token?, bound, member?, reason? }
+ */
+router.post('/phone-login', async (req, res, next) => {
+  try {
+    const body = req.body || {};
+    const r = await auth.phoneLogin({ code: body.code, phone: body.phone, openid: body.openid || req.get('x-openid') });
+    const out = { ...r };
+    if (out.memberRow) {
+      out.member = members.toViewModel(out.memberRow);
+      delete out.memberRow;
+    }
+    if (out.phone) out.phoneMasked = String(out.phone).replace(/^(\d{3})\d{4}(\d{4})$/, '$1****$2');
+    delete out.phone;
+    res.json({ ok: true, ...out });
+  } catch (e) { next(e); }
+});
+
+/** POST /api/v1/customer/bind  { plateNo, phone }  → 兜底：车牌 + 手机号绑定 */
 router.post('/bind', customerAuth, async (req, res, next) => {
   try {
     const body = req.body || {};

@@ -25,6 +25,9 @@ function exec(sql, params = []) {
   if (/^SELECT \* FROM `js_member` WHERE plate_no = \? (LIMIT 1|FOR UPDATE)/i.test(s)) {
     return [[store.find((r) => r.plate_no === params[0])].filter(Boolean).map(clone)];
   }
+  if (/^SELECT \* FROM `js_member` WHERE phone = \? ORDER BY/i.test(s)) {
+    return [store.filter((r) => r.phone && r.phone === params[0]).map(clone)];
+  }
   if (/^SELECT \* FROM `js_member` WHERE openid = \? LIMIT 1/i.test(s)) {
     return [[store.find((r) => r.openid && r.openid === params[0])].filter(Boolean).map(clone)];
   }
@@ -253,6 +256,26 @@ function ok(name, cond, extra = '') {
   r = await fetch(`${base}/customer/me`, { headers: { 'x-openid': OID } });
   j = await r.json();
   ok('解绑后 bound=false', j.bound === false);
+
+  // 11.8 手机号一键登录 → 自动判身份
+  r = await fetch(`${base}/customer/phone-login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: 'ph1', phone: '18800000001', openid: 'mock_staff' }) });
+  j = await r.json();
+  ok('员工手机号 → 门店端并下发口令', r.status === 200 && j.role === 'staff' && j.token === TOKEN, j.phoneMasked);
+
+  r = await fetch(`${base}/customer/phone-login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: 'ph2', phone: '13800138000', openid: 'mock_phone_cust' }) });
+  j = await r.json();
+  ok('车主手机号 → 车主端并自动绑卡', r.status === 200 && j.role === 'customer' && j.bound === true && !!j.member, j.member && j.member.platePretty);
+
+  r = await fetch(`${base}/customer/me`, { headers: { 'x-openid': 'mock_phone_cust' } });
+  j = await r.json();
+  ok('自动绑定后 /me 能读到自己的卡', j.bound === true);
+
+  r = await fetch(`${base}/customer/phone-login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: 'ph3', phone: '13911112222', openid: 'mock_none' }) });
+  j = await r.json();
+  ok('陌生手机号 → 车主端但未绑卡', j.role === 'customer' && j.bound === false && !!j.reason);
+
+  r = await fetch(`${base}/customer/phone-login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: 'ph4' }) });
+  ok('调试模式缺 phone 参数 400', r.status === 400);
 
   // 12. 后台登录
   r = await fetch(`${base}/admin/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: 'wrong' }) });

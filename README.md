@@ -45,22 +45,35 @@ jieshenxiche/
 
 ## 一、两种身份（同一个小程序）
 
-首次打开是身份选择页（`pages/role`），选完记住，之后可在「我的」里随时切换：
+首次打开是身份页（`pages/role`）：点 **手机号一键登录** 后按手机号自动分流——员工号进门店端、车主号进车主端；
+也可以手动选身份（调试或没开手机号权限时用）。选完记住，之后可在「我的」里切换：
 
 | 身份 | 底部导航 | 能做什么 |
 | --- | --- | --- |
 | 门店员工 | 首页 / 拍车牌 / 项目 / 门店 / 我的 | 拍车牌查会员、核销（扣次数或余额）、充值开卡、建档、看门店数据 |
 | 车主 | 我的卡 / 店内项目 / 我的 | 看余额、剩余次数、洗车/打蜡次数、最近到店；逛项目；绑定/解绑 |
 
-车主端登录与绑定：
+登录与身份判定：
 
 ```
-wx.login → POST /api/v1/customer/login {code}  → openid（未配置 WX_APPID/SECRET 时自动 mock）
-        → POST /api/v1/customer/bind {plateNo, phone}
-           校验规则：车牌存在 + 档案里的手机号与之完全一致 → 写入 js_member.openid
-           （一个微信只能绑一辆车，重复绑别的车返回 409）
-        → GET  /api/v1/customer/me  → 自己的卡 + 店内项目
+① 微信手机号一键登录（推荐）
+   button open-type="getPhoneNumber" → code
+   → POST /api/v1/customer/phone-login { code, openid }
+       后端用 access_token 调 getuserphonenumber 换手机号
+       ├ 手机号命中 STAFF_PHONES 白名单 → role=staff，直接下发 ADMIN_TOKEN
+       └ 否则 role=customer：按手机号找会员卡，自动把 openid 绑到「还没被绑」的那辆车
+            0 张卡 → bound=false（提示到店建档）
+            多张卡 → 绑定最近到店、且未被其他微信绑定的那张
+
+② 车牌 + 手机号兜底绑定
+   POST /api/v1/customer/bind {plateNo, phone}
+       校验：车牌已建档 + 档案手机号完全一致 → 写入 openid（一微信一车，冲突 409）
+
+③ 读自己的卡
+   GET /api/v1/customer/me → 余额/剩余次数/洗车打蜡/最近到店 + 店内项目
 ```
+
+员工白名单在 `.env` 里配：`STAFF_PHONES=18800000001,13900001111`（逗号分隔，改完 `manage.sh restart`）。
 
 车主接口用 `x-openid` 鉴权，和员工口令 `x-token` 完全隔离：车主拿不到会员列表、核销、充值等员工接口。
 
@@ -163,6 +176,7 @@ v3 迁移时旧的 `total_count` 会一次性折算进 `wash_count`（打蜡从 
 | POST | `/wash/consume` | 核销 `{plateNo,serviceId,useCount,operator}` |
 | POST | `/wash/recharge` | 充值 `{plateNo,amount,giftAmount,times,months}` |
 | GET | `/stats/overview` · `/stats/recent` | 小程序看板 / 最近到店 |
+| POST | `/customer/phone-login` | 手机号一键登录 → 判身份 `{code, openid, phone?}` |
 | POST | `/customer/login` | 车主 wx.login 换 openid `{code}` |
 | POST | `/customer/bind` · `/customer/unbind` | 绑定 / 解绑爱车（车牌 + 手机号校验） |
 | GET | `/customer/me` · `/customer/services` | 车主首页数据 / 店内项目 |
@@ -202,7 +216,7 @@ npm test             # 30 条断言，不需要数据库
 
 ## 九、已验证
 
-`npm test` → **39/39 通过**（内存假库 + 临时项目文件，跑真实路由与业务代码）：
+`npm test` → **46/46 通过**（内存假库 + 临时项目文件，跑真实路由与业务代码）：
 
 ```
 车牌归一化 / 新能源绿牌 / OCR 纠偏 / 无口令 401
@@ -212,6 +226,7 @@ npm test             # 30 条断言，不需要数据库
 看板 washSum/waxSum、不再有今日实收
 后台：错误口令 401 / 登录 / 看板 / 新增 / 改价+下架 / 下架不进小程序 / 排序 / 删除 / 会员检索 / 后台核销
 车主端：mock 登录换 openid / 未绑定 bound=false / 无 openid 401 / 手机号不匹配 403 / 绑定成功 / 重复绑定幂等 / 解绑
+手机号登录：员工号→门店端+下发口令 / 车主号→车主端并自动绑卡 / 陌生号→未绑卡 / 缺 phone 400
 ```
 
 **真实环境联调（MySQL 8.0.43）**：登录返回 token、上传 PNG 后 `/uploads/xxx.png` 200、新增项目、核销后

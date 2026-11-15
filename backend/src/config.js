@@ -26,6 +26,15 @@ module.exports = {
     secret: env.WX_SECRET || '',
     mock: String(env.WX_MOCK || '0') === '1',
   },
+  /**
+   * 员工/老板手机号白名单（逗号分隔）。
+   * 车主用手机号一键登录时，命中这里 = 门店端；否则 = 车主端。
+   * 留空则所有人按车主处理，仍可在选择页手动切员工端。
+   */
+  staffPhones: String(env.STAFF_PHONES || '')
+    .split(',')
+    .map((x) => x.replace(/\D/g, ''))
+    .filter((x) => x.length === 11),
   ocr: {
     secretId: env.TENCENT_SECRET_ID || '',
     secretKey: env.TENCENT_SECRET_KEY || '',
