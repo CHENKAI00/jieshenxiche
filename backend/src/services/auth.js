@@ -1,64 +1,14 @@
 /**
- * 车主/员工登录与身份判定
+ * 微信登录与车主绑定（不调用任何收费接口）
  *
- * 1) 微信手机号一键登录（button open-type="getPhoneNumber"）
- *    wx 端拿到 code → 这里换手机号：
- *      access_token（缓存 2 小时）→ wxa/business/getuserphonenumber
- *    未配置 WX_APPID/WX_SECRET 时走 mock：手机号由请求里的 phone 字段提供（仅调试）
- * 2) 身份判定：
- *    - 手机号在 STAFF_PHONES 白名单 → role=staff，回员工口令 token
- *    - 否则 role=customer：按手机号找会员卡，自动把 openid 绑到「还没被绑定」的那辆车上
+ * - 微信登录只调 code2session（免费）：code → openid
+ * - 车主绑定：车牌 + 手机号（支持完整手机号，或手机号后 4 位）
+ *   不接短信、不接手机号快速验证组件（按次收费），所以用「档案里已有的手机号」做校验
+ * - 员工/老板：走员工口令（ADMIN_TOKEN），不依赖手机号
  */
 const cfg = require('../config');
 const { pool } = require('../db');
 const { validatePlate, normalizePlate } = require('../utils/plate');
-
-let tokenCache = { value: '', expireAt: 0 };
-
-async function getAccessToken() {
-  if (cfg.wx.mock || !cfg.wx.appId || !cfg.wx.secret) return '';
-  if (tokenCache.value && Date.now() < tokenCache.expireAt) return tokenCache.value;
-  const url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${encodeURIComponent(cfg.wx.appId)}&secret=${encodeURIComponent(cfg.wx.secret)}`;
-  const res = await fetch(url);
-  const j = await res.json().catch(() => ({}));
-  if (!j.access_token) {
-    const e = new Error(`获取 access_token 失败：${j.errcode || ''} ${j.errmsg || ''}`);
-    e.status = 502;
-    throw e;
-  }
-  tokenCache = { value: j.access_token, expireAt: Date.now() + (Number(j.expires_in || 7200) - 300) * 1000 };
-  return tokenCache.value;
-}
-
-/** getPhoneNumber 的 code → 手机号 */
-async function getPhoneNumber(code, fallbackPhone) {
-  if (!code) {
-    const e = new Error('缺少手机号授权 code'); e.status = 400; throw e;
-  }
-  if (cfg.wx.mock || !cfg.wx.appId || !cfg.wx.secret) {
-    const phone = String(fallbackPhone || '').replace(/\D/g, '');
-    if (!/^1[3-9]\d{9}$/.test(phone)) {
-      const e = new Error('未配置微信 AppID/Secret，调试模式需要在请求里带 phone（11 位）');
-      e.status = 400;
-      throw e;
-    }
-    return { phone, mock: true };
-  }
-  const token = await getAccessToken();
-  const res = await fetch(`https://api.weixin.qq.com/wxa/business/getuserphonenumber?access_token=${encodeURIComponent(token)}`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ code }),
-  });
-  const j = await res.json().catch(() => ({}));
-  const info = j.phone_info || {};
-  if (j.errcode || !info.purePhoneNumber) {
-    const e = new Error(`获取手机号失败：${j.errcode || ''} ${j.errmsg || ''}`);
-    e.status = 502;
-    throw e;
-  }
-  return { phone: info.purePhoneNumber, mock: false };
-}
 
 async function wxLogin(code) {
   if (!code) {
@@ -78,73 +28,48 @@ async function wxLogin(code) {
   return { openid: j.openid, sessionKey: j.session_key, mock: false };
 }
 
-/** 按手机号找会员卡，并把 openid 绑到一张「空闲」的卡上 */
-async function bindByPhone({ openid, phone }) {
-  const [rows] = await pool.query('SELECT * FROM `js_member` WHERE phone = ? ORDER BY last_service_at DESC, id DESC', [phone]);
-  if (!rows.length) return { bound: false, members: [] };
+/* ---------- 绑定尝试节流（内存，重启即清空） ---------- */
+const attempts = new Map();
+const WINDOW_MS = 10 * 60 * 1000;
+const MAX_TRY = 6;
 
-  const mine = rows.find((r) => r.openid && r.openid === openid);
-  if (mine) return { bound: true, memberId: mine.id };
-
-  const free = rows.find((r) => !r.openid);
-  if (!free) return { bound: false, reason: '这些车都已绑定其他微信，请在「我的」里解绑后再试' };
-
-  try {
-    await pool.query('UPDATE `js_member` SET openid = ? WHERE id = ?', [openid, free.id]);
-    return { bound: true, memberId: free.id };
-  } catch (e) {
-    if (e.code === 'ER_DUP_ENTRY') return { bound: false, reason: '这个微信已绑定过其他车辆' };
-    throw e;
+function throttle(key) {
+  const now = Date.now();
+  const rec = attempts.get(key) || { count: 0, start: now };
+  if (now - rec.start > WINDOW_MS) { rec.count = 0; rec.start = now; }
+  rec.count += 1;
+  attempts.set(key, rec);
+  if (rec.count > MAX_TRY) {
+    const e = new Error('尝试次数过多，请 10 分钟后再试，或联系门店'); e.status = 429; throw e;
   }
 }
 
-/** 手机号一键登录：一次性返回身份、口令、绑定的车 */
-async function phoneLogin({ code, phone, openid }) {
-  const got = await getPhoneNumber(code, phone);
-  const isStaff = cfg.staffPhones.includes(got.phone);
-
-  if (isStaff) {
-    return {
-      role: 'staff',
-      phone: got.phone,
-      token: cfg.adminToken,
-      mock: got.mock,
-      bound: false,
-      member: null,
-    };
-  }
-
-  let bind = { bound: false, reason: '' };
-  if (openid) bind = await bindByPhone({ openid, phone: got.phone });
-
-  let member = null;
-  if (bind.memberId) {
-    const [rows] = await pool.query('SELECT * FROM `js_member` WHERE id = ?', [bind.memberId]);
-    if (rows[0]) member = rows[0];
-  }
-  return {
-    role: 'customer',
-    phone: got.phone,
-    token: '',
-    mock: got.mock,
-    bound: !!member,
-    reason: member ? '' : (bind.reason || '这个手机号还没有会员卡，到店建档后即可绑定'),
-    memberRow: member,
-  };
+/** 手机号比对：完整 11 位，或后 4 位（都来自门店建档时登记的手机号） */
+function phoneMatches(stored, input) {
+  const s = String(stored || '');
+  const v = String(input || '').replace(/\D/g, '');
+  if (!s) return false;
+  if (v.length === 11) return s === v;
+  if (v.length === 4) return s.slice(-4) === v;
+  return false;
 }
 
-/** 车主绑定：车牌 + 档案里的手机号（保留，作为手机号登录之外的兜底） */
+/** 车主绑定：车牌 + 手机号（或后 4 位） */
 async function bindMember({ openid, plateNo, phone }) {
   if (!openid) {
     const e = new Error('未登录'); e.status = 401; throw e;
   }
+  throttle(`bind:${openid}`);
+
   const v = validatePlate(plateNo);
   if (!v.ok) {
     const e = new Error(`车牌格式不正确：${v.reason}`); e.status = 400; throw e;
   }
-  if (!/^1[3-9]\d{9}$/.test(String(phone || ''))) {
-    const e = new Error('请填写 11 位手机号'); e.status = 400; throw e;
+  const input = String(phone || '').replace(/\D/g, '');
+  if (input.length !== 11 && input.length !== 4) {
+    const e = new Error('请填写登记的 11 位手机号，或手机号后 4 位'); e.status = 400; throw e;
   }
+
   const [rows] = await pool.query('SELECT * FROM `js_member` WHERE plate_no = ? LIMIT 1', [normalizePlate(v.plate)]);
   const row = rows[0];
   if (!row) {
@@ -156,7 +81,7 @@ async function bindMember({ openid, plateNo, phone }) {
   if (!row.phone) {
     const e = new Error('这辆车还没登记手机号，请到门店补登后再绑定'); e.status = 400; throw e;
   }
-  if (String(row.phone) !== String(phone)) {
+  if (!phoneMatches(row.phone, input)) {
     const e = new Error('手机号与门店登记的不一致'); e.status = 403; throw e;
   }
   try {
@@ -181,4 +106,4 @@ async function unbind(openid) {
   return { ok: true, affected: r.affectedRows };
 }
 
-module.exports = { wxLogin, getPhoneNumber, phoneLogin, bindByPhone, bindMember, findByOpenid, unbind };
+module.exports = { wxLogin, bindMember, findByOpenid, unbind, phoneMatches };

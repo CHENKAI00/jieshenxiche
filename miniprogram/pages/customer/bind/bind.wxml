@@ -2,7 +2,7 @@
   <view class="card">
     <view class="h2">绑定我的爱车</view>
     <view class="small" style="margin:12rpx 0 30rpx;line-height:1.7">
-      车牌和手机号要跟门店登记的完全一致，绑定后就能看到这张卡的余额与次数。
+      车牌要和门店登记的一致；手机号填完整 11 位，或只填后 4 位都能绑定（不需要短信验证码）。
     </view>
 
     <view class="field">
@@ -13,7 +13,7 @@
     <view class="field">
       <text class="field-k">手机号</text>
       <input class="input grow" type="number" maxlength="11" value="{{phone}}"
-             placeholder="门店登记的那个手机号" bindinput="onPhone" />
+             placeholder="登记手机号，或后 4 位" bindinput="onPhone" />
     </view>
 
     <button class="btn" style="margin-top:20rpx" bindtap="submit">确认绑定</button>

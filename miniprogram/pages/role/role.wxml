@@ -2,33 +2,14 @@
   <view class="brand">
     <view class="logo">🧽</view>
     <view class="name">洁神洗车</view>
-    <view class="slogan">拍照识车牌 · 洗车打蜡一站搞定</view>
+    <view class="slogan">车主查卡 · 门店核销</view>
   </view>
 
-  <button class="phone-btn" open-type="getPhoneNumber" bindgetphonenumber="onPhoneLogin">
-    📱 手机号一键登录
-  </button>
-  <view class="or">员工号自动进门店端，车主号自动进车主端</view>
+  <button class="main-btn" bindtap="customerLogin">👤 微信登录，查看我的卡</button>
+  <view class="or">余额 · 剩余次数 · 洗车打蜡记录</view>
 
-  <view class="cards">
-    <view class="choose" bindtap="asCustomer">
-      <view class="ico">🚗</view>
-      <view class="col grow">
-        <view class="t">我是车主</view>
-        <view class="d">看余额、剩余次数、洗车/打蜡记录，逛店内项目</view>
-      </view>
-      <view class="arrow">›</view>
-    </view>
+  <button class="ghost-btn" bindtap="staffLogin">🧑‍🔧 老板 / 门店员工登录</button>
+  <view class="or small-or">使用门店员工口令，登录后可拍车牌核销</view>
 
-    <view class="choose" bindtap="asStaff">
-      <view class="ico">🧑‍🔧</view>
-      <view class="col grow">
-        <view class="t">我是门店员工</view>
-        <view class="d">拍车牌查会员、核销项目、充值开卡、管理门店</view>
-      </view>
-      <view class="arrow">›</view>
-    </view>
-  </view>
-
-  <view class="tip">首次使用选一次身份即可，之后可在「我的」里切换</view>
+  <view class="tip">车主登录免费、不需要短信；一个微信绑定一辆车</view>
 </view>

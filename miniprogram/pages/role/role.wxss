@@ -2,8 +2,8 @@ page {
   background: linear-gradient(170deg, #0b2b4a 0%, #0b4c7a 55%, #0b7bd8 100%);
   min-height: 100vh;
 }
-.wrap { padding: 120rpx 48rpx 60rpx; box-sizing: border-box; }
-.brand { text-align: center; color: #fff; margin-bottom: 70rpx; }
+.wrap { padding: 130rpx 48rpx 60rpx; box-sizing: border-box; }
+.brand { text-align: center; color: #fff; margin-bottom: 80rpx; }
 .logo {
   width: 132rpx; height: 132rpx; line-height: 132rpx;
   margin: 0 auto 24rpx;
@@ -14,38 +14,42 @@ page {
 .name { font-size: 52rpx; font-weight: 700; letter-spacing: 4rpx; }
 .slogan { font-size: 24rpx; color: rgba(255, 255, 255, 0.7); margin-top: 14rpx; }
 
-.cards { display: flex; flex-direction: column; gap: 24rpx; }
-.phone-btn {
+.main-btn {
   width: 100%;
-  height: 96rpx;
-  line-height: 96rpx;
-  border-radius: 48rpx;
-  background: linear-gradient(135deg, #17c3b2, #0b7bd8);
-  color: #fff;
+  height: 100rpx;
+  line-height: 100rpx;
+  border-radius: 50rpx;
+  background: #fff;
+  color: #0b2b4a;
   font-size: 32rpx;
   font-weight: 700;
   border: none;
-  box-shadow: 0 14rpx 34rpx rgba(11, 123, 216, 0.35);
+  box-shadow: 0 16rpx 40rpx rgba(3, 22, 40, 0.28);
 }
-.phone-btn::after { border: none; }
-.or { text-align: center; color: rgba(255, 255, 255, 0.68); font-size: 22rpx; margin: 18rpx 0 34rpx; }
-.choose {
-  display: flex;
-  align-items: center;
-  gap: 22rpx;
-  background: #fff;
-  border-radius: 26rpx;
-  padding: 32rpx 28rpx;
-  box-shadow: 0 16rpx 40rpx rgba(3, 22, 40, 0.24);
+.main-btn::after { border: none; }
+.ghost-btn {
+  width: 100%;
+  height: 92rpx;
+  line-height: 92rpx;
+  border-radius: 46rpx;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 28rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.28);
+  margin-top: 34rpx;
 }
-.ico {
-  width: 88rpx; height: 88rpx; line-height: 88rpx;
-  text-align: center; font-size: 42rpx;
-  border-radius: 22rpx;
-  background: linear-gradient(135deg, #e8f4ff, #dffaf6);
-  flex: none;
+.ghost-btn::after { border: none; }
+.or {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 22rpx;
+  margin-top: 18rpx;
 }
-.t { font-size: 34rpx; font-weight: 700; color: #0b2b4a; }
-.d { font-size: 23rpx; color: #7b8a9a; margin-top: 8rpx; line-height: 1.5; }
-.arrow { font-size: 44rpx; color: #c3ccd6; }
-.tip { text-align: center; color: rgba(255, 255, 255, 0.6); font-size: 22rpx; margin-top: 46rpx; }
+.small-or { margin-top: 14rpx; }
+.tip {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 21rpx;
+  margin-top: 90rpx;
+  line-height: 1.7;
+}

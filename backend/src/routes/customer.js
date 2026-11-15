@@ -13,7 +13,7 @@ function customerAuth(req, res, next) {
   next();
 }
 
-/** POST /api/v1/customer/login  { code }  → { openid, mock } */
+/** POST /api/v1/customer/login  { code }  → { openid, mock }（code2session，免费接口） */
 router.post('/login', async (req, res, next) => {
   try {
     const r = await auth.wxLogin((req.body || {}).code);
@@ -22,28 +22,9 @@ router.post('/login', async (req, res, next) => {
 });
 
 /**
- * POST /api/v1/customer/phone-login
- * { code, openid, phone? }
- *   code   = getPhoneNumber 回调里的 code（正式环境）
- *   phone  = 调试用（未配置 AppID/Secret 时必填）
- * 返回 { role: 'staff'|'customer', token?, bound, member?, reason? }
+ * POST /api/v1/customer/bind  { plateNo, phone }
+ * phone 可以是登记手机号，也可以是后 4 位；不需要短信、不调用收费接口
  */
-router.post('/phone-login', async (req, res, next) => {
-  try {
-    const body = req.body || {};
-    const r = await auth.phoneLogin({ code: body.code, phone: body.phone, openid: body.openid || req.get('x-openid') });
-    const out = { ...r };
-    if (out.memberRow) {
-      out.member = members.toViewModel(out.memberRow);
-      delete out.memberRow;
-    }
-    if (out.phone) out.phoneMasked = String(out.phone).replace(/^(\d{3})\d{4}(\d{4})$/, '$1****$2');
-    delete out.phone;
-    res.json({ ok: true, ...out });
-  } catch (e) { next(e); }
-});
-
-/** POST /api/v1/customer/bind  { plateNo, phone }  → 兜底：车牌 + 手机号绑定 */
 router.post('/bind', customerAuth, async (req, res, next) => {
   try {
     const body = req.body || {};
@@ -76,6 +57,15 @@ router.get('/services', async (req, res, next) => {
     const [services, tags] = await Promise.all([catalog.list(), catalog.tags()]);
     res.json({ ok: true, services, tags, rechargePlans: cfg.rechargePlans });
   } catch (e) { next(e); }
+});
+
+/** POST /api/v1/customer/staff-login {password} 员工/老板登录（免费，纯口令） */
+router.post('/staff-login', (req, res) => {
+  const pwd = (req.body || {}).password;
+  if (!pwd || String(pwd) !== String(cfg.adminToken)) {
+    return res.status(401).json({ ok: false, msg: '口令不正确' });
+  }
+  res.json({ ok: true, role: 'staff', token: cfg.adminToken });
 });
 
 module.exports = router;

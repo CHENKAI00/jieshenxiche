@@ -257,25 +257,26 @@ function ok(name, cond, extra = '') {
   j = await r.json();
   ok('解绑后 bound=false', j.bound === false);
 
-  // 11.8 手机号一键登录 → 自动判身份
-  r = await fetch(`${base}/customer/phone-login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: 'ph1', phone: '18800000001', openid: 'mock_staff' }) });
-  j = await r.json();
-  ok('员工手机号 → 门店端并下发口令', r.status === 200 && j.role === 'staff' && j.token === TOKEN, j.phoneMasked);
+  // 11.8 车主绑定：手机号后 4 位也能绑（不调收费接口）+ 员工口令登录
+  r = await fetch(`${base}/customer/bind`, { method: 'POST', headers: { 'x-openid': 'mock_last4b', 'content-type': 'application/json' }, body: JSON.stringify({ plateNo: '粤B12345', phone: '9999' }) });
+  ok('后 4 位不匹配 403', r.status === 403);
 
-  r = await fetch(`${base}/customer/phone-login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: 'ph2', phone: '13800138000', openid: 'mock_phone_cust' }) });
+  r = await fetch(`${base}/customer/bind`, { method: 'POST', headers: { 'x-openid': 'mock_last4', 'content-type': 'application/json' }, body: JSON.stringify({ plateNo: '粤B12345', phone: '8000' }) });
   j = await r.json();
-  ok('车主手机号 → 车主端并自动绑卡', r.status === 200 && j.role === 'customer' && j.bound === true && !!j.member, j.member && j.member.platePretty);
+  ok('手机号后 4 位可绑定', r.status === 200 && j.member && j.member.platePretty === '粤B·12345', j.member && j.member.platePretty);
 
-  r = await fetch(`${base}/customer/me`, { headers: { 'x-openid': 'mock_phone_cust' } });
+  r = await fetch(`${base}/customer/me`, { headers: { 'x-openid': 'mock_last4' } });
   j = await r.json();
-  ok('自动绑定后 /me 能读到自己的卡', j.bound === true);
+  ok('后 4 位绑定后能读自己的卡', j.bound === true);
 
-  r = await fetch(`${base}/customer/phone-login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: 'ph3', phone: '13911112222', openid: 'mock_none' }) });
+  r = await fetch(`${base}/customer/staff-login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: 'wrong' }) });
+  ok('员工口令错误 401', r.status === 401);
+
+  r = await fetch(`${base}/customer/staff-login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: TOKEN }) });
   j = await r.json();
-  ok('陌生手机号 → 车主端但未绑卡', j.role === 'customer' && j.bound === false && !!j.reason);
+  ok('员工口令登录返回 token（免费，不依赖手机号）', r.status === 200 && j.token === TOKEN && j.role === 'staff');
 
-  r = await fetch(`${base}/customer/phone-login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: 'ph4' }) });
-  ok('调试模式缺 phone 参数 400', r.status === 400);
+  await fetch(`${base}/customer/unbind`, { method: 'POST', headers: { 'x-openid': 'mock_last4' } });
 
   // 12. 后台登录
   r = await fetch(`${base}/admin/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: 'wrong' }) });

@@ -20,7 +20,9 @@ Page({
     const plateNo = (this.data.plateNo || '').replace(/[·\s]/g, '').toUpperCase();
     const phone = this.data.phone || '';
     if (plateNo.length < 7) return wx.showToast({ title: '请填写完整车牌', icon: 'none' });
-    if (phone.length !== 11) return wx.showToast({ title: '请填写 11 位手机号', icon: 'none' });
+    if (phone.length !== 11 && phone.length !== 4) {
+      return wx.showToast({ title: '填完整手机号或后 4 位', icon: 'none' });
+    }
 
     try {
       const app = getApp();
