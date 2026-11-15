@@ -43,10 +43,10 @@ function exec(sql, params = []) {
     });
     return [{ affectedRows: 1 }];
   }
-  if (/^UPDATE `js_member` SET balance=\?, remain_count=\?, expire_at=\?, last_item=\?, last_amount=\?/i.test(s)) {
-    const [balance, remain_count, expire_at, last_item, last_amount, remark, id] = params;
+  if (/^UPDATE `js_member` SET balance=\?, remain_count=\?, expire_at=\?, remark=COALESCE/i.test(s)) {
+    const [balance, remain_count, expire_at, remark, id] = params;
     const r = store.find((x) => x.id === id);
-    Object.assign(r, { balance, remain_count, expire_at, last_item, last_amount, remark: remark || r.remark });
+    Object.assign(r, { balance, remain_count, expire_at, remark: remark || r.remark });
     return [{ affectedRows: 1 }];
   }
   if (/^SELECT \* FROM `js_member` WHERE \(\?='' OR plate_no LIKE \?/i.test(s)) {
@@ -149,6 +149,8 @@ function ok(name, cond, extra = '') {
   r = await fetch(`${base}/wash/recharge`, { method: 'POST', headers: H, body: JSON.stringify({ plateNo: '粤B12345', amount: 200, giftAmount: 30, times: 10, months: 12 }) });
   j = await r.json();
   ok('充值到账 230 元 + 10 次 + 有效期', r.status === 200 && j.balance === 230 && j.remainCount === 10 && !!j.expireAt, `余额=${j.balance} 次数=${j.remainCount} 到期=${j.expireAt}`);
+
+  ok('充值不写 last_*（最近服务仍是空的）', j.member.lastItem === '' && j.member.lastAmount === 0);
 
   // 7. 洗车核销（扣次数）
   r = await fetch(`${base}/wash/consume`, { method: 'POST', headers: H, body: JSON.stringify({ plateNo: '粤B12345', serviceId: 'wash_suv' }) });

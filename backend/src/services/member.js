@@ -170,10 +170,12 @@ async function recharge({ plateNo, amount, giftAmount = 0, times = 0, months = 0
       base.setMonth(base.getMonth() + Number(months));
       expireAt = base.toISOString().slice(0, 10);
     }
-    const label = `充值¥${amt}${giftAmount ? ` 送¥${giftAmount}` : ''}${times ? ` +${times}次` : ''}`;
+    // 注意：充值只动 余额/次数/有效期。
+    // last_service_at / last_item / last_amount 是「服务维度」，只由核销写入，
+    // 否则「最近一次服务」会被充值覆盖，看板的今日实收也会算错。
     await conn.query(
-      `UPDATE ${TABLE} SET balance=?, remain_count=?, expire_at=?, last_item=?, last_amount=?, remark=COALESCE(NULLIF(?,''), remark) WHERE id=?`,
-      [balance, remain, expireAt, label, amt, note, row.id]
+      `UPDATE ${TABLE} SET balance=?, remain_count=?, expire_at=?, remark=COALESCE(NULLIF(?,''), remark) WHERE id=?`,
+      [balance, remain, expireAt, note, row.id]
     );
     await conn.commit();
     return { ok: true, balance, remainCount: remain, expireAt, member: await getMemberView(row.plate_no) };
