@@ -185,6 +185,75 @@ npm test             # 30 条断言，不需要数据库
 
 ---
 
+## 九、部署到服务器（nohup 常驻）
+
+服务器上跑的是 `backend/`，`deploy/` 里是配套脚本（Node ≥ 18）。
+
+### 1. 打包上传（本机执行）
+
+```bash
+cd /Users/chenkai/Documents/jieshenxiche
+tar czf /tmp/backend.tgz --exclude=node_modules --exclude=.env --exclude=logs --exclude=run backend
+scp /tmp/backend.tgz root@<服务器IP>:/tmp/
+```
+
+> `.env` 不打进包里：口令现场输入，不留在传输文件里。
+
+### 2. 服务器上安装并启动
+
+```bash
+ssh root@<服务器IP>
+mkdir -p /opt/jieshenxiche && tar xzf /tmp/backend.tgz --strip-components=1 -C /opt/jieshenxiche
+cd /opt/jieshenxiche
+bash deploy/install.sh
+```
+
+`install.sh` 会依次做：
+
+1. 检查 Node 版本（< 18 直接给出安装命令并退出）
+2. 交互生成 `.env`（数据库地址/口令、自动生成 `ADMIN_TOKEN`，权限 600）
+3. `npm ci --omit=dev` 安装生产依赖
+4. `npm run db:init` 建库建表（幂等）
+5. `nohup node src/app.js >> logs/app.log 2>&1 &` 启动，PID 写入 `run/app.pid`
+6. 自动跑一次 `/health` 打印结果 + 后台地址 + 登录口令
+
+若后端和 MySQL 在同一台机器，`.env` 里 `DB_HOST` 填 `127.0.0.1`。
+
+### 3. 日常管理
+
+```bash
+cd /opt/jieshenxiche
+bash deploy/manage.sh status     # 进程 + /health
+bash deploy/manage.sh restart    # 改完 .env 或代码后重启
+bash deploy/manage.sh logs       # tail -f logs/app.log
+bash deploy/manage.sh stop|start
+```
+
+### 4. 开放端口 / 重启后自启
+
+```bash
+# 云厂商安全组放行 8099；系统防火墙
+ufw allow 8099/tcp                      # Debian/Ubuntu
+firewall-cmd --add-port=8099/tcp --permanent && firewall-cmd --reload   # CentOS/Rocky
+
+# nohup 不随重启恢复，二选一：
+crontab -e   # 加一行：@reboot cd /opt/jieshenxiche && bash deploy/manage.sh start
+# 或者用 systemd（更稳）
+cp deploy/jieshenxiche.service /etc/systemd/system/ && systemctl daemon-reload && systemctl enable --now jieshenxiche
+```
+
+### 5. 接域名 / HTTPS（小程序正式上线必须）
+
+```bash
+cp deploy/nginx-jieshenxiche.conf /etc/nginx/conf.d/
+# 改 server_name 与证书路径 → nginx -t && nginx -s reload
+```
+
+微信公众平台 → 开发设置 → **request / uploadFile 合法域名** 填 `https://你的域名`；
+小程序「我的」页把服务地址换成该域名，员工口令填服务器 `.env` 里的 `ADMIN_TOKEN`。
+
+> 自测阶段可以先不配域名：小程序填 `http://<服务器IP>:8099`，开发者工具勾「不校验合法域名」即可。
+
 ## 九、还能接着做
 
 - **微信支付**：充值页「确认收款」换 `wx.requestPayment`（后端统一下单 + 回调）。

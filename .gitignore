@@ -16,6 +16,10 @@ miniprogram/project.private.config.json
 backend/uploads/*
 !backend/uploads/.gitkeep
 
+# 运行时产物
+backend/logs/
+backend/run/
+
 # 系统/编辑器
 .DS_Store
 Thumbs.db

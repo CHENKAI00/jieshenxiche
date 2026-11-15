@@ -1,0 +1,23 @@
+[Unit]
+# 可选方案：用 systemd 代替 nohup（重启服务器后自动拉起）
+# 安装：
+#   cp deploy/jieshenxiche.service /etc/systemd/system/
+#   systemctl daemon-reload && systemctl enable --now jieshenxiche
+#   systemctl status jieshenxiche
+# 已用 nohup 启动的话先 bash deploy/manage.sh stop，避免端口冲突
+Description=Jieshen Car Wash API (jieshenxiche)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/jieshenxiche
+EnvironmentFile=/opt/jieshenxiche/.env
+ExecStart=/usr/bin/node src/app.js
+Restart=always
+RestartSec=3
+LimitNOFILE=65535
+StandardOutput=append:/opt/jieshenxiche/logs/app.log
+StandardError=append:/opt/jieshenxiche/logs/app.log
+
+[Install]
+WantedBy=multi-user.target
