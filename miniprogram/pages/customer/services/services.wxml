@@ -1,0 +1,35 @@
+<view class="page cpage">
+  <view class="banner">
+    <view class="banner-t">店内项目</view>
+    <view class="banner-s">洗车 · 打蜡 · 抛光 · 内饰 · 镀膜</view>
+  </view>
+
+  <scroll-view class="tabs" scroll-x>
+    <view class="tab {{activeTag === '' ? 'on' : ''}}" data-tag="" bindtap="pickTag">全部</view>
+    <view wx:for="{{tags}}" wx:key="*this" class="tab {{activeTag === item ? 'on' : ''}}"
+          data-tag="{{item}}" bindtap="pickTag">{{item}}</view>
+  </scroll-view>
+
+  <view wx:for="{{list}}" wx:key="id" class="svc-card" data-id="{{item.id}}" bindtap="detail">
+    <image wx:if="{{item.imageUrl}}" class="svc-img" src="{{item.imageUrl}}" mode="aspectFill" />
+    <view wx:else class="svc-img ph ph-{{item.phClass}}">{{item.emoji}}</view>
+    <view class="svc-body">
+      <view class="between">
+        <view class="row" style="gap:10rpx">
+          <text class="svc-name">{{item.name}}</text>
+          <text class="tag {{item.tag === '洗车' ? '' : 'gold'}}">{{item.tag}}</text>
+        </view>
+        <text class="svc-price">¥{{item.price}}</text>
+      </view>
+      <view class="svc-desc">{{item.desc}}</view>
+      <view class="between" style="margin-top:12rpx">
+        <text class="small">约 {{item.mins}} 分钟</text>
+        <text class="svc-go">到店消费 ›</text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{list.length === 0}}" class="empty">暂无项目</view>
+  <view class="tabbar-gap"></view>
+  <customer-tabbar active="services" />
+</view>

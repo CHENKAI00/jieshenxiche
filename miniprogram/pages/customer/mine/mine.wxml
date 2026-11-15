@@ -1,0 +1,38 @@
+<view class="page cpage">
+  <view class="profile">
+    <view class="avatar">{{initial}}</view>
+    <view class="col grow" style="margin-left:22rpx">
+      <view class="h2">{{bound ? member.nickname : '车主'}}</view>
+      <view class="small" style="margin-top:6rpx">{{bound ? member.platePretty + ' · ' + member.memberNo : '还没有绑定爱车'}}</view>
+    </view>
+    <view class="tag {{bound ? 'mint' : 'grey'}}">{{bound ? '已绑定' : '未绑定'}}</view>
+  </view>
+
+  <view class="card">
+    <view class="rowline" bindtap="goBind" wx:if="{{!bound}}">
+      <text>绑定爱车</text><text class="arrow">›</text>
+    </view>
+    <view class="rowline" bindtap="goHome" wx:if="{{bound}}">
+      <text>我的会员卡</text><text class="arrow">›</text>
+    </view>
+    <view class="rowline" bindtap="unbind" wx:if="{{bound}}">
+      <text style="color:#d9463a">解绑这辆车</text><text class="arrow">›</text>
+    </view>
+    <view class="rowline" bindtap="callStore">
+      <text>联系门店</text><text class="arrow">›</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="rowline" bindtap="switchRole">
+      <text>切换到门店员工端</text><text class="arrow">›</text>
+    </view>
+    <view class="rowline" bindtap="about">
+      <text>关于洁神洗车</text><text class="arrow">›</text>
+    </view>
+  </view>
+
+  <view class="foot">车主端 v1.0 · 数据以门店系统为准</view>
+  <view class="tabbar-gap"></view>
+  <customer-tabbar active="mine" />
+</view>

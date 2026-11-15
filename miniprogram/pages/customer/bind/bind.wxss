@@ -1,0 +1,2 @@
+.field { display: flex; align-items: center; gap: 20rpx; margin-bottom: 22rpx; }
+.field-k { width: 120rpx; color: #7b8a9a; font-size: 26rpx; }

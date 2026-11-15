@@ -1,3 +1,4 @@
+const { guardStaff } = require('../../utils/role');
 const api = require('../../utils/api');
 const fmt = require('../../utils/fmt');
 
@@ -14,6 +15,7 @@ Page({
   },
 
   onLoad(options) {
+    if (!guardStaff()) return;
     const plate = decodeURIComponent(options.plate || '');
     this.setData({ plate, platePretty: fmt.prettyPlate(plate), 'form.plateNo': plate });
     this.load(plate);

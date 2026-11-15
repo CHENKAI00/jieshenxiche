@@ -1,6 +1,7 @@
 const { pool } = require('../db');
 const cfg = require('../config');
 const catalog = require('./catalog');
+const auth = require('./auth');
 const { validatePlate, normalizePlate, prettyPlate, genMemberNo } = require('../utils/plate');
 
 const TABLE = '`js_member`';
@@ -241,6 +242,13 @@ async function recentVisits(limit = 10) {
   return rows.map(toViewModel);
 }
 
+/** 车主端：按 openid 取自己的卡（未绑定返回 null） */
+async function getCustomerView(openid) {
+  const row = await auth.findByOpenid(openid);
+  return row ? toViewModel(row) : null;
+}
+
 module.exports = {
   getMemberView, createMember, consume, recharge, listMembers, overview, recentVisits,
+  getCustomerView, toViewModel,
 };

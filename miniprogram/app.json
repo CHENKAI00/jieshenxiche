@@ -1,5 +1,6 @@
 {
   "pages": [
+    "pages/role/role",
     "pages/index/index",
     "pages/scan/scan",
     "pages/catalog/catalog",
@@ -7,7 +8,11 @@
     "pages/recharge/recharge",
     "pages/records/records",
     "pages/admin/admin",
-    "pages/mine/mine"
+    "pages/mine/mine",
+    "pages/customer/home/home",
+    "pages/customer/bind/bind",
+    "pages/customer/services/services",
+    "pages/customer/mine/mine"
   ],
   "window": {
     "backgroundTextStyle": "light",
@@ -22,26 +27,11 @@
     "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [
-      {
-        "pagePath": "pages/index/index",
-        "text": "首页"
-      },
-      {
-        "pagePath": "pages/scan/scan",
-        "text": "拍车牌"
-      },
-      {
-        "pagePath": "pages/catalog/catalog",
-        "text": "项目"
-      },
-      {
-        "pagePath": "pages/admin/admin",
-        "text": "门店"
-      },
-      {
-        "pagePath": "pages/mine/mine",
-        "text": "我的"
-      }
+      { "pagePath": "pages/index/index", "text": "首页" },
+      { "pagePath": "pages/scan/scan", "text": "拍车牌" },
+      { "pagePath": "pages/catalog/catalog", "text": "项目" },
+      { "pagePath": "pages/admin/admin", "text": "门店" },
+      { "pagePath": "pages/mine/mine", "text": "我的" }
     ]
   },
   "style": "v2",

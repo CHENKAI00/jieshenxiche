@@ -1,6 +1,10 @@
-# 洁神洗车 · 微信小程序 + Web 后台管理
+# 洁神洗车 · 微信小程序（门店端 + 车主端）+ Web 后台管理
 
-门店员工端：**拍一下车牌，立刻调出这辆车的会员档案（余额、剩余次数、洗车/打蜡次数、最近到店）**，当场核销 / 充值 / 建档。
+同一套小程序，两种身份：
+
+- **门店员工**：拍一下车牌就调出会员档案（余额、剩余次数、洗车/打蜡次数、最近到店），当场核销 / 充值 / 建档
+- **车主**：微信登录 + 车牌手机号绑定，看自己的余额、剩余次数、洗车打蜡记录、店内项目
+
 另配一套 **Web 后台管理系统**：维护店内项目（图片 / 价格 / 时长 / 上下架 / 排序）、查会员、看门店数据。
 
 ```
@@ -28,14 +32,39 @@ jieshenxiche/
 │   └── test/api.smoke.js        30 条端到端断言（不需要数据库）
 └── miniprogram/                 微信开发者工具直接导入
     ├── app.js / app.json / app.wxss
-    ├── utils/api.js             请求封装（x-token、图片绝对地址）
-    └── pages/  index 首页 · scan 拍车牌 · catalog 店内项目 · member 会员卡
-                recharge 充值 · records 会员名录 · admin 门店工作台 · mine 我的
+    ├── utils/api.js             请求封装（x-token / x-openid、图片绝对地址）
+    ├── utils/role.js            角色守卫（门店端 / 车主端互不串门）
+    ├── components/customer-tabbar/  车主端底部导航（我的卡 / 项目 / 我的）
+    ├── pages/role               启动页：选身份（车主 / 门店员工）
+    ├── pages/  index 首页 · scan 拍车牌 · catalog 店内项目 · member 会员卡
+    │           recharge 充值 · records 会员名录 · admin 门店工作台 · mine 我的
+    └── pages/customer/  home 我的卡 · bind 绑车 · services 项目 · mine 我的
 ```
 
 ---
 
-## 一、两个入口
+## 一、两种身份（同一个小程序）
+
+首次打开是身份选择页（`pages/role`），选完记住，之后可在「我的」里随时切换：
+
+| 身份 | 底部导航 | 能做什么 |
+| --- | --- | --- |
+| 门店员工 | 首页 / 拍车牌 / 项目 / 门店 / 我的 | 拍车牌查会员、核销（扣次数或余额）、充值开卡、建档、看门店数据 |
+| 车主 | 我的卡 / 店内项目 / 我的 | 看余额、剩余次数、洗车/打蜡次数、最近到店；逛项目；绑定/解绑 |
+
+车主端登录与绑定：
+
+```
+wx.login → POST /api/v1/customer/login {code}  → openid（未配置 WX_APPID/SECRET 时自动 mock）
+        → POST /api/v1/customer/bind {plateNo, phone}
+           校验规则：车牌存在 + 档案里的手机号与之完全一致 → 写入 js_member.openid
+           （一个微信只能绑一辆车，重复绑别的车返回 409）
+        → GET  /api/v1/customer/me  → 自己的卡 + 店内项目
+```
+
+车主接口用 `x-openid` 鉴权，和员工口令 `x-token` 完全隔离：车主拿不到会员列表、核销、充值等员工接口。
+
+## 二、两个入口
 
 | 入口 | 地址 | 给谁用 |
 | --- | --- | --- |
@@ -46,7 +75,7 @@ jieshenxiche/
 
 ---
 
-## 二、特色功能：拍照识车牌查会员
+## 三、特色功能：拍照识车牌查会员
 
 ```
 wx.chooseMedia 拍照 → wx.uploadFile → POST /api/v1/ocr/plate
@@ -58,14 +87,14 @@ wx.chooseMedia 拍照 → wx.uploadFile → POST /api/v1/ocr/plate
 → 结果卡片；未建档一键建档；识别失败弹手输，不挡业务
 ```
 
-## 三、店内项目陈列（小程序「项目」页）
+## 四、店内项目陈列（小程序「项目」页）
 
 - 项目来自 `backend/data/services.json`，**后台增删改后小程序刷新即生效**。
 - 卡片展示：封面图（无图用 emoji 渐变占位）、名称、分类（洗车/美容）、价格、时长、说明、计次规则。
 - 点卡片 → 输车牌 → 选「扣次数 / 余额支付」→ 当场核销，核销后回显余额与洗车/打蜡次数。
 - 分类页签由项目数据自动聚合（洗车 / 美容 / 其他）。
 
-## 四、Web 后台管理系统（`/admin/`）
+## 五、Web 后台管理系统（`/admin/`）
 
 | 模块 | 能力 |
 | --- | --- |
@@ -81,7 +110,7 @@ wx.chooseMedia 拍照 → wx.uploadFile → POST /api/v1/ocr/plate
 
 ---
 
-## 五、数据库：`jieshenxiche` 库 + `js_member` 一张表（17 字段）
+## 六、数据库：`jieshenxiche` 库 + `js_member` 一张表（18 字段）
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
@@ -90,6 +119,7 @@ wx.chooseMedia 拍照 → wx.uploadFile → POST /api/v1/ocr/plate
 | plate_color | VARCHAR(8) | 蓝 / 绿 / 黄 |
 | member_no | VARCHAR(24) | 卡号 JS+yyMMdd+4位 |
 | nickname / phone | VARCHAR | 称呼、手机（返回脱敏） |
+| **openid** | VARCHAR(64) UNIQUE | 车主端绑定的微信 openid（NULL=未绑定） |
 | balance | DECIMAL(10,2) | 储值余额（唯一的钱） |
 | remain_count | INT | 次卡剩余次数（通用） |
 | **wash_count** | INT | **洗车次数** |
@@ -118,7 +148,7 @@ v3 迁移时旧的 `total_count` 会一次性折算进 `wash_count`（打蜡从 
 
 ---
 
-## 六、接口一览（前缀 `/api/v1`，请求头 `x-token`）
+## 七、接口一览（前缀 `/api/v1`，请求头 `x-token`）
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
@@ -133,6 +163,9 @@ v3 迁移时旧的 `total_count` 会一次性折算进 `wash_count`（打蜡从 
 | POST | `/wash/consume` | 核销 `{plateNo,serviceId,useCount,operator}` |
 | POST | `/wash/recharge` | 充值 `{plateNo,amount,giftAmount,times,months}` |
 | GET | `/stats/overview` · `/stats/recent` | 小程序看板 / 最近到店 |
+| POST | `/customer/login` | 车主 wx.login 换 openid `{code}` |
+| POST | `/customer/bind` · `/customer/unbind` | 绑定 / 解绑爱车（车牌 + 手机号校验） |
+| GET | `/customer/me` · `/customer/services` | 车主首页数据 / 店内项目 |
 | POST | `/admin/login` | 后台登录 `{password}` → token |
 | GET | `/admin/overview` | 后台看板 |
 | GET/POST | `/admin/services` | 项目列表 / 新增 |
@@ -152,7 +185,7 @@ v3 迁移时旧的 `total_count` 会一次性折算进 `wash_count`（打蜡从 
 
 ---
 
-## 七、跑起来
+## 八、跑起来
 
 ```bash
 cd backend
@@ -167,9 +200,9 @@ npm test             # 30 条断言，不需要数据库
 
 ---
 
-## 八、已验证
+## 九、已验证
 
-`npm test` → **30/30 通过**（内存假库 + 临时项目文件，跑真实路由与业务代码）：
+`npm test` → **39/39 通过**（内存假库 + 临时项目文件，跑真实路由与业务代码）：
 
 ```
 车牌归一化 / 新能源绿牌 / OCR 纠偏 / 无口令 401
@@ -178,6 +211,7 @@ npm test             # 30 条断言，不需要数据库
 详情洗车/打蜡分开计数、不再返回 totalCount/lastAmount
 看板 washSum/waxSum、不再有今日实收
 后台：错误口令 401 / 登录 / 看板 / 新增 / 改价+下架 / 下架不进小程序 / 排序 / 删除 / 会员检索 / 后台核销
+车主端：mock 登录换 openid / 未绑定 bound=false / 无 openid 401 / 手机号不匹配 403 / 绑定成功 / 重复绑定幂等 / 解绑
 ```
 
 **真实环境联调（MySQL 8.0.43）**：登录返回 token、上传 PNG 后 `/uploads/xxx.png` 200、新增项目、核销后
@@ -185,7 +219,7 @@ npm test             # 30 条断言，不需要数据库
 
 ---
 
-## 九、部署到服务器（nohup 常驻）
+## 十、部署到服务器（nohup 常驻）
 
 服务器上跑的是 `backend/`，`deploy/` 里是配套脚本（Node ≥ 18）。
 
@@ -254,7 +288,7 @@ cp deploy/nginx-jieshenxiche.conf /etc/nginx/conf.d/
 
 > 自测阶段可以先不配域名：小程序填 `http://<服务器IP>:8099`，开发者工具勾「不校验合法域名」即可。
 
-## 九、还能接着做
+## 十一、还能接着做
 
 - **微信支付**：充值页「确认收款」换 `wx.requestPayment`（后端统一下单 + 回调）。
 - **项目进库**：要按项目做报表时，把 `data/services.json` 换成 `js_service` 表，接口不变。

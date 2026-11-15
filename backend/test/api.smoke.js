@@ -25,6 +25,23 @@ function exec(sql, params = []) {
   if (/^SELECT \* FROM `js_member` WHERE plate_no = \? (LIMIT 1|FOR UPDATE)/i.test(s)) {
     return [[store.find((r) => r.plate_no === params[0])].filter(Boolean).map(clone)];
   }
+  if (/^SELECT \* FROM `js_member` WHERE openid = \? LIMIT 1/i.test(s)) {
+    return [[store.find((r) => r.openid && r.openid === params[0])].filter(Boolean).map(clone)];
+  }
+  if (/^UPDATE `js_member` SET openid = \? WHERE id = \?/i.test(s)) {
+    const [openid, id] = params;
+    if (store.some((r) => r.openid === openid && r.id !== id)) {
+      const e = new Error('Duplicate entry'); e.code = 'ER_DUP_ENTRY'; throw e;
+    }
+    const r = store.find((x) => x.id === id);
+    if (r) r.openid = openid;
+    return [{ affectedRows: r ? 1 : 0 }];
+  }
+  if (/^UPDATE `js_member` SET openid = NULL WHERE openid = \?/i.test(s)) {
+    let n = 0;
+    store.forEach((r) => { if (r.openid === params[0]) { r.openid = null; n += 1; } });
+    return [{ affectedRows: n }];
+  }
   if (/^SELECT \* FROM `js_member` WHERE id = \?/i.test(s)) {
     return [[store.find((r) => r.id === params[0])].filter(Boolean).map(clone)];
   }
@@ -32,6 +49,7 @@ function exec(sql, params = []) {
     const [plate_no, plate_color, member_no, nickname, phone, remark] = params;
     const row = {
       id: ++seq, plate_no, plate_color, member_no, nickname, phone,
+      openid: null,
       balance: 0, remain_count: 0, wash_count: 0, wax_count: 0, expire_at: null,
       last_service_at: null, last_item: null, remark: remark || null,
       status: 1, created_at: `${today()} 10:00:00`, updated_at: `${today()} 10:00:00`,
@@ -188,6 +206,40 @@ function ok(name, cond, extra = '') {
   j = await r.json();
   ok('看板有洗车/打蜡累计', j.washSum === 1 && j.waxSum === 1 && j.todayVisits === 1);
   ok('看板不再有今日实收', j.todayIncome === undefined);
+
+  // 11.5 车主端：登录 → 未绑定 → 错手机号 → 绑定 → 已绑定 → 解绑
+  r = await fetch(`${base}/customer/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: 'devcode' }) });
+  j = await r.json();
+  const OID = j.openid;
+  ok('车主 wx.login 换 openid（mock）', r.status === 200 && !!OID && j.mock === true, OID);
+
+  r = await fetch(`${base}/customer/me`, { headers: { 'x-openid': OID } });
+  j = await r.json();
+  ok('未绑定时 bound=false 且能看项目', j.bound === false && j.services.length > 0);
+
+  r = await fetch(`${base}/customer/me`);
+  ok('没带 openid 的车主接口 401', r.status === 401);
+
+  r = await fetch(`${base}/customer/bind`, { method: 'POST', headers: { 'x-openid': OID, 'content-type': 'application/json' }, body: JSON.stringify({ plateNo: '粤B12345', phone: '13900000000' }) });
+  ok('手机号不匹配 403', r.status === 403);
+
+  r = await fetch(`${base}/customer/bind`, { method: 'POST', headers: { 'x-openid': OID, 'content-type': 'application/json' }, body: JSON.stringify({ plateNo: '粤B12345', phone: '13800138000' }) });
+  j = await r.json();
+  ok('车牌+手机号匹配后绑定成功', r.status === 200 && j.member.platePretty === '粤B·12345', j.member && j.member.platePretty);
+
+  r = await fetch(`${base}/customer/me`, { headers: { 'x-openid': OID } });
+  j = await r.json();
+  ok('绑定后 /me 返回自己的卡', j.bound === true && j.member.balance === j.member.balance && j.member.washCount >= 1);
+
+  r = await fetch(`${base}/customer/bind`, { method: 'POST', headers: { 'x-openid': OID, 'content-type': 'application/json' }, body: JSON.stringify({ plateNo: '粤B12345', phone: '13800138000' }) });
+  ok('重复绑定同一辆车幂等', r.status === 200);
+
+  r = await fetch(`${base}/customer/unbind`, { method: 'POST', headers: { 'x-openid': OID } });
+  ok('解绑成功', r.status === 200 && j.ok !== false);
+
+  r = await fetch(`${base}/customer/me`, { headers: { 'x-openid': OID } });
+  j = await r.json();
+  ok('解绑后 bound=false', j.bound === false);
 
   // 12. 后台登录
   r = await fetch(`${base}/admin/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: 'wrong' }) });

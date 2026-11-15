@@ -1,4 +1,5 @@
 const api = require('../../utils/api');
+const { guardStaff } = require('../../utils/role');
 const fmt = require('../../utils/fmt');
 
 Page({
@@ -15,6 +16,7 @@ Page({
   },
 
   onShow() {
+    if (!guardStaff()) return;
     if (this.data.result && this.data.result.plateNo && this.data.result.exists) {
       this.lookupByPlate(this.data.result.plateNo);
     }

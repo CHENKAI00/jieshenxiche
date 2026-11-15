@@ -1,0 +1,31 @@
+<view class="page">
+  <view class="card">
+    <view class="h2">绑定我的爱车</view>
+    <view class="small" style="margin:12rpx 0 30rpx;line-height:1.7">
+      车牌和手机号要跟门店登记的完全一致，绑定后就能看到这张卡的余额与次数。
+    </view>
+
+    <view class="field">
+      <text class="field-k">车牌号</text>
+      <input class="input grow" value="{{plateNo}}" maxlength="8" placeholder="如 粤B12345"
+             bindinput="onPlate" />
+    </view>
+    <view class="field">
+      <text class="field-k">手机号</text>
+      <input class="input grow" type="number" maxlength="11" value="{{phone}}"
+             placeholder="门店登记的那个手机号" bindinput="onPhone" />
+    </view>
+
+    <button class="btn" style="margin-top:20rpx" bindtap="submit">确认绑定</button>
+    <view class="small" style="margin-top:20rpx;line-height:1.7">
+      提示：一个微信只能绑定一辆车；绑错了可以在「我的」里解绑。
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="h2" style="font-size:30rpx">还没办卡？</view>
+    <view class="small" style="margin-top:12rpx;line-height:1.7">
+      到店把车牌告诉前台，建档后就能绑定；洗车、打蜡都能计次或扣余额。
+    </view>
+  </view>
+</view>

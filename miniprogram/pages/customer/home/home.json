@@ -1,0 +1,8 @@
+{
+  "usingComponents": {
+    "customer-tabbar": "/components/customer-tabbar/index"
+  },
+  "navigationBarTitleText": "我的会员卡",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark"
+}

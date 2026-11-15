@@ -1,0 +1,8 @@
+<view class="bar">
+  <view wx:for="{{items}}" wx:key="key"
+        class="item {{active === item.key ? 'on' : ''}}"
+        data-key="{{item.key}}" bindtap="go">
+    <view class="ico">{{item.ico}}</view>
+    <view class="txt">{{item.text}}</view>
+  </view>
+</view>

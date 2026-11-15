@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "customer-tabbar": "/components/customer-tabbar/index"
+  },
+  "navigationBarTitleText": "店内项目"
+}

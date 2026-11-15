@@ -1,0 +1,29 @@
+<view class="wrap">
+  <view class="brand">
+    <view class="logo">🧽</view>
+    <view class="name">洁神洗车</view>
+    <view class="slogan">拍照识车牌 · 洗车打蜡一站搞定</view>
+  </view>
+
+  <view class="cards">
+    <view class="choose" bindtap="asCustomer">
+      <view class="ico">🚗</view>
+      <view class="col grow">
+        <view class="t">我是车主</view>
+        <view class="d">看余额、剩余次数、洗车/打蜡记录，逛店内项目</view>
+      </view>
+      <view class="arrow">›</view>
+    </view>
+
+    <view class="choose" bindtap="asStaff">
+      <view class="ico">🧑‍🔧</view>
+      <view class="col grow">
+        <view class="t">我是门店员工</view>
+        <view class="d">拍车牌查会员、核销项目、充值开卡、管理门店</view>
+      </view>
+      <view class="arrow">›</view>
+    </view>
+  </view>
+
+  <view class="tip">首次使用选一次身份即可，之后可在「我的」里切换</view>
+</view>

@@ -9,6 +9,11 @@ function token() {
   return (app && app.globalData.token) || '';
 }
 
+function openid() {
+  const app = getApp();
+  return (app && app.globalData.openid) || '';
+}
+
 function handle(status, data) {
   if (status === 401) {
     wx.showModal({
@@ -34,7 +39,7 @@ function request(path, { method = 'GET', data = {}, loading = false, tip = '处�
       method,
       data,
       timeout: 20000,
-      header: { 'content-type': 'application/json', 'x-token': token() },
+      header: { 'content-type': 'application/json', 'x-token': token(), 'x-openid': openid() },
       success: (res) => {
         if (loading) wx.hideLoading();
         handle(res.statusCode, res.data).then(resolve).catch(reject);
@@ -61,7 +66,7 @@ function uploadPlate(filePath) {
       filePath,
       name: 'file',
       timeout: 30000,
-      header: { 'x-token': token() },
+      header: { 'x-token': token(), 'x-openid': openid() },
       success: (res) => {
         wx.hideLoading();
         let data = {};
@@ -90,6 +95,12 @@ module.exports = {
   request,
   absUrl,
   catalog: () => request('/api/v1/catalog'),
+  // ===== 车主端 =====
+  customerLogin: (code) => request('/api/v1/customer/login', { method: 'POST', data: { code } }),
+  customerMe: () => request('/api/v1/customer/me'),
+  customerBind: (payload) => request('/api/v1/customer/bind', { method: 'POST', data: payload, loading: true, tip: '绑定中' }),
+  customerUnbind: () => request('/api/v1/customer/unbind', { method: 'POST', loading: true, tip: '解绑中' }),
+  customerServices: () => request('/api/v1/customer/services'),
   uploadPlate,
   // ===== 业务接口 =====
   meta: () => request('/api/v1/ocr/meta'),

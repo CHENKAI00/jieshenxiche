@@ -1,4 +1,5 @@
 const api = require('../../utils/api');
+const { guardStaff } = require('../../utils/role');
 const fmt = require('../../utils/fmt');
 
 Page({
@@ -10,6 +11,7 @@ Page({
   },
 
   onShow() {
+    if (!guardStaff()) return;
     const app = getApp();
     this.setData({ staffName: app.globalData.staffName || '前台' });
     this.refresh();

@@ -1,4 +1,5 @@
 const api = require('../../utils/api');
+const { guardStaff } = require('../../utils/role');
 const fmt = require('../../utils/fmt');
 
 Page({
@@ -13,6 +14,7 @@ Page({
   },
 
   onShow() {
+    if (!guardStaff()) return;
     this.refresh();
     this.checkHealth();
     this.loadMeta();

@@ -10,6 +10,7 @@ const washRouter = require('./routes/wash');
 const statsRouter = require('./routes/stats');
 const catalogRouter = require('./routes/catalog');
 const adminRouter = require('./routes/admin');
+const customerRouter = require('./routes/customer');
 
 const app = express();
 app.use(cors());
@@ -35,7 +36,10 @@ app.get('/health', async (req, res) => {
 
 // 小程序接口（员工口令）
 app.use('/api/v1/ocr', staffAuth, ocrRouter);
-app.use('/api/v1/catalog', staffAuth, catalogRouter);
+// 店内项目菜单：员工端与车主端都要看，不需要口令
+app.use('/api/v1/catalog', catalogRouter);
+// 车主端：用 x-openid 鉴权（wx.login 拿到的 openid），与员工口令完全隔离
+app.use('/api/v1/customer', customerRouter);
 app.use('/api/v1/member', staffAuth, memberRouter);
 app.use('/api/v1/wash', staffAuth, washRouter);
 app.use('/api/v1/stats', staffAuth, statsRouter);

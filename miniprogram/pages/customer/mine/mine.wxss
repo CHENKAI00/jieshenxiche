@@ -1,0 +1,29 @@
+.cpage { padding-bottom: 20rpx; }
+.tabbar-gap { height: 130rpx; }
+
+.profile {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 28rpx;
+  box-shadow: 0 8rpx 30rpx rgba(11, 43, 74, 0.06);
+  margin-bottom: 24rpx;
+}
+.avatar {
+  width: 96rpx; height: 96rpx; border-radius: 48rpx;
+  background: linear-gradient(135deg, #0b7bd8, #17c3b2);
+  color: #fff; font-size: 40rpx; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.rowline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #f2f5f8;
+  font-size: 28rpx;
+}
+.rowline:last-child { border-bottom: none; }
+.arrow { color: #c3ccd6; font-size: 34rpx; }
+.foot { text-align: center; color: #b3bfcc; font-size: 20rpx; padding-top: 12rpx; }

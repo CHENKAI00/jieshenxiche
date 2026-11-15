@@ -1,0 +1,84 @@
+<view class="page cpage">
+  <view wx:if="{{loading}}" class="loading">正在读取我的会员卡…</view>
+
+  <block wx:if="{{!loading}}">
+    <!-- 已绑定 -->
+    <block wx:if="{{bound}}">
+      <view class="card-hero">
+        <view class="between">
+          <view class="col">
+            <text class="hero-plate">{{member.platePretty}}</text>
+            <text class="hero-nick">{{member.nickname}} · 会员卡 {{member.memberNo}}</text>
+          </view>
+          <text class="hero-tag">{{member.expireAt ? member.expireAt + ' 到期' : '长期有效'}}</text>
+        </view>
+
+        <view class="hero-nums">
+          <view class="hn">
+            <text class="hn-v">¥{{balanceText}}</text>
+            <text class="hn-l">卡内余额</text>
+          </view>
+          <view class="hn">
+            <text class="hn-v">{{member.remainCount}}<text class="unit">次</text></text>
+            <text class="hn-l">剩余次数</text>
+          </view>
+        </view>
+
+        <view class="hero-counts">
+          <view class="hc"><text class="hc-v">{{member.washCount}}</text><text class="hc-l">洗车</text></view>
+          <view class="hc"><text class="hc-v">{{member.waxCount}}</text><text class="hc-l">打蜡</text></view>
+          <view class="hc wide">
+            <text class="hc-l">{{member.lastItem ? '最近 ' + member.lastItem + ' · ' + lastAgo : '暂无到店记录'}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="quick">
+        <view class="q" bindtap="goServices">
+          <view class="q-ico">🧽</view>
+          <view class="q-t">店内项目</view>
+          <view class="q-d">洗车 / 打蜡 / 抛光</view>
+        </view>
+        <view class="q" bindtap="callStore">
+          <view class="q-ico">📞</view>
+          <view class="q-t">联系门店</view>
+          <view class="q-d">预约 / 咨询</view>
+        </view>
+      </view>
+
+      <view class="card">
+        <view class="h2" style="font-size:30rpx">会员权益</view>
+        <view class="row-line"><text class="k">可用次数</text><text class="v">{{member.remainCount}} 次</text></view>
+        <view class="row-line"><text class="k">次数有效期</text><text class="v">{{member.expireAt || '长期有效'}}</text></view>
+        <view class="row-line"><text class="k">累计洗车</text><text class="v">{{member.washCount}} 次</text></view>
+        <view class="row-line"><text class="k">累计打蜡</text><text class="v">{{member.waxCount}} 次</text></view>
+        <view class="row-line"><text class="k">手机</text><text class="v">{{member.phone || '未登记'}}</text></view>
+        <view wx:if="{{member.remark}}" class="row-line"><text class="k">备注</text><text class="v">{{member.remark}}</text></view>
+      </view>
+
+      <view class="card tip-card">
+        <text class="small">到店出示这辆车即可核销次数；充值、开卡请到店咨询门店。</text>
+      </view>
+    </block>
+
+    <!-- 未绑定 -->
+    <block wx:else>
+      <view class="empty-hero">
+        <view class="eh-ico">🚗</view>
+        <view class="eh-t">绑定我的爱车</view>
+        <view class="eh-d">输入车牌和门店登记的手机号，绑定后就能看到余额、剩余次数和历史服务。</view>
+        <button class="btn" style="margin-top:36rpx" bindtap="goBind">立即绑定</button>
+      </view>
+
+      <view class="card">
+        <view class="h2" style="font-size:30rpx">绑定后可以</view>
+        <view class="row-line"><text class="k">看余额</text><text class="v">卡里还有多少钱</text></view>
+        <view class="row-line"><text class="k">看次数</text><text class="v">还能洗几次 / 打几次蜡</text></view>
+        <view class="row-line"><text class="k">看记录</text><text class="v">最近一次做了什么</text></view>
+      </view>
+    </block>
+  </block>
+
+  <view class="tabbar-gap"></view>
+  <customer-tabbar active="home" />
+</view>

@@ -20,6 +20,12 @@ module.exports = {
     dateStrings: true,
     decimalNumbers: true,
   },
+  // 车主端微信登录（不填 appId/secret 时自动 mock，方便本地联调）
+  wx: {
+    appId: env.WX_APPID || '',
+    secret: env.WX_SECRET || '',
+    mock: String(env.WX_MOCK || '0') === '1',
+  },
   ocr: {
     secretId: env.TENCENT_SECRET_ID || '',
     secretKey: env.TENCENT_SECRET_KEY || '',

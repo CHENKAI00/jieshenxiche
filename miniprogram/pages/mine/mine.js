@@ -1,4 +1,5 @@
 const api = require('../../utils/api');
+const { guardStaff } = require('../../utils/role');
 
 Page({
   data: {
@@ -11,6 +12,7 @@ Page({
   },
 
   onShow() {
+    if (!guardStaff()) return;
     const app = getApp();
     this.setData({
       baseUrl: app.globalData.baseUrl,
@@ -48,6 +50,19 @@ Page({
   },
 
   openMembers() { wx.navigateTo({ url: '/pages/records/records?mode=members' }); },
+
+  goCustomer() {
+    wx.showModal({
+      title: '切换身份',
+      content: '切换到车主端后，看的是车主自己的会员卡；随时可以切回来。',
+      confirmText: '切换',
+      success: (r) => {
+        if (!r.confirm) return;
+        getApp().setRole('customer');
+        wx.reLaunch({ url: '/pages/customer/home/home' });
+      },
+    });
+  },
 
   async showPrice() {
     try {
