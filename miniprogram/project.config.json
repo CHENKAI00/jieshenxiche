@@ -1,6 +1,6 @@
 {
   "description": "洁神洗车 · 门店会员小程序（拍照识车牌查会员）",
-  "appid": "touristappid",
+  "appid": "wxc6a8a4784554641f",
   "projectname": "jieshenxiche",
   "miniprogramRoot": "./",
   "compileType": "miniprogram",
@@ -28,7 +28,20 @@
     "useApiHostProcess": true,
     "showES6CompileOption": false,
     "useCompilerPlugins": false,
-    "ignoreUploadUnusedFiles": true
+    "ignoreUploadUnusedFiles": true,
+    "compileWorklet": false,
+    "packNpmManually": false,
+    "packNpmRelationList": [],
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "condition": false,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
   },
   "condition": {
     "miniprogram": {
@@ -47,5 +60,11 @@
         }
       ]
     }
-  }
+  },
+  "simulatorPluginLibVersion": {},
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "editorSetting": {}
 }

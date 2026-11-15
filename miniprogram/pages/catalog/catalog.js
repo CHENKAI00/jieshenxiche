@@ -25,6 +25,8 @@ Page({
         ...s,
         imageUrl: api.absUrl(s.image),
         priceText: fmt.money(s.price),
+        // WXSS 选择器只能用 ASCII，中文分类映射成 wash / beauty
+        phClass: s.tag === '洗车' ? 'wash' : 'beauty',
       }));
       this.setData({ all, tags: meta.tags || [], list: this.filter(all, this.data.activeTag) });
     } catch (e) {}

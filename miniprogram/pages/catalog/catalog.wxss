@@ -45,7 +45,8 @@
   font-size: 60rpx;
   background: linear-gradient(135deg, #e8f4ff, #dffaf6);
 }
-.svc-img.ph-美容 { background: linear-gradient(135deg, #fff3e0, #fdf0d5); }
+.svc-img.ph-wash { background: linear-gradient(135deg, #e8f4ff, #dffaf6); }
+.svc-img.ph-beauty { background: linear-gradient(135deg, #fff3e0, #fdf0d5); }
 
 .svc-body { flex: 1; padding: 20rpx 22rpx; min-width: 0; }
 .svc-name { font-size: 30rpx; font-weight: 700; }

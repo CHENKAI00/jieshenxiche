@@ -16,7 +16,7 @@
   <!-- 项目列表 -->
   <view wx:for="{{list}}" wx:key="id" class="svc-card" data-id="{{item.id}}" bindtap="chooseService">
     <image wx:if="{{item.imageUrl}}" class="svc-img" src="{{item.imageUrl}}" mode="aspectFill" />
-    <view wx:else class="svc-img ph ph-{{item.tag}}">{{item.emoji}}</view>
+    <view wx:else class="svc-img ph ph-{{item.phClass}}">{{item.emoji}}</view>
 
     <view class="svc-body">
       <view class="between">
