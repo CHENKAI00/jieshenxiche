@@ -24,8 +24,9 @@ Page({
         stat,
         recent: (recent.list || []).map((r) => ({
           ...r,
-          amountText: fmt.money(r.amount),
-          typeText: fmt.typeText(r.type),
+          amountText: fmt.money(r.lastAmount),
+          agoText: fmt.timeAgo(r.lastServiceAt),
+          tagClass: fmt.serviceTag(r.lastItem),
         })),
       });
     } catch (e) { /* 错误已在 api 层提示 */ }
@@ -43,7 +44,7 @@ Page({
 
   goScan() { wx.switchTab({ url: '/pages/scan/scan' }); },
   goAdmin() { wx.switchTab({ url: '/pages/admin/admin' }); },
-  goMembers() { wx.navigateTo({ url: '/pages/records/records?mode=members' }); },
+  goMembers() { wx.navigateTo({ url: '/pages/records/records' }); },
 
   openMember(e) {
     const plate = e.currentTarget.dataset.plate;
@@ -53,8 +54,13 @@ Page({
   async showPrice() {
     try {
       const meta = await api.meta();
-      const lines = meta.items.map((i) => `${i.name}  ¥${i.price}`).join('\n');
-      wx.showModal({ title: '洗车价目表', content: lines, showCancel: false });
+      const groups = {};
+      (meta.services || []).forEach((s) => {
+        groups[s.tag] = groups[s.tag] || [];
+        groups[s.tag].push(`${s.name}  ¥${s.price}（约${s.mins}分钟）`);
+      });
+      const content = Object.keys(groups).map((k) => `【${k}】\n${groups[k].join('\n')}`).join('\n\n');
+      wx.showModal({ title: '服务价目表', content, showCancel: false });
     } catch (e) {}
   },
 });

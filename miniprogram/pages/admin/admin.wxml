@@ -6,12 +6,12 @@
     </view>
     <view class="board-grid">
       <view class="b-item">
-        <view class="b-num">{{stat.todayWash || 0}}</view>
-        <view class="b-label">今日核销</view>
+        <view class="b-num">{{stat.todayVisits || 0}}</view>
+        <view class="b-label">今日到店</view>
       </view>
       <view class="b-item">
         <view class="b-num">¥{{stat.todayIncome || '0.00'}}</view>
-        <view class="b-label">今日营收</view>
+        <view class="b-label">今日实收</view>
       </view>
       <view class="b-item">
         <view class="b-num">{{stat.members || 0}}</view>
@@ -19,13 +19,13 @@
       </view>
     </view>
     <view class="board-sub">
-      储值余额合计 ¥{{stat.balanceSum || '0.00'}} · 未消耗套餐 {{stat.packageLeftSum || 0}} 次 · 今日积分 {{stat.todayPoints || 0}}
+      储值余额合计 ¥{{stat.balanceSum || '0.00'}} · 未消耗次数 {{stat.remainSum || 0}} 次 · 今日新增 {{stat.todayNew || 0}} 位
     </view>
   </view>
 
   <view class="card">
     <view class="h2">快速核销</view>
-    <view class="small" style="margin:12rpx 0 20rpx">输入车牌直接核销，不必进会员卡</view>
+    <view class="small" style="margin:12rpx 0 20rpx">输车牌 → 选服务项目，洗车 / 打蜡都能核销</view>
     <view class="row" style="gap:16rpx">
       <input class="input grow" value="{{plate}}" maxlength="8" placeholder="粤B12345"
              bindinput="onPlate" confirm-type="search" bindconfirm="quickLookup" />
@@ -35,11 +35,11 @@
       <view class="between">
         <view class="col">
           <text style="font-weight:700">{{quickMember.platePretty}} · {{quickMember.nickname}}</text>
-          <text class="small">{{quickMember.levelName}} · 余额 ¥{{quickBalance}} · 套餐 {{quickMember.packageLeft}} 次</text>
+          <text class="small">余额 ¥{{quickBalance}} · 剩余 {{quickMember.remainCount}} 次 · 累计 {{quickMember.totalCount}} 次</text>
         </view>
         <view class="tag mint">可用</view>
       </view>
-      <button class="btn" style="margin-top:20rpx;height:76rpx;line-height:76rpx;font-size:28rpx" bindtap="openWash">选择项目核销</button>
+      <button class="btn" style="margin-top:20rpx;height:76rpx;line-height:76rpx;font-size:28rpx" bindtap="openConsume">选择服务核销</button>
     </view>
     <view wx:elif="{{quickMember && quickMember.exists === false}}" class="quick-res">
       <text class="small">该车牌未建档</text>
@@ -49,20 +49,21 @@
 
   <view class="card">
     <view class="between">
-      <view class="h2">最近流水</view>
+      <view class="h2">最近到店</view>
       <text class="small" bindtap="refresh">刷新</text>
     </view>
-    <view wx:if="{{recent.length === 0}}" class="empty">暂无流水</view>
+    <view wx:if="{{recent.length === 0}}" class="empty">暂无到店记录</view>
     <view wx:for="{{recent}}" wx:key="id" class="flow" data-plate="{{item.plateNo}}" bindtap="openMember">
       <view class="col grow">
         <view class="row" style="gap:10rpx">
           <text class="flow-plate">{{item.platePretty}}</text>
-          <text class="tag {{item.type === 'recharge' ? 'mint' : 'grey'}}">{{item.typeText}}</text>
+          <text class="tag {{item.tagClass}}">{{item.lastItem || '到店'}}</text>
         </view>
-        <view class="small" style="margin-top:6rpx">{{item.item}} · {{item.ts}} · {{item.operator}}</view>
+        <view class="small" style="margin-top:6rpx">{{item.nickname}} · {{item.agoText}}</view>
       </view>
-      <view class="flow-amt {{item.type === 'recharge' ? 'in' : ''}}">
-        {{item.type === 'recharge' ? '+' : (item.type === 'points' ? '' : '-')}}{{item.type === 'points' ? item.points + '分' : '¥' + item.amountText}}
+      <view class="col" style="align-items:flex-end">
+        <view style="font-size:28rpx;font-weight:700;color:#0b7bd8">{{item.lastAmount > 0 ? '¥' + item.amountText : '扣次数'}}</view>
+        <view class="small">余 {{item.remainCount}} 次</view>
       </view>
     </view>
   </view>
@@ -77,5 +78,5 @@
     </view>
   </view>
 
-  <view class="foot">洁神洗车 · 门店工作台</view>
+  <view class="foot">洁神洗车 · 门店工作台 v2</view>
 </view>

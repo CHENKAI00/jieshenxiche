@@ -54,7 +54,7 @@ Page({
       const meta = await api.meta();
       wx.showModal({
         title: '洗车价目表',
-        content: meta.items.map((i) => `${i.name}  ¥${i.price} / ${i.mins}分钟`).join('\n'),
+        content: (meta.services || []).map((i) => `${i.name}  ¥${i.price} / 约${i.mins}分钟`).join('\n'),
         showCancel: false,
       });
     } catch (e) {}
@@ -63,7 +63,7 @@ Page({
   showAbout() {
     wx.showModal({
       title: '关于',
-      content: '洁神洗车门店小程序 v1.0.0\n特色：拍照识别车牌秒查会员\n数据：MySQL 单表会员系统\n后端：Node.js + Express',
+      content: '洁神洗车门店小程序 v2.0.0\n特色：拍照识别车牌秒查会员\n服务：洗车 / 打蜡 / 抛光 / 内饰 / 镀膜\n数据：MySQL 单表会员系统（精简版）\n后端：Node.js + Express',
       showCancel: false,
     });
   },

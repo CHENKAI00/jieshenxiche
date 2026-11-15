@@ -9,7 +9,7 @@ Page({
     plate: '',
     quickMember: null,
     quickBalance: '0.00',
-    items: [],
+    services: [],
   },
 
   onShow() {
@@ -21,7 +21,7 @@ Page({
   async loadMeta() {
     try {
       const meta = await api.meta();
-      this.setData({ items: meta.items || [] });
+      this.setData({ services: meta.services || [] });
     } catch (e) {}
   },
 
@@ -38,7 +38,10 @@ Page({
       this.setData({
         stat,
         recent: (recent.list || []).map((r) => ({
-          ...r, amountText: fmt.money(r.amount), typeText: fmt.typeText(r.type),
+          ...r,
+          amountText: fmt.money(r.lastAmount),
+          agoText: fmt.timeAgo(r.lastServiceAt),
+          tagClass: fmt.serviceTag(r.lastItem),
         })),
       });
     } catch (e) {}
@@ -57,26 +60,26 @@ Page({
     } catch (e) {}
   },
 
-  openWash() {
-    const items = this.data.items;
-    if (!items.length) return wx.showToast({ title: '价目表未加载', icon: 'none' });
+  openConsume() {
+    const services = this.data.services;
+    if (!services.length) return wx.showToast({ title: '价目表未加载', icon: 'none' });
     const m = this.data.quickMember;
     if (!m || !m.exists) return;
     wx.showActionSheet({
-      itemList: items.map((i) => `${i.name} ¥${i.price}`),
+      itemList: services.map((s) => `${s.name} ¥${s.price}`),
       success: (res) => {
-        const item = items[res.tapIndex];
-        const usePackage = m.packageLeft > 0 && !m.expireWarn;
-        const price = Math.round(item.price * (m.discount || 1) * 100) / 100;
+        const svc = services[res.tapIndex];
+        const useCount = m.remainCount > 0 && !m.expireWarn;
+        const price = Number(svc.price);
         wx.showModal({
           title: '确认核销',
-          content: `${m.platePretty}\n${item.name}\n${usePackage ? '扣套餐 1 次（余 ' + m.packageLeft + '）' : '余额支付 ¥' + price.toFixed(2)}`,
+          content: `${m.platePretty}\n${svc.name}\n${useCount ? '扣次数 1 次（剩 ' + m.remainCount + '）' : '余额支付 ¥' + price.toFixed(2)}`,
           success: async (r) => {
             if (!r.confirm) return;
             try {
-              await api.consume({ plateNo: m.plateNo, itemId: item.id, usePackage, operator: getApp().globalData.staffName });
+              const out = await api.consume({ plateNo: m.plateNo, serviceId: svc.id, useCount, operator: getApp().globalData.staffName });
               wx.showToast({ title: '核销成功', icon: 'success' });
-              this.quickLookup();
+              this.setData({ quickMember: out.member, quickBalance: fmt.money(out.balance) });
               this.refresh();
             } catch (e) {}
           },

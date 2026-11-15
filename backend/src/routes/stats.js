@@ -10,10 +10,10 @@ router.get('/overview', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-/** GET /api/v1/stats/recent  最近流水 */
+/** GET /api/v1/stats/recent  最近到店（单表只记最近一次，所以直接按 last_service_at 排） */
 router.get('/recent', async (req, res, next) => {
   try {
-    res.json({ ok: true, list: await svc.recentRecords(req.query.limit) });
+    res.json({ ok: true, list: await svc.recentVisits(req.query.limit) });
   } catch (e) { next(e); }
 });
 

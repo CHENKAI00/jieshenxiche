@@ -1,8 +1,12 @@
 -- ============================================================
--- 洁神洗车 · 数据库初始化（只新建 1 个库 + 1 张表）
+-- 洁神洗车 · 数据库初始化（精简版 v2）
 -- 目标库：jieshenxiche   唯一业务表：js_member
--- 设计要点：会员 / 车辆 / 套餐 / 余额 / 积分 / 流水全部收在一张表，
---          流水用 JSON 数组存在 records 字段里，不额外建表。
+--
+-- v2 精简说明（按店主意见）：
+--   删除 level（不做会员等级）、points（与余额重复）、package_name、
+--         avatar、records（不存流水明细）、把 wash_total 改名为 total_count
+--   保留：车牌、余额、剩余次数、总次数、到期日、最近到店、备注
+--   服务不限于洗车：洗车 / 打蜡 / 抛光 / 内饰 / 玻璃镀膜 都在价目表里
 -- ============================================================
 
 CREATE DATABASE IF NOT EXISTS `jieshenxiche`
@@ -12,55 +16,38 @@ CREATE DATABASE IF NOT EXISTS `jieshenxiche`
 USE `jieshenxiche`;
 
 CREATE TABLE IF NOT EXISTS `js_member` (
-  `id`              INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
-  `plate_no`        VARCHAR(16)  NOT NULL                 COMMENT '车牌号（大写去空格，新能源8位）',
-  `plate_color`     VARCHAR(8)   NOT NULL DEFAULT '蓝'     COMMENT '车牌颜色：蓝/绿/黄/白/黑',
-  `member_no`       VARCHAR(24)  DEFAULT NULL             COMMENT '会员卡号 JS+日期+序号',
-  `nickname`        VARCHAR(32)  DEFAULT NULL             COMMENT '车主称呼',
-  `phone`           VARCHAR(20)  DEFAULT NULL             COMMENT '手机号',
-  `level`           TINYINT      NOT NULL DEFAULT 1       COMMENT '1普通 2银卡 3金卡 4钻石',
-  `balance`         DECIMAL(10,2) NOT NULL DEFAULT 0.00   COMMENT '储值余额（元）',
-  `points`          INT          NOT NULL DEFAULT 0       COMMENT '积分',
-  `wash_total`      INT          NOT NULL DEFAULT 0       COMMENT '累计洗车次数',
-  `package_left`    INT          NOT NULL DEFAULT 0       COMMENT '套餐剩余次数',
-  `package_name`    VARCHAR(32)  DEFAULT NULL             COMMENT '套餐名（如 洗车10次卡）',
-  `expire_at`       DATE         DEFAULT NULL             COMMENT '套餐/权益到期日',
-  `last_wash_at`    DATETIME     DEFAULT NULL             COMMENT '最近到店时间',
-  `avatar`          VARCHAR(255) DEFAULT NULL             COMMENT '头像/车辆照片 URL',
-  `remark`          VARCHAR(255) DEFAULT NULL             COMMENT '备注（如 只洗外观/豪车）',
-  `records`         JSON         DEFAULT NULL             COMMENT '流水数组:[{id,ts,type,item,amount,points,payType,operator,balanceAfter}]',
-  `status`          TINYINT      NOT NULL DEFAULT 1       COMMENT '1正常 0停用',
-  `created_at`      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at`      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `id`               INT UNSIGNED  NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `plate_no`         VARCHAR(16)   NOT NULL                COMMENT '车牌号（大写去空格，新能源8位）',
+  `plate_color`      VARCHAR(8)    NOT NULL DEFAULT '蓝'    COMMENT '车牌颜色：蓝/绿/黄',
+  `member_no`        VARCHAR(24)   DEFAULT NULL            COMMENT '会员卡号 JS+日期+序号',
+  `nickname`         VARCHAR(32)   DEFAULT NULL            COMMENT '车主称呼',
+  `phone`            VARCHAR(20)   DEFAULT NULL            COMMENT '手机号',
+  `balance`          DECIMAL(10,2) NOT NULL DEFAULT 0.00   COMMENT '储值余额（元）',
+  `remain_count`     INT           NOT NULL DEFAULT 0      COMMENT '剩余次数（次卡）',
+  `total_count`      INT           NOT NULL DEFAULT 0      COMMENT '累计服务次数（洗车/打蜡/抛光…）',
+  `expire_at`        DATE          DEFAULT NULL            COMMENT '次数有效期',
+  `last_service_at`  DATETIME      DEFAULT NULL            COMMENT '最近到店时间',
+  `last_item`        VARCHAR(32)   DEFAULT NULL            COMMENT '最近一次服务项目',
+  `last_amount`      DECIMAL(10,2) NOT NULL DEFAULT 0.00   COMMENT '最近一次实收金额',
+  `remark`           VARCHAR(255)  DEFAULT NULL            COMMENT '备注（如 只洗外观/豪车/有充电口）',
+  `status`           TINYINT       NOT NULL DEFAULT 1      COMMENT '1正常 0停用',
+  `created_at`       DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`       DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_plate_no` (`plate_no`),
   KEY `idx_phone` (`phone`),
-  KEY `idx_last_wash` (`last_wash_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='洁神洗车会员总表（单表设计）';
+  KEY `idx_last_service` (`last_service_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='洁神洗车会员总表（单表精简版）';
 
 -- 演示数据（可删）：用于小程序联调「拍照识车牌 → 查会员」链路
--- INSERT IGNORE 保证脚本可重复执行（表/演示数据已存在时直接跳过）
+-- INSERT IGNORE 保证脚本可重复执行
 INSERT IGNORE INTO `js_member`
-  (`plate_no`,`plate_color`,`member_no`,`nickname`,`phone`,`level`,`balance`,`points`,
-   `wash_total`,`package_left`,`package_name`,`expire_at`,`last_wash_at`,`remark`,`records`)
+  (`plate_no`,`plate_color`,`member_no`,`nickname`,`phone`,`balance`,
+   `remain_count`,`total_count`,`expire_at`,`last_service_at`,`last_item`,`last_amount`,`remark`)
 VALUES
-  ('粤B12345','蓝','JS2026001','张先生','13800138000',3,268.50,860,26,4,'洗车10次卡','2026-12-31',
-   NOW() - INTERVAL 3 DAY,'常客，喜欢周五下午来',
-   JSON_ARRAY(
-     JSON_OBJECT('id','R1001','ts',DATE_FORMAT(NOW() - INTERVAL 3 DAY,'%Y-%m-%d %H:%i:%s'),
-       'type','wash','item','精洗SUV','amount',45.00,'points',45,'payType','套餐次数','operator','前台小李','balanceAfter',268.50),
-     JSON_OBJECT('id','R1002','ts',DATE_FORMAT(NOW() - INTERVAL 10 DAY,'%Y-%m-%d %H:%i:%s'),
-       'type','recharge','item','充值200送30','amount',200.00,'points',0,'payType','微信支付','operator','前台小李','balanceAfter',268.50)
-   )),
-  ('粤B8888G','绿','JS2026002','李女士','13900139000',4,1024.00,3200,58,12,'钻石年卡','2027-06-30',
-   NOW() - INTERVAL 1 DAY,'新能源，注意充电口别冲水',
-   JSON_ARRAY(
-     JSON_OBJECT('id','R2001','ts',DATE_FORMAT(NOW() - INTERVAL 1 DAY,'%Y-%m-%d %H:%i:%s'),
-       'type','wash','item','标准洗车','amount',25.00,'points',25,'payType','套餐次数','operator','前台小王','balanceAfter',1024.00)
-   )),
-  ('粤A66666','蓝','JS2026003','王先生','13700137000',2,96.00,320,9,0,NULL,'2026-11-30',
-   NOW() - INTERVAL 7 DAY,NULL,
-   JSON_ARRAY(
-     JSON_OBJECT('id','R3001','ts',DATE_FORMAT(NOW() - INTERVAL 7 DAY,'%Y-%m-%d %H:%i:%s'),
-       'type','wash','item','标准洗车','amount',25.00,'points',25,'payType','余额','operator','前台小王','balanceAfter',96.00)
-   ));
+  ('粤B12345','蓝','JS2026001','张先生','13800138000',268.50,4,26,'2026-12-31',
+   NOW() - INTERVAL 3 DAY,'精洗SUV/MPV',50.00,'常客，喜欢周五下午来'),
+  ('粤B8888G','绿','JS2026002','李女士','13900139000',1024.00,12,58,'2027-06-30',
+   NOW() - INTERVAL 1 DAY,'标准洗车',0.00,'新能源，注意充电口别冲水'),
+  ('粤A66666','蓝','JS2026003','王先生','13700137000',96.00,0,9,'2026-11-30',
+   NOW() - INTERVAL 7 DAY,'打蜡',98.00,'喜欢打蜡，每月一次');

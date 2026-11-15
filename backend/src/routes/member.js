@@ -19,19 +19,11 @@ router.get('/:plate', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-/** POST /api/v1/member  会员建档 {plateNo,nickname,phone,level,remark} */
+/** POST /api/v1/member  会员建档 {plateNo,nickname,phone,remark} */
 router.post('/', async (req, res, next) => {
   try {
     const data = await svc.createMember(req.body || {});
     res.status(data.created ? 201 : 200).json({ ok: true, ...data });
-  } catch (e) { next(e); }
-});
-
-/** POST /api/v1/member/:plate/points  积分兑换 {points,item} */
-router.post('/:plate/points', async (req, res, next) => {
-  try {
-    const data = await svc.usePoints({ plateNo: req.params.plate, ...req.body });
-    res.json({ ok: true, ...data });
   } catch (e) { next(e); }
 });
 

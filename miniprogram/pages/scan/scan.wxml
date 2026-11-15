@@ -51,10 +51,11 @@
         <view class="col grow" style="margin-left:20rpx">
           <view class="row" style="gap:12rpx">
             <text class="h2">{{result.member.nickname}}</text>
-            <text class="tag gold">{{result.member.levelName}}</text>
+            <text class="tag">{{result.member.memberNo}}</text>
           </view>
           <view class="small" style="margin-top:6rpx">
-            卡号 {{result.member.memberNo}} · 累计洗车 {{result.member.washTotal}} 次
+            累计服务 {{result.member.totalCount}} 次
+            <text wx:if="{{result.member.lastItem}}"> · 上次 {{result.member.lastItem}}（{{lastAgo}}）</text>
           </view>
         </view>
       </view>
@@ -65,17 +66,17 @@
           <view class="mini-label">储值余额</view>
         </view>
         <view class="mini">
-          <view class="mini-num">{{result.member.packageLeft}}<text class="unit">次</text></view>
-          <view class="mini-label">套餐剩余</view>
+          <view class="mini-num">{{result.member.remainCount}}<text class="unit">次</text></view>
+          <view class="mini-label">剩余次数</view>
         </view>
         <view class="mini">
-          <view class="mini-num">{{result.member.points}}</view>
-          <view class="mini-label">积分</view>
+          <view class="mini-num">{{result.member.totalCount}}</view>
+          <view class="mini-label">累计服务</view>
         </view>
       </view>
 
       <view wx:if="{{result.member.expireWarn}}" class="warn-box">
-        <text>套餐已于 {{result.member.expireAt}} 到期，核销将按余额计价</text>
+        <text>次数卡已于 {{result.member.expireAt}} 到期，核销将按余额计价</text>
       </view>
 
       <view class="row" style="gap:18rpx;margin-top:24rpx">
@@ -87,7 +88,7 @@
     <block wx:elif="{{result.plateValid}}">
       <view class="divider"></view>
       <view class="empty" style="padding:24rpx 0">
-        这个车牌还没有会员档案，可直接建档并开通储值/次卡
+        这个车牌还没有会员档案，可直接建档并开通储值 / 次卡
       </view>
       <button class="btn warn" bindtap="goCreate">立即为 {{result.platePretty}} 建档</button>
     </block>

@@ -7,10 +7,6 @@
   box-shadow: 0 18rpx 44rpx rgba(11, 43, 74, 0.28);
   margin-bottom: 24rpx;
 }
-.mcard.vip {
-  background: linear-gradient(140deg, #2a2118, #6d4b12 55%, #b8892a);
-  box-shadow: 0 18rpx 44rpx rgba(120, 85, 20, 0.3);
-}
 .mcard-sub { font-size: 24rpx; color: rgba(255,255,255,0.72); margin-top: 10rpx; }
 .mcard-balance { display: flex; justify-content: space-between; margin-top: 40rpx; }
 .mcard-label { font-size: 22rpx; color: rgba(255,255,255,0.65); }
@@ -51,3 +47,15 @@
 .field-k { width: 96rpx; color: #7b8a9a; font-size: 26rpx; }
 
 .foot { text-align: center; color: #b3bfcc; font-size: 20rpx; padding: 12rpx 0 20rpx; }
+
+.svc-grid { display: flex; flex-wrap: wrap; gap: 16rpx; margin-top: 20rpx; }
+.svc {
+  width: calc((100% - 32rpx) / 3);
+  box-sizing: border-box;
+  background: #f7fafd;
+  border-radius: 18rpx;
+  padding: 20rpx 16rpx;
+  text-align: center;
+}
+.svc-name { font-size: 26rpx; font-weight: 600; color: #16232f; }
+.svc-price { font-size: 26rpx; color: #0b7bd8; font-weight: 700; margin: 6rpx 0; }

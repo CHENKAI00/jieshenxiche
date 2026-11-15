@@ -9,13 +9,15 @@ Page({
     confText: '',
     balanceText: '0.00',
     memberInitial: '',
+    lastAgo: '',
     showInput: false,
     plateInput: '',
   },
 
   onShow() {
-    // 从会员卡返回后，如果停在结果页则静默刷新一次
-    if (this.data.result && this.data.result.plateNo) this.lookupByPlate(this.data.result.plateNo);
+    if (this.data.result && this.data.result.plateNo && this.data.result.exists) {
+      this.lookupByPlate(this.data.result.plateNo);
+    }
   },
 
   takePhoto() {
@@ -57,7 +59,6 @@ Page({
         wx.showToast({ title: '未建档，可一键建档', icon: 'none' });
       }
     } catch (e) {
-      // 识别服务异常时直接进手输
       this.setData({ showInput: true, plateInput: '' });
     } finally {
       this.setData({ loading: false });
@@ -71,15 +72,15 @@ Page({
       confText: r.confidence ? Math.round(r.confidence * 100) + '%' : '—',
       balanceText: member ? fmt.money(member.balance) : '0.00',
       memberInitial: member && member.nickname ? member.nickname.slice(0, 1) : '车',
+      lastAgo: member && member.lastServiceAt ? fmt.timeAgo(member.lastServiceAt) : '',
     });
-    const app = getApp();
-    app.globalData.lastPlate = r.plateNo || '';
+    getApp().globalData.lastPlate = r.plateNo || '';
   },
 
   async lookupByPlate(plate) {
     try {
       const m = await api.lookup(plate);
-      const result = {
+      this.applyResult({
         plateNo: m.plateNo,
         platePretty: m.platePretty,
         plateValid: m.plateValid,
@@ -88,27 +89,18 @@ Page({
         exists: m.exists,
         member: m.exists ? m : null,
         confidence: 0,
-      };
-      this.applyResult(result);
+      });
     } catch (e) { /* ignore */ }
   },
 
-  reset() {
-    this.setData({ imagePath: '', result: null });
-  },
+  reset() { this.setData({ imagePath: '', result: null }); },
 
   editPlate() {
     this.setData({ showInput: true, plateInput: (this.data.result && this.data.result.plateNo) || '' });
   },
 
-  focusInput() {
-    this.setData({ showInput: true, plateInput: '' });
-  },
-
-  onInput(e) {
-    this.setData({ plateInput: (e.detail.value || '').toUpperCase() });
-  },
-
+  focusInput() { this.setData({ showInput: true, plateInput: '' }); },
+  onInput(e) { this.setData({ plateInput: (e.detail.value || '').toUpperCase() }); },
   closeInput() { this.setData({ showInput: false }); },
   noop() {},
 
@@ -121,19 +113,16 @@ Page({
 
   openMember() {
     const p = this.data.result && this.data.result.plateNo;
-    if (!p) return;
-    wx.navigateTo({ url: `/pages/member/member?plate=${encodeURIComponent(p)}` });
+    if (p) wx.navigateTo({ url: `/pages/member/member?plate=${encodeURIComponent(p)}` });
   },
 
   openRecharge() {
     const p = this.data.result && this.data.result.plateNo;
-    if (!p) return;
-    wx.navigateTo({ url: `/pages/recharge/recharge?plate=${encodeURIComponent(p)}` });
+    if (p) wx.navigateTo({ url: `/pages/recharge/recharge?plate=${encodeURIComponent(p)}` });
   },
 
   goCreate() {
     const p = this.data.result && this.data.result.plateNo;
-    if (!p) return;
-    wx.navigateTo({ url: `/pages/member/member?plate=${encodeURIComponent(p)}&create=1` });
+    if (p) wx.navigateTo({ url: `/pages/member/member?plate=${encodeURIComponent(p)}&create=1` });
   },
 });

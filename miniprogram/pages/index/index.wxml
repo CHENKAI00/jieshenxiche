@@ -37,13 +37,13 @@
   <view class="stat-card">
     <view class="stat between">
       <view class="stat-item">
-        <view class="stat-num">{{stat.todayWash || 0}}</view>
-        <view class="stat-label">今日洗车</view>
+        <view class="stat-num">{{stat.todayVisits || 0}}</view>
+        <view class="stat-label">今日到店</view>
       </view>
       <view class="stat-split"></view>
       <view class="stat-item">
         <view class="stat-num">¥{{stat.todayIncome || '0.00'}}</view>
-        <view class="stat-label">今日营收</view>
+        <view class="stat-label">今日实收</view>
       </view>
       <view class="stat-split"></view>
       <view class="stat-item">
@@ -53,7 +53,7 @@
     </view>
     <view class="divider"></view>
     <view class="between">
-      <text class="small">储值总额 ¥{{stat.balanceSum || '0.00'}} · 待用套餐 {{stat.packageLeftSum || 0}} 次</text>
+      <text class="small">储值总额 ¥{{stat.balanceSum || '0.00'}} · 待用次数 {{stat.remainSum || 0}} 次 · 今日新客 {{stat.todayNew || 0}}</text>
       <text class="small" style="color:#0b7bd8" bindtap="refresh">刷新</text>
     </view>
   </view>
@@ -66,7 +66,7 @@
     </view>
     <view class="grid-item" bindtap="goAdmin">
       <view class="grid-ico">🧾</view>
-      <view class="grid-txt">门店核销</view>
+      <view class="grid-txt">服务核销</view>
     </view>
     <view class="grid-item" bindtap="goMembers">
       <view class="grid-ico">👥</view>
@@ -78,24 +78,27 @@
     </view>
   </view>
 
-  <!-- 最近核销 -->
+  <!-- 最近到店 -->
   <view class="card">
     <view class="between">
       <view class="h2">最近到店</view>
       <text class="small" bindtap="goAdmin">全部 ›</text>
     </view>
-    <view wx:if="{{recent.length === 0}}" class="empty">今天还没有核销记录</view>
+    <view wx:if="{{recent.length === 0}}" class="empty">还没有服务记录</view>
     <view wx:for="{{recent}}" wx:key="id" class="rec" data-plate="{{item.plateNo}}" bindtap="openMember">
       <view class="rec-left">
-        <view class="rec-plate">{{item.platePretty}}</view>
-        <view class="small">{{item.item}} · {{item.ts}}</view>
+        <view class="row" style="gap:12rpx">
+          <text class="rec-plate">{{item.platePretty}}</text>
+          <text class="tag {{item.tagClass}}">{{item.lastItem || '到店'}}</text>
+        </view>
+        <view class="small" style="margin-top:6rpx">{{item.nickname}} · {{item.agoText}}</view>
       </view>
       <view class="col" style="align-items:flex-end">
-        <view class="rec-amt">{{item.type === 'recharge' ? '+' : '-'}}¥{{item.amountText}}</view>
-        <view class="small">{{item.typeText}} · {{item.payType}}</view>
+        <view class="rec-amt">{{item.lastAmount > 0 ? '¥' + item.amountText : '扣次数'}}</view>
+        <view class="small">余 {{item.remainCount}} 次</view>
       </view>
     </view>
   </view>
 
-  <view class="foot">洁神洗车 · 单表会员系统 v1.0</view>
+  <view class="foot">洁神洗车 · 单表会员系统 v2</view>
 </view>

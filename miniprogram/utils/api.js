@@ -1,7 +1,7 @@
 /** 网络层：统一带 x-token、统一错误提示、统一 loading */
 function base() {
   const app = getApp();
-  return (app && app.globalData.baseUrl || 'http://127.0.0.1:8099').replace(/\/+$/, '');
+  return ((app && app.globalData.baseUrl) || 'http://127.0.0.1:8099').replace(/\/+$/, '');
 }
 
 function token() {
@@ -90,7 +90,6 @@ module.exports = {
   createMember: (payload) => request('/api/v1/member', { method: 'POST', data: payload, loading: true, tip: '建档中' }),
   consume: (payload) => request('/api/v1/wash/consume', { method: 'POST', data: payload, loading: true, tip: '核销中' }),
   recharge: (payload) => request('/api/v1/wash/recharge', { method: 'POST', data: payload, loading: true, tip: '充值中' }),
-  points: (plate, payload) => request(`/api/v1/member/${encodeURIComponent(plate)}/points`, { method: 'POST', data: payload, loading: true }),
   overview: () => request('/api/v1/stats/overview'),
   health: () => new Promise((resolve) => {
     wx.request({
@@ -101,5 +100,5 @@ module.exports = {
       fail: () => resolve({ ok: false, db: 'down' }),
     });
   }),
-  recent: (limit = 15) => request(`/api/v1/stats/recent?limit=${limit}`),
+  recent: (limit = 10) => request(`/api/v1/stats/recent?limit=${limit}`),
 };

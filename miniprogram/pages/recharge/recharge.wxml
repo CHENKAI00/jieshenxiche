@@ -31,15 +31,9 @@
              bindinput="onCustom" />
     </view>
     <view class="field">
-      <text class="field-k">有效期</text>
+      <text class="field-k">次数有效期</text>
       <picker class="grow" range="{{monthOptions}}" value="{{monthIndex}}" bindchange="onMonth">
         <view class="input">{{monthOptions[monthIndex]}}</view>
-      </picker>
-    </view>
-    <view class="field">
-      <text class="field-k">升级</text>
-      <picker class="grow" range="{{levelNames}}" value="{{levelIndex}}" bindchange="onLevel">
-        <view class="input">{{levelNames[levelIndex]}}</view>
       </picker>
     </view>
   </view>
@@ -58,11 +52,11 @@
       <text>{{timesText}} 次</text>
     </view>
     <view class="between" style="margin-top:14rpx">
-      <text class="small">套餐名称</text>
-      <text>{{packageName}}</text>
+      <text class="small">次数有效期</text>
+      <text>{{monthOptions[monthIndex]}}</text>
     </view>
   </view>
 
-  <button class="btn" bindtap="submit">确认充值 ¥{{payText}}</button>
+  <button class="btn" bindtap="submit">确认收款 ¥{{payText}}</button>
   <view class="foot">演示版走「确认即到账」；接入商户号后替换为 wx.requestPayment</view>
 </view>

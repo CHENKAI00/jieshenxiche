@@ -46,9 +46,14 @@ router.post('/plate', upload.single('file'), async (req, res, next) => {
   }
 });
 
-/** GET /api/v1/ocr/meta  —— 前端展示价目表/等级，避免两端硬编码 */
+/** GET /api/v1/ocr/meta —— 服务价目表 + 充值档位 + 识别引擎状态，前端不再硬编码 */
 router.get('/meta', (req, res) => {
-  res.json({ ok: true, items: cfg.items, levels: cfg.levels, ocrEngine: cfg.ocr.mock || !cfg.ocr.secretId ? 'mock' : 'tencent' });
+  res.json({
+    ok: true,
+    services: cfg.services,
+    rechargePlans: cfg.rechargePlans,
+    ocrEngine: cfg.ocr.mock || !cfg.ocr.secretId ? 'mock' : 'tencent',
+  });
 });
 
 module.exports = router;
