@@ -7,7 +7,6 @@ Page({
     platePretty: '',
     member: {},
     balanceText: '0.00',
-    lastAmountText: '0.00',
     lastAgo: '',
     services: [],
     loaded: false,
@@ -28,7 +27,9 @@ Page({
   async loadMeta() {
     try {
       const meta = await api.meta();
-      this.setData({ services: meta.services || [] });
+      this.setData({
+        services: (meta.services || []).map((s) => ({ ...s, imageUrl: api.absUrl(s.image) })),
+      });
     } catch (e) {}
   },
 
@@ -44,7 +45,6 @@ Page({
         platePretty: m.platePretty,
         member: m,
         balanceText: fmt.money(m.balance),
-        lastAmountText: fmt.money(m.lastAmount),
         lastAgo: m.lastServiceAt ? fmt.timeAgo(m.lastServiceAt) : '',
         loaded: true,
       });
@@ -108,7 +108,7 @@ Page({
           this.load(m.plateNo);
           wx.showModal({
             title: '核销完成',
-            content: `${out.service} · ${out.payType}\n剩余次数 ${out.remainCount} 次 · 累计 ${out.totalCount} 次\n余额 ¥${fmt.money(out.balance)}`,
+            content: `${out.service} · ${out.payType}\n剩余次数 ${out.remainCount} 次\n洗车 ${out.washCount} 次 / 打蜡 ${out.waxCount} 次\n余额 ¥${fmt.money(out.balance)}`,
             showCancel: false,
           });
         } catch (e) {}
@@ -122,6 +122,10 @@ Page({
 
   goMembers() {
     wx.navigateTo({ url: '/pages/records/records' });
+  },
+
+  goCatalog() {
+    wx.switchTab({ url: '/pages/catalog/catalog' });
   },
 
   callOwner() {

@@ -41,7 +41,7 @@ Page({
       const m = await api.lookup(plate);
       if (m.exists) {
         this.setData({
-          memberName: `${m.nickname} · 累计服务 ${m.totalCount} 次`,
+          memberName: `${m.nickname} · 洗车 ${m.washCount} 次 / 打蜡 ${m.waxCount} 次`,
           balanceText: fmt.money(m.balance),
         });
       } else {

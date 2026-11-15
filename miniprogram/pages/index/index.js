@@ -18,13 +18,11 @@ Page({
   async refresh() {
     try {
       const [stat, recent] = await Promise.all([api.overview(), api.recent(6)]);
-      stat.todayIncome = fmt.money(stat.todayIncome);
       stat.balanceSum = fmt.money(stat.balanceSum);
       this.setData({
         stat,
         recent: (recent.list || []).map((r) => ({
           ...r,
-          amountText: fmt.money(r.lastAmount),
           agoText: fmt.timeAgo(r.lastServiceAt),
           tagClass: fmt.serviceTag(r.lastItem),
         })),
@@ -45,22 +43,11 @@ Page({
   goScan() { wx.switchTab({ url: '/pages/scan/scan' }); },
   goAdmin() { wx.switchTab({ url: '/pages/admin/admin' }); },
   goMembers() { wx.navigateTo({ url: '/pages/records/records' }); },
+  goCatalog() { wx.switchTab({ url: '/pages/catalog/catalog' }); },
 
   openMember(e) {
     const plate = e.currentTarget.dataset.plate;
     wx.navigateTo({ url: `/pages/member/member?plate=${encodeURIComponent(plate)}` });
   },
 
-  async showPrice() {
-    try {
-      const meta = await api.meta();
-      const groups = {};
-      (meta.services || []).forEach((s) => {
-        groups[s.tag] = groups[s.tag] || [];
-        groups[s.tag].push(`${s.name}  ¥${s.price}（约${s.mins}分钟）`);
-      });
-      const content = Object.keys(groups).map((k) => `【${k}】\n${groups[k].join('\n')}`).join('\n\n');
-      wx.showModal({ title: '服务价目表', content, showCancel: false });
-    } catch (e) {}
-  },
 });

@@ -3,6 +3,7 @@ const multer = require('multer');
 const { recognizePlate } = require('../services/ocr');
 const { validatePlate, prettyPlate } = require('../utils/plate');
 const { getMemberView } = require('../services/member');
+const catalog = require('../services/catalog');
 const cfg = require('../config');
 
 const router = express.Router();
@@ -46,14 +47,18 @@ router.post('/plate', upload.single('file'), async (req, res, next) => {
   }
 });
 
-/** GET /api/v1/ocr/meta —— 服务价目表 + 充值档位 + 识别引擎状态，前端不再硬编码 */
-router.get('/meta', (req, res) => {
-  res.json({
-    ok: true,
-    services: cfg.services,
-    rechargePlans: cfg.rechargePlans,
-    ocrEngine: cfg.ocr.mock || !cfg.ocr.secretId ? 'mock' : 'tencent',
-  });
+/** GET /api/v1/ocr/meta —— 服务目录 + 充值档位 + 识别引擎状态 */
+router.get('/meta', async (req, res, next) => {
+  try {
+    const [services, tags] = await Promise.all([catalog.list(), catalog.tags()]);
+    res.json({
+      ok: true,
+      services,
+      tags,
+      rechargePlans: cfg.rechargePlans,
+      ocrEngine: cfg.ocr.mock || !cfg.ocr.secretId ? 'mock' : 'tencent',
+    });
+  } catch (e) { next(e); }
 });
 
 module.exports = router;

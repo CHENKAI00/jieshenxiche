@@ -1,0 +1,83 @@
+<view class="page">
+  <!-- 门店头图 -->
+  <view class="banner">
+    <view class="banner-title">店内项目</view>
+    <view class="banner-sub">洗车 · 打蜡 · 抛光 · 内饰 · 镀膜</view>
+    <view class="banner-tip">点项目卡片 → 输车牌 → 当场核销</view>
+  </view>
+
+  <!-- 分类 -->
+  <scroll-view class="tabs" scroll-x>
+    <view class="tab {{activeTag === '' ? 'on' : ''}}" data-tag="" bindtap="pickTag">全部</view>
+    <view wx:for="{{tags}}" wx:key="*this" class="tab {{activeTag === item ? 'on' : ''}}"
+          data-tag="{{item}}" bindtap="pickTag">{{item}}</view>
+  </scroll-view>
+
+  <!-- 项目列表 -->
+  <view wx:for="{{list}}" wx:key="id" class="svc-card" data-id="{{item.id}}" bindtap="chooseService">
+    <image wx:if="{{item.imageUrl}}" class="svc-img" src="{{item.imageUrl}}" mode="aspectFill" />
+    <view wx:else class="svc-img ph ph-{{item.tag}}">{{item.emoji}}</view>
+
+    <view class="svc-body">
+      <view class="between">
+        <view class="row" style="gap:10rpx">
+          <text class="svc-name">{{item.name}}</text>
+          <text class="tag {{item.tag === '洗车' ? '' : 'gold'}}">{{item.tag}}</text>
+        </view>
+        <text class="svc-price">¥{{item.price}}</text>
+      </view>
+      <view class="svc-desc">{{item.desc}}</view>
+      <view class="between" style="margin-top:14rpx">
+        <text class="small">约 {{item.mins}} 分钟{{item.countKey === 'wash' ? ' · 计洗车次数' : (item.countKey === 'wax' ? ' · 计打蜡次数' : '')}}</text>
+        <text class="svc-go">核销 ›</text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{list.length === 0}}" class="empty">该分类下暂无上架项目</view>
+  <view class="foot">项目与价格由后台管理系统维护</view>
+
+  <!-- 核销弹层 -->
+  <view wx:if="{{sheet}}" class="mask" bindtap="closeSheet">
+    <view class="sheet" catchtap="noop">
+      <view class="between">
+        <view class="h2">{{sheet.name}}</view>
+        <text class="svc-price">¥{{sheet.price}}</text>
+      </view>
+      <view class="small" style="margin-top:8rpx">{{sheet.mins}} 分钟 · {{sheet.tag}}</view>
+
+      <block wx:if="{{!member}}">
+        <view class="row" style="gap:16rpx;margin-top:26rpx">
+          <input class="input grow" value="{{plate}}" maxlength="8" placeholder="输入车牌核销，如 粤B12345"
+                 bindinput="onPlate" confirm-type="search" bindconfirm="lookup" />
+          <view class="qbtn" bindtap="lookup">查会员</view>
+        </view>
+        <view class="small" style="margin-top:14rpx">也可以先去「拍车牌」识别，再回来核销</view>
+      </block>
+
+      <block wx:else>
+        <view class="found">
+          <view class="between">
+            <view class="col">
+              <text style="font-weight:700">{{member.platePretty}} · {{member.nickname}}</text>
+              <text class="small">余额 ¥{{member.balanceText}} · 剩余 {{member.remainCount}} 次 · 洗车 {{member.washCount}} / 打蜡 {{member.waxCount}}</text>
+            </view>
+            <text class="tag mint">已建档</text>
+          </view>
+        </view>
+        <view class="pay-row">
+          <view class="pay {{useCount ? 'on' : ''}}" bindtap="setPay" data-v="1">
+            <view class="pay-t">扣次数</view>
+            <view class="small">剩 {{member.remainCount}} 次{{member.expireWarn ? '（已过期）' : ''}}</view>
+          </view>
+          <view class="pay {{useCount ? '' : 'on'}}" bindtap="setPay" data-v="0">
+            <view class="pay-t">余额 {{sheet.price}} 元</view>
+            <view class="small">付后 ¥{{afterBalance}}</view>
+          </view>
+        </view>
+        <button class="btn" style="margin-top:26rpx" bindtap="submit">确认核销 · {{useCount ? '扣 1 次' : '¥' + sheet.price}}</button>
+        <button class="btn ghost" style="margin-top:14rpx" bindtap="closeSheet">取消</button>
+      </block>
+    </view>
+  </view>
+</view>

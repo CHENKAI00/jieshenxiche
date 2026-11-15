@@ -33,13 +33,11 @@ Page({
   async refresh() {
     try {
       const [stat, recent] = await Promise.all([api.overview(), api.recent(12)]);
-      stat.todayIncome = fmt.money(stat.todayIncome);
       stat.balanceSum = fmt.money(stat.balanceSum);
       this.setData({
         stat,
         recent: (recent.list || []).map((r) => ({
           ...r,
-          amountText: fmt.money(r.lastAmount),
           agoText: fmt.timeAgo(r.lastServiceAt),
           tagClass: fmt.serviceTag(r.lastItem),
         })),
@@ -78,7 +76,6 @@ Page({
             if (!r.confirm) return;
             try {
               const out = await api.consume({ plateNo: m.plateNo, serviceId: svc.id, useCount, operator: getApp().globalData.staffName });
-              wx.showToast({ title: '核销成功', icon: 'success' });
               this.setData({ quickMember: out.member, quickBalance: fmt.money(out.balance) });
               this.refresh();
             } catch (e) {}

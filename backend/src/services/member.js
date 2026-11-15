@@ -1,5 +1,6 @@
 const { pool } = require('../db');
 const cfg = require('../config');
+const catalog = require('./catalog');
 const { validatePlate, normalizePlate, prettyPlate, genMemberNo } = require('../utils/plate');
 
 const TABLE = '`js_member`';
@@ -22,12 +23,12 @@ function toViewModel(row) {
     phoneRaw: row.phone || '',
     balance: Number(row.balance),
     remainCount: row.remain_count,
-    totalCount: row.total_count,
+    washCount: row.wash_count,
+    waxCount: row.wax_count,
     expireAt: row.expire_at || '',
     expireWarn: !!row.expire_at && expired,
     lastServiceAt: row.last_service_at || '',
     lastItem: row.last_item || '',
-    lastAmount: Number(row.last_amount || 0),
     remark: row.remark || '',
     status: row.status,
     createdAt: row.created_at,
@@ -73,18 +74,16 @@ async function createMember({ plateNo, nickname, phone, remark }) {
   return { created: true, ...toViewModel(rows[0]) };
 }
 
-function findService(idOrName) {
-  return cfg.services.find((s) => s.id === idOrName) || cfg.services.find((s) => s.name === idOrName);
-}
-
 /**
- * 服务核销：优先扣剩余次数（未过期），否则扣余额。
- * 支持全部服务项目（洗车、打蜡、抛光、内饰、镀膜…），不再是「洗车专用」。
+ * 服务核销
+ * - 服务项目来自「项目目录」（后台可增删改），支持洗车 / 打蜡 / 抛光 / 内饰…
+ * - 次数优先（未过期），否则扣余额
+ * - 洗车类累加 wash_count，打蜡累加 wax_count，其余项目只记录金额与最近项目
  */
-async function consume({ plateNo, serviceId, itemId, useCount = true, operator = '前台', note = '' }) {
-  const svc = findService(serviceId || itemId);
+async function consume({ plateNo, serviceId, useCount = true, operator = '前台', note = '' }) {
+  const svc = serviceId ? await catalog.get(serviceId) : null;
   if (!svc) {
-    const e = new Error('未知的服务项目');
+    const e = new Error('未知的服务项目（可能已在后台下架）');
     e.status = 400;
     throw e;
   }
@@ -117,14 +116,22 @@ async function consume({ plateNo, serviceId, itemId, useCount = true, operator =
       payType = '余额';
     }
 
+    // 按项目计次：洗车 → wash_count，打蜡 → wax_count，其它项目不计数
+    const inc = svc.countKey === 'wash' ? ', wash_count=wash_count+1'
+      : svc.countKey === 'wax' ? ', wax_count=wax_count+1'
+        : '';
+
     await conn.query(
       `UPDATE ${TABLE}
-         SET balance=?, remain_count=?, total_count=total_count+1,
-             last_service_at=NOW(), last_item=?, last_amount=?, remark=COALESCE(NULLIF(?,''), remark)
+         SET balance=?, remain_count=?,
+             last_service_at=NOW(), last_item=?,
+             remark=COALESCE(NULLIF(?,''), remark)${inc}
        WHERE id=?`,
-      [balance, remain, svc.name, amount, note, row.id]
+      [balance, remain, svc.name, note, row.id]
     );
     await conn.commit();
+
+    const [fresh] = await conn.query(`SELECT * FROM ${TABLE} WHERE id = ?`, [row.id]);
     return {
       ok: true,
       service: svc.name,
@@ -133,7 +140,8 @@ async function consume({ plateNo, serviceId, itemId, useCount = true, operator =
       amount,
       balance,
       remainCount: remain,
-      totalCount: row.total_count + 1,
+      washCount: fresh[0].wash_count,
+      waxCount: fresh[0].wax_count,
       member: await getMemberView(row.plate_no),
     };
   } catch (e) {
@@ -144,8 +152,8 @@ async function consume({ plateNo, serviceId, itemId, useCount = true, operator =
   }
 }
 
-/** 充值 / 买次卡：加余额、加次数、延有效期 */
-async function recharge({ plateNo, amount, giftAmount = 0, times = 0, months = 0, operator = '前台', note = '' }) {
+/** 充值 / 买次卡：加余额、加次数、延有效期（不动 last_* 服务字段） */
+async function recharge({ plateNo, amount, giftAmount = 0, times = 0, months = 0, note = '' }) {
   const amt = Number(amount);
   if (!(amt > 0)) {
     const e = new Error('充值金额必须大于 0');
@@ -170,9 +178,6 @@ async function recharge({ plateNo, amount, giftAmount = 0, times = 0, months = 0
       base.setMonth(base.getMonth() + Number(months));
       expireAt = base.toISOString().slice(0, 10);
     }
-    // 注意：充值只动 余额/次数/有效期。
-    // last_service_at / last_item / last_amount 是「服务维度」，只由核销写入，
-    // 否则「最近一次服务」会被充值覆盖，看板的今日实收也会算错。
     await conn.query(
       `UPDATE ${TABLE} SET balance=?, remain_count=?, expire_at=?, remark=COALESCE(NULLIF(?,''), remark) WHERE id=?`,
       [balance, remain, expireAt, note, row.id]
@@ -189,7 +194,7 @@ async function recharge({ plateNo, amount, giftAmount = 0, times = 0, months = 0
 
 async function listMembers({ keyword = '', page = 1, size = 20 }) {
   const kw = String(keyword || '').trim();
-  const lim = Math.min(Math.max(Number(size) || 20, 1), 100);
+  const lim = Math.min(Math.max(Number(size) || 20, 1), 200);
   const off = (Math.max(Number(page) || 1, 1) - 1) * lim;
   const like = `%${kw}%`;
   const where = `(?='' OR plate_no LIKE ? OR nickname LIKE ? OR phone LIKE ? OR member_no LIKE ?)`;
@@ -201,13 +206,15 @@ async function listMembers({ keyword = '', page = 1, size = 20 }) {
   return { total, page: Number(page) || 1, size: lim, list: rows.map(toViewModel) };
 }
 
-/** 门店看板：会员数、储值总额、待用次数、今日到店、今日服务实收、今日新增 */
+/** 门店看板：会员数、储值总额、待用次数、今日到店、今日新增、累计洗车/打蜡 */
 async function overview() {
   const [[agg]] = await pool.query(
-    `SELECT COUNT(*) members, SUM(balance) balance, SUM(remain_count) remain FROM ${TABLE}`
+    `SELECT COUNT(*) members, SUM(balance) balance, SUM(remain_count) remain,
+            SUM(wash_count) wash, SUM(wax_count) wax
+       FROM ${TABLE}`
   );
   const [[today]] = await pool.query(
-    `SELECT COUNT(*) visits, SUM(last_amount) amount FROM ${TABLE} WHERE DATE(last_service_at) = CURDATE()`
+    `SELECT COUNT(*) visits FROM ${TABLE} WHERE DATE(last_service_at) = CURDATE()`
   );
   const [[fresh]] = await pool.query(
     `SELECT COUNT(*) c FROM ${TABLE} WHERE DATE(created_at) = CURDATE()`
@@ -217,13 +224,14 @@ async function overview() {
     members: Number(agg.members || 0),
     balanceSum: Number(agg.balance || 0),
     remainSum: Number(agg.remain || 0),
+    washSum: Number(agg.wash || 0),
+    waxSum: Number(agg.wax || 0),
     todayVisits: Number(today.visits || 0),
-    todayIncome: Number(Number(today.amount || 0).toFixed(2)),
     todayNew: Number(fresh.c || 0),
   };
 }
 
-/** 最近到店（只有最近一次，所以按 last_service_at 排序即可，不需要流水表） */
+/** 最近到店 */
 async function recentVisits(limit = 10) {
   const lim = Math.min(Math.max(Number(limit) || 10, 1), 100);
   const [rows] = await pool.query(
@@ -234,5 +242,5 @@ async function recentVisits(limit = 10) {
 }
 
 module.exports = {
-  getMemberView, createMember, consume, recharge, listMembers, overview, recentVisits, findService,
+  getMemberView, createMember, consume, recharge, listMembers, overview, recentVisits,
 };

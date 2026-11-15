@@ -54,7 +54,7 @@
             <text class="tag">{{result.member.memberNo}}</text>
           </view>
           <view class="small" style="margin-top:6rpx">
-            累计服务 {{result.member.totalCount}} 次
+            洗车 {{result.member.washCount}} 次 · 打蜡 {{result.member.waxCount}} 次
             <text wx:if="{{result.member.lastItem}}"> · 上次 {{result.member.lastItem}}（{{lastAgo}}）</text>
           </view>
         </view>
@@ -70,8 +70,12 @@
           <view class="mini-label">剩余次数</view>
         </view>
         <view class="mini">
-          <view class="mini-num">{{result.member.totalCount}}</view>
-          <view class="mini-label">累计服务</view>
+          <view class="mini-num">{{result.member.washCount}}<text class="unit">次</text></view>
+          <view class="mini-label">洗车</view>
+        </view>
+        <view class="mini">
+          <view class="mini-num">{{result.member.waxCount}}<text class="unit">次</text></view>
+          <view class="mini-label">打蜡</view>
         </view>
       </view>
 

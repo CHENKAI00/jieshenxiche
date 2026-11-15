@@ -60,13 +60,13 @@
 .mini {
   flex: 1;
   background: #f6f9fc;
-  border-radius: 18rpx;
-  padding: 20rpx 0;
+  border-radius: 16rpx;
+  padding: 18rpx 0;
   text-align: center;
-  margin-right: 16rpx;
+  margin-right: 12rpx;
 }
 .mini:last-child { margin-right: 0; }
-.mini-num { font-size: 34rpx; font-weight: 700; color: #0b2b4a; }
+.mini-num { font-size: 30rpx; font-weight: 700; color: #0b2b4a; }
 .unit { font-size: 22rpx; color: #7b8a9a; margin-left: 4rpx; }
 .mini-label { font-size: 22rpx; color: #7b8a9a; margin-top: 6rpx; }
 

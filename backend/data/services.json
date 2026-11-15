@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "updatedAt": "2026-11-15T13:23:12.324Z",
+  "services": [
+    {
+      "id": "wash_std",
+      "name": "标准洗车",
+      "tag": "洗车",
+      "price": 30,
+      "mins": 20,
+      "desc": "高压水枪冲洗 + 中性泡沫 + 轮毂清洁 + 擦干，外观全车清洁",
+      "emoji": "🚿",
+      "image": "",
+      "countKey": "wash",
+      "on": true,
+      "sort": 10
+    },
+    {
+      "id": "wash_suv",
+      "name": "精洗 SUV/MPV",
+      "tag": "洗车",
+      "price": 50,
+      "mins": 35,
+      "desc": "大车专属，泡沫洗 + 门缝/轮毂细节刷洗 + 内饰吸尘",
+      "emoji": "🚙",
+      "image": "",
+      "countKey": "wash",
+      "on": true,
+      "sort": 20
+    },
+    {
+      "id": "wax",
+      "name": "打蜡",
+      "tag": "美容",
+      "price": 98,
+      "mins": 45,
+      "desc": "洗车打底 + 全车棕榈蜡手工上蜡 + 抛光收蜡，漆面增亮防水",
+      "emoji": "🪄",
+      "image": "",
+      "countKey": "wax",
+      "on": true,
+      "sort": 30
+    },
+    {
+      "id": "polish",
+      "name": "抛光",
+      "tag": "美容",
+      "price": 180,
+      "mins": 60,
+      "desc": "镜面还原处理，去除细微划痕、氧化层与太阳纹",
+      "emoji": "✨",
+      "image": "",
+      "countKey": null,
+      "on": true,
+      "sort": 40
+    },
+    {
+      "id": "inner",
+      "name": "内饰深度清洁",
+      "tag": "美容",
+      "price": 128,
+      "mins": 70,
+      "desc": "座椅 / 地毯 / 顶棚 / 出风口的深度清洁与除味",
+      "emoji": "🧼",
+      "image": "",
+      "countKey": null,
+      "on": true,
+      "sort": 50
+    },
+    {
+      "id": "glass",
+      "name": "玻璃镀膜",
+      "tag": "美容",
+      "price": 88,
+      "mins": 30,
+      "desc": "前档与侧窗镀膜，雨天疏水、夜间减少炫光",
+      "emoji": "🪟",
+      "image": "",
+      "countKey": null,
+      "on": true,
+      "sort": 60
+    },
+    {
+      "id": "newcar",
+      "name": "新车开蜡",
+      "tag": "美容",
+      "price": 168,
+      "mins": 90,
+      "desc": "去除运输保护蜡，再做一遍漆面养护",
+      "emoji": "🚗",
+      "image": "",
+      "countKey": null,
+      "on": true,
+      "sort": 70
+    }
+  ]
+}

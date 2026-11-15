@@ -22,9 +22,10 @@
       </view>
     </view>
 
-    <view class="mcard-foot between">
-      <text>累计服务 {{member.totalCount || 0}} 次</text>
-      <text>{{member.lastItem ? '最近 ' + member.lastItem : '暂无服务记录'}}</text>
+    <view class="mcard-counts">
+      <view class="mc"><text class="mc-n">{{member.washCount || 0}}</text><text class="mc-l">洗车</text></view>
+      <view class="mc"><text class="mc-n">{{member.waxCount || 0}}</text><text class="mc-l">打蜡</text></view>
+      <view class="mc"><text class="mc-l" style="margin-top:10rpx">{{member.lastItem ? '最近 ' + member.lastItem : '暂无服务记录'}}</text></view>
     </view>
   </view>
 
@@ -57,18 +58,22 @@
       <view class="info-row"><text class="info-k">卡号</text><text class="info-v">{{member.memberNo}}</text></view>
       <view class="info-row"><text class="info-k">手机</text><text class="info-v">{{member.phone || '未登记'}}</text></view>
       <view class="info-row"><text class="info-k">剩余次数</text><text class="info-v">{{member.remainCount}} 次{{member.expireAt ? '（有效期至 ' + member.expireAt + '）' : ''}}</text></view>
+      <view class="info-row"><text class="info-k">洗车 / 打蜡</text><text class="info-v">{{member.washCount}} 次 / {{member.waxCount}} 次</text></view>
       <view class="info-row"><text class="info-k">最近一次</text><text class="info-v">{{member.lastItem || '—'}}<text wx:if="{{member.lastServiceAt}}"> · {{lastAgo}}</text></text></view>
-      <view class="info-row"><text class="info-k">最近实收</text><text class="info-v">¥{{lastAmountText}}</text></view>
       <view class="info-row" wx:if="{{member.remark}}"><text class="info-k">备注</text><text class="info-v">{{member.remark}}</text></view>
     </view>
 
     <view class="card">
-      <view class="h2">可选服务</view>
+      <view class="between">
+        <view class="h2">店内项目</view>
+        <text class="small" bindtap="goCatalog">全部 ›</text>
+      </view>
       <view class="svc-grid">
         <view wx:for="{{services}}" wx:key="id" class="svc" data-id="{{item.id}}" bindtap="pickService">
+          <image wx:if="{{item.imageUrl}}" class="svc-img" src="{{item.imageUrl}}" mode="aspectFill" />
+          <view wx:else class="svc-img ph">{{item.emoji}}</view>
           <view class="svc-name">{{item.name}}</view>
           <view class="svc-price">¥{{item.price}}</view>
-          <view class="small">{{item.tag}} · 约{{item.mins}}分钟</view>
         </view>
       </view>
     </view>

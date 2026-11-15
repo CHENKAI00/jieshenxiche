@@ -8,7 +8,9 @@
     "dev": "node --watch src/app.js",
     "db:init": "node scripts/init-db.js",
     "test": "node test/api.smoke.js",
-    "db:migrate": "node scripts/migrate-v2.js"
+    "db:migrate": "node scripts/migrate-v2.js",
+    "migrate:v3": "node scripts/migrate-v3.js",
+    "align:comments": "node scripts/align-comments.js"
   },
   "keywords": [],
   "author": "",

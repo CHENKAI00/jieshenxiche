@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>洁神洗车 · 后台管理</title>
+<style>
+  :root{
+    --brand:#0b7bd8; --deep:#0b2b4a; --mint:#17c3b2; --gold:#e8b23a;
+    --bg:#f4f7fb; --card:#fff; --text:#16232f; --sub:#7b8a9a; --line:#eaeff5;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,"PingFang SC","Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+  .hidden{display:none !important}
+  button{font:inherit;cursor:pointer}
+  input,select,textarea{font:inherit;color:inherit}
+
+  /* 登录 */
+  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(150deg,#0b2b4a,#0b5f96 60%,#0b7bd8)}
+  .login-card{width:380px;background:#fff;border-radius:18px;padding:34px 30px;box-shadow:0 24px 60px rgba(3,22,40,.35)}
+  .login-card h1{font-size:22px;margin:0 0 6px}
+  .login-card p{color:var(--sub);margin:0 0 24px;font-size:13px}
+  .login-card input{width:100%;height:44px;border:1px solid var(--line);border-radius:10px;padding:0 14px;background:#f8fafd}
+  .login-card button{width:100%;height:46px;margin-top:16px;border:0;border-radius:10px;color:#fff;font-weight:600;
+    background:linear-gradient(135deg,var(--brand),var(--mint))}
+  .login-err{color:#e8543a;font-size:13px;margin-top:10px;min-height:18px}
+
+  /* 布局 */
+  .layout{display:flex;min-height:100vh}
+  .side{width:212px;background:linear-gradient(180deg,#0b2b4a,#0b3f66);color:#cfe3f5;padding:22px 14px;display:flex;flex-direction:column}
+  .logo{font-size:19px;font-weight:700;color:#fff;padding:0 10px 4px}
+  .logo small{display:block;font-size:11px;color:#8fb6d6;font-weight:400;margin-top:4px;letter-spacing:.5px}
+  .nav{margin-top:26px;display:flex;flex-direction:column;gap:6px}
+  .nav a{padding:11px 12px;border-radius:10px;color:#cfe3f5;text-decoration:none;font-size:14px;display:flex;gap:10px;align-items:center}
+  .nav a:hover{background:rgba(255,255,255,.08)}
+  .nav a.on{background:rgba(255,255,255,.16);color:#fff;font-weight:600}
+  .side-foot{margin-top:auto;font-size:11px;color:#7ea6c6;padding:12px 10px 0;line-height:1.7}
+
+  .main{flex:1;padding:26px 30px 60px;min-width:0}
+  .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+  .top h2{margin:0;font-size:20px}
+  .top .meta{color:var(--sub);font-size:12px}
+  .btn{border:0;border-radius:9px;padding:9px 16px;background:linear-gradient(135deg,var(--brand),var(--mint));color:#fff;font-weight:600}
+  .btn.ghost{background:#eef5fd;color:var(--brand)}
+  .btn.danger{background:#fdeceb;color:#d9463a}
+  .btn.sm{padding:5px 10px;font-size:12px;border-radius:7px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:22px}
+  .kpi{background:var(--card);border-radius:14px;padding:18px;box-shadow:0 8px 24px rgba(11,43,74,.05)}
+  .kpi .n{font-size:26px;font-weight:700;color:var(--deep)}
+  .kpi .l{font-size:12px;color:var(--sub);margin-top:4px}
+  .panel{background:var(--card);border-radius:14px;padding:20px;box-shadow:0 8px 24px rgba(11,43,74,.05);margin-bottom:20px}
+  .panel h3{margin:0 0 14px;font-size:16px}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .panel-head h3{margin:0}
+
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:11px 10px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}
+  th{color:var(--sub);font-weight:600;font-size:12px;background:#fafcfe}
+  tr:hover td{background:#fbfdff}
+  .thumb{width:46px;height:34px;border-radius:8px;object-fit:cover;background:#eef4fa;display:block}
+  .thumb.ph{display:flex;align-items:center;justify-content:center;font-size:17px}
+  .tag{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;background:#eef5fd;color:var(--brand)}
+  .tag.mint{background:#e6f9f6;color:#0f8d80}
+  .tag.gold{background:#fdf5e3;color:#a97a11}
+  .tag.grey{background:#f0f2f5;color:var(--sub)}
+  .muted{color:var(--sub)}
+  .money{font-weight:600}
+  .search{display:flex;gap:10px;margin-bottom:14px}
+  .search input{flex:1;max-width:320px;height:38px;border:1px solid var(--line);border-radius:9px;padding:0 12px;background:#f8fafd}
+
+  /* 弹窗 */
+  .modal{position:fixed;inset:0;background:rgba(9,22,35,.5);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}
+  .modal-card{background:#fff;border-radius:16px;width:560px;max-width:100%;max-height:88vh;overflow:auto;padding:24px}
+  .modal-card h3{margin:0 0 18px;font-size:17px}
+  .field{display:flex;align-items:center;gap:12px;margin-bottom:13px}
+  .field>label{width:84px;color:var(--sub);font-size:13px;flex:none}
+  .field input[type=text],.field input[type=number],.field select,.field textarea{
+    flex:1;border:1px solid var(--line);border-radius:9px;padding:9px 11px;background:#f8fafd;width:100%}
+  .field textarea{min-height:64px;resize:vertical}
+  .row-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+  .hint{font-size:12px;color:var(--sub);margin:-6px 0 14px 96px}
+  .preview{width:70px;height:52px;border-radius:10px;object-fit:cover;background:#eef4fa}
+  .kv{display:grid;grid-template-columns:96px 1fr;gap:8px 12px;font-size:13px;margin-bottom:8px}
+  .kv b{color:var(--sub);font-weight:400}
+  .toast{position:fixed;left:50%;top:22px;transform:translateX(-50%);background:#0b2b4a;color:#fff;
+    padding:10px 18px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;z-index:99}
+  .toast.on{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- 登录 -->
+<div id="login" class="login-wrap">
+  <div class="login-card">
+    <h1>洁神洗车 · 后台管理</h1>
+    <p>项目管理 · 会员管理 · 门店看板</p>
+    <input id="pwd" type="password" placeholder="员工口令（ADMIN_TOKEN）" autocomplete="current-password" />
+    <button id="loginBtn">登 录</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- 主体 -->
+<div id="app" class="layout hidden">
+  <aside class="side">
+    <div class="logo">洁神洗车<small>BACKEND CONSOLE</small></div>
+    <nav class="nav">
+      <a href="#" data-tab="overview" class="on">📊 门店看板</a>
+      <a href="#" data-tab="services">🧽 项目管理</a>
+      <a href="#" data-tab="members">👥 会员管理</a>
+    </nav>
+    <div class="side-foot">
+      单表会员系统 v3<br />
+      <a href="#" id="logout" style="color:#9fc4e0">退出登录</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="top">
+      <div>
+        <h2 id="pageTitle">门店看板</h2>
+        <div class="meta" id="pageMeta"></div>
+      </div>
+      <div id="topActions"></div>
+    </div>
+
+    <!-- 看板 -->
+    <section id="tab-overview">
+      <div class="cards" id="kpis"></div>
+      <div class="panel">
+        <div class="panel-head"><h3>最近到店</h3><button class="btn ghost sm" onclick="loadOverview()">刷新</button></div>
+        <table><thead><tr><th>车牌</th><th>车主</th><th>最近项目</th><th>到店时间</th><th>余额</th><th>剩余次数</th><th>洗车/打蜡</th></tr></thead>
+        <tbody id="recentBody"></tbody></table>
+      </div>
+    </section>
+
+    <!-- 项目管理 -->
+    <section id="tab-services" class="hidden">
+      <div class="panel">
+        <div class="panel-head">
+          <h3>店内项目（<span id="svcCount">0</span>）</h3>
+          <button class="btn" onclick="openService()">+ 新增项目</button>
+        </div>
+        <table>
+          <thead><tr><th>封面</th><th>项目</th><th>分类</th><th>价格</th><th>时长</th><th>计次</th><th>状态</th><th>排序</th><th>操作</th></tr></thead>
+          <tbody id="svcBody"></tbody>
+        </table>
+        <p class="muted" style="margin:12px 0 0;font-size:12px">
+          计次列：洗车 → 会员「洗车次数」+1，打蜡 → 「打蜡次数」+1，其它项目只记最近项目不计数。
+        </p>
+      </div>
+    </section>
+
+    <!-- 会员管理 -->
+    <section id="tab-members" class="hidden">
+      <div class="panel">
+        <div class="search">
+          <input id="kw" placeholder="车牌 / 姓名 / 手机 / 卡号" onkeydown="if(event.key==='Enter')loadMembers()" />
+          <button class="btn" onclick="loadMembers()">搜索</button>
+          <button class="btn ghost" onclick="location.href='/admin/'">清空</button>
+        </div>
+        <table>
+          <thead><tr><th>车牌</th><th>车主</th><th>手机</th><th>余额</th><th>剩余次数</th><th>洗车/打蜡</th><th>最近到店</th><th>操作</th></tr></thead>
+          <tbody id="memBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="modal" class="modal hidden"><div class="modal-card" id="modalCard"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ 基础工具 ============ */
+const $ = (s) => document.querySelector(s);
+let state = { token: localStorage.getItem('js_admin_token') || '', services: [], tab: 'overview', editing: null };
+
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(t._timer); t._timer = setTimeout(() => t.classList.remove('on'), 1800);
+}
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function money(n) { return Number(n || 0).toFixed(2); }
+function ago(ts) {
+  if (!ts) return '—';
+  const t = new Date(String(ts).replace(' ', 'T')).getTime();
+  if (isNaN(t)) return ts;
+  const d = Date.now() - t;
+  if (d < 60000) return '刚刚';
+  if (d < 3600000) return Math.floor(d / 60000) + ' 分钟前';
+  if (d < 86400000) return Math.floor(d / 3600000) + ' 小时前';
+  return String(ts).slice(0, 10);
+}
+
+async function api(path, opts = {}) {
+  const res = await fetch('/api/v1/admin' + path, {
+    method: opts.method || 'GET',
+    headers: Object.assign({ 'content-type': 'application/json', 'x-token': state.token }, opts.headers || {}),
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  if (res.status === 401) { logout(); throw new Error('未登录'); }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.ok === false) throw new Error(data.msg || '请求失败');
+  return data;
+}
+
+/* ============ 登录 ============ */
+async function login() {
+  const pwd = $('#pwd').value.trim();
+  $('#loginErr').textContent = '';
+  try {
+    const r = await fetch('/api/v1/admin/login', {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: pwd }),
+    });
+    const d = await r.json();
+    if (!r.ok || !d.ok) throw new Error(d.msg || '口令不正确');
+    state.token = d.token; localStorage.setItem('js_admin_token', d.token);
+    enter();
+  } catch (e) { $('#loginErr').textContent = e.message; }
+}
+function logout() {
+  localStorage.removeItem('js_admin_token'); state.token = '';
+  $('#app').classList.add('hidden'); $('#login').classList.remove('hidden');
+}
+function enter() {
+  $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
+  switchTab('overview');
+}
+
+/* ============ 导航 ============ */
+document.querySelectorAll('.nav a').forEach((a) => {
+  a.onclick = (e) => { e.preventDefault(); switchTab(a.dataset.tab); };
+});
+function switchTab(tab) {
+  state.tab = tab;
+  document.querySelectorAll('.nav a').forEach((a) => a.classList.toggle('on', a.dataset.tab === tab));
+  ['overview', 'services', 'members'].forEach((t) => $('#tab-' + t).classList.toggle('hidden', t !== tab));
+  const titles = { overview: '门店看板', services: '项目管理', members: '会员管理' };
+  $('#pageTitle').textContent = titles[tab];
+  if (tab === 'overview') loadOverview();
+  if (tab === 'services') loadServices();
+  if (tab === 'members') loadMembers();
+}
+
+/* ============ 看板 ============ */
+async function loadOverview() {
+  const d = await api('/overview');
+  $('#pageMeta').textContent = '统计日期 ' + d.date;
+  const items = [
+    ['会员总数', d.members],
+    ['储值总额', '¥' + money(d.balanceSum)],
+    ['待用次数', d.remainSum + ' 次'],
+    ['今日到店', d.todayVisits + ' 单'],
+    ['今日新客', d.todayNew + ' 位'],
+    ['累计洗车', d.washSum + ' 次'],
+    ['累计打蜡', d.waxSum + ' 次'],
+    ['上架项目', d.servicesOn + ' / ' + d.servicesCount],
+  ];
+  $('#kpis').innerHTML = items.map(([l, n]) => `<div class="kpi"><div class="n">${esc(n)}</div><div class="l">${l}</div></div>`).join('');
+  $('#recentBody').innerHTML = (d.recent || []).map((r) => `
+    <tr>
+      <td><b>${esc(r.platePretty)}</b></td>
+      <td>${esc(r.nickname)}</td>
+      <td><span class="tag">${esc(r.lastItem || '到店')}</span></td>
+      <td class="muted">${esc(ago(r.lastServiceAt))}</td>
+      <td class="money">¥${money(r.balance)}</td>
+      <td>${r.remainCount} 次</td>
+      <td class="muted">${r.washCount} / ${r.waxCount}</td>
+    </tr>`).join('') || '<tr><td colspan="7" class="muted">暂无到店记录</td></tr>';
+}
+
+/* ============ 项目管理 ============ */
+async function loadServices() {
+  const d = await api('/services');
+  state.services = d.services || [];
+  $('#svcCount').textContent = state.services.length;
+  const rows = state.services.map((s, i) => `
+    <tr>
+      <td>${s.image ? `<img class="thumb" src="${esc(s.image)}" />` : `<div class="thumb ph">${esc(s.emoji || '🧽')}</div>`}</td>
+      <td><b>${esc(s.name)}</b><div class="muted" style="font-size:12px">${esc(s.desc || '')}</div></td>
+      <td><span class="tag ${s.tag === '洗车' ? '' : 'gold'}">${esc(s.tag)}</span></td>
+      <td class="money">¥${money(s.price)}</td>
+      <td class="muted">${s.mins} 分钟</td>
+      <td>${s.countKey === 'wash' ? '<span class="tag">洗车+1</span>' : s.countKey === 'wax' ? '<span class="tag mint">打蜡+1</span>' : '<span class="tag grey">不计数</span>'}</td>
+      <td>${s.on ? '<span class="tag mint">上架</span>' : '<span class="tag grey">下架</span>'}</td>
+      <td class="muted">
+        <button class="btn ghost sm" onclick="moveSvc('${s.id}',-1)" ${i === 0 ? 'disabled' : ''}>↑</button>
+        <button class="btn ghost sm" onclick="moveSvc('${s.id}',1)" ${i === state.services.length - 1 ? 'disabled' : ''}>↓</button>
+      </td>
+      <td style="white-space:nowrap">
+        <button class="btn ghost sm" onclick="openService('${s.id}')">编辑</button>
+        <button class="btn ghost sm" onclick="toggleSvc('${s.id}',${!s.on})">${s.on ? '下架' : '上架'}</button>
+        <button class="btn danger sm" onclick="delSvc('${s.id}')">删除</button>
+      </td>
+    </tr>`).join('');
+  $('#svcBody').innerHTML = rows || '<tr><td colspan="9" class="muted">还没有项目，点右上角新增</td></tr>';
+}
+
+function openService(id) {
+  const s = id ? state.services.find((x) => x.id === id) : { name: '', tag: '洗车', price: 30, mins: 20, desc: '', emoji: '🧽', image: '', countKey: null, on: true, sort: 0 };
+  state.editing = id || null;
+  $('#modalCard').innerHTML = `
+    <h3>${id ? '编辑项目' : '新增项目'}</h3>
+    <div class="field"><label>名称</label><input id="f_name" type="text" value="${esc(s.name)}" placeholder="如 标准洗车 / 打蜡" /></div>
+    <div class="field"><label>分类</label>
+      <select id="f_tag"><option ${s.tag === '洗车' ? 'selected' : ''}>洗车</option><option ${s.tag === '美容' ? 'selected' : ''}>美容</option><option ${s.tag !== '洗车' && s.tag !== '美容' ? 'selected' : ''}>其他</option></select>
+    </div>
+    <div class="field"><label>价格(元)</label><input id="f_price" type="number" step="1" min="0" value="${s.price}" /></div>
+    <div class="field"><label>时长(分钟)</label><input id="f_mins" type="number" step="5" min="0" value="${s.mins}" /></div>
+    <div class="field"><label>计次</label>
+      <select id="f_count">
+        <option value="" ${!s.countKey ? 'selected' : ''}>不计数（只记最近项目）</option>
+        <option value="wash" ${s.countKey === 'wash' ? 'selected' : ''}>洗车次数 +1</option>
+        <option value="wax" ${s.countKey === 'wax' ? 'selected' : ''}>打蜡次数 +1</option>
+      </select>
+    </div>
+    <div class="field"><label>封面图</label>
+      <input id="f_file" type="file" accept="image/*" onchange="uploadImg(this)" />
+      <img class="preview" id="f_preview" src="${esc(s.image || '')}" style="${s.image ? '' : 'display:none'}" />
+    </div>
+    <div class="hint">建议 16:9 或 4:3 横图，小于 5MB；不上传则用 emoji 占位</div>
+    <div class="field"><label>占位图标</label><input id="f_emoji" type="text" maxlength="4" value="${esc(s.emoji || '🧽')}" /></div>
+    <div class="field"><label>项目说明</label><textarea id="f_desc" placeholder="水枪冲洗 + 泡沫 + 擦干…">${esc(s.desc || '')}</textarea></div>
+    <div class="row-btns">
+      <button class="btn ghost" onclick="closeModal()">取消</button>
+      <button class="btn" onclick="saveService()">保存</button>
+    </div>`;
+  $('#modal').classList.remove('hidden');
+  state.editingImage = s.image || '';
+}
+
+async function uploadImg(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('file', file);
+  const res = await fetch('/api/v1/admin/upload', { method: 'POST', headers: { 'x-token': state.token }, body: fd });
+  const d = await res.json();
+  if (!res.ok || !d.ok) { toast(d.msg || '上传失败'); return; }
+  state.editingImage = d.url;
+  const p = $('#f_preview'); p.src = d.url; p.style.display = '';
+  toast('封面已上传');
+}
+
+async function saveService() {
+  const payload = {
+    name: $('#f_name').value.trim(),
+    tag: $('#f_tag').value,
+    price: Number($('#f_price').value),
+    mins: Number($('#f_mins').value),
+    countKey: $('#f_count').value || null,
+    emoji: $('#f_emoji').value.trim() || '🧽',
+    desc: $('#f_desc').value.trim(),
+    image: state.editingImage || '',
+  };
+  if (!payload.name) return toast('请填写项目名称');
+  try {
+    if (state.editing) await api('/services/' + encodeURIComponent(state.editing), { method: 'PUT', body: payload });
+    else await api('/services', { method: 'POST', body: payload });
+    closeModal(); await loadServices(); toast('已保存');
+  } catch (e) { toast(e.message); }
+}
+
+async function toggleSvc(id, on) {
+  try { await api('/services/' + encodeURIComponent(id), { method: 'PUT', body: { on } }); await loadServices(); toast(on ? '已上架' : '已下架'); }
+  catch (e) { toast(e.message); }
+}
+async function delSvc(id) {
+  if (!confirm('确定删除这个项目？已发生的核销记录不受影响。')) return;
+  try { await api('/services/' + encodeURIComponent(id), { method: 'DELETE' }); await loadServices(); toast('已删除'); }
+  catch (e) { toast(e.message); }
+}
+async function moveSvc(id, dir) {
+  const ids = state.services.map((s) => s.id);
+  const i = ids.indexOf(id); const j = i + dir;
+  if (i < 0 || j < 0 || j >= ids.length) return;
+  [ids[i], ids[j]] = [ids[j], ids[i]];
+  try { await api('/services/reorder', { method: 'POST', body: { ids } }); await loadServices(); }
+  catch (e) { toast(e.message); }
+}
+
+/* ============ 会员管理 ============ */
+async function loadMembers() {
+  const kw = $('#kw').value.trim();
+  const d = await api('/members?size=50&keyword=' + encodeURIComponent(kw));
+  $('#pageMeta').textContent = '共 ' + d.total + ' 位会员';
+  $('#memBody').innerHTML = (d.list || []).map((m) => `
+    <tr>
+      <td><b>${esc(m.platePretty)}</b></td>
+      <td>${esc(m.nickname)}</td>
+      <td class="muted">${esc(m.phone || '—')}</td>
+      <td class="money">¥${money(m.balance)}</td>
+      <td>${m.remainCount} 次</td>
+      <td class="muted">${m.washCount} / ${m.waxCount}</td>
+      <td class="muted">${esc(ago(m.lastServiceAt))}</td>
+      <td><button class="btn ghost sm" onclick="openMember('${esc(m.plateNo)}')">详情</button></td>
+    </tr>`).join('') || '<tr><td colspan="8" class="muted">没有匹配的会员</td></tr>';
+}
+
+async function openMember(plate) {
+  const m = await api('/members/' + encodeURIComponent(plate));
+  const svcOptions = state.services.filter((s) => s.on).map((s) => `<option value="${esc(s.id)}">${esc(s.name)} ¥${money(s.price)}</option>`).join('');
+  $('#modalCard').innerHTML = `
+    <h3>${esc(m.platePretty)} · ${esc(m.nickname)}</h3>
+    <div class="kv">
+      <b>卡号</b><span>${esc(m.memberNo || '—')}</span>
+      <b>手机</b><span>${esc(m.phone || '未登记')}</span>
+      <b>余额</b><span>¥${money(m.balance)}</span>
+      <b>剩余次数</b><span>${m.remainCount} 次${m.expireAt ? '（至 ' + esc(m.expireAt) + '）' : ''}</span>
+      <b>洗车 / 打蜡</b><span>${m.washCount} 次 / ${m.waxCount} 次</span>
+      <b>最近到店</b><span>${esc(m.lastServiceAt || '—')}${m.lastItem ? ' · ' + esc(m.lastItem) : ''}</span>
+      <b>备注</b><span>${esc(m.remark || '—')}</span>
+    </div>
+    <hr style="border:0;border-top:1px solid var(--line);margin:16px 0" />
+    <div class="field"><label>核销项目</label><select id="c_svc">${svcOptions}</select></div>
+    <div class="field"><label>支付方式</label>
+      <select id="c_pay"><option value="1">优先扣次数</option><option value="0">余额支付</option></select>
+    </div>
+    <div class="row-btns" style="justify-content:flex-start">
+      <button class="btn" onclick="adminConsume('${esc(m.plateNo)}')">立即核销</button>
+    </div>
+    <hr style="border:0;border-top:1px solid var(--line);margin:16px 0" />
+    <div class="field"><label>充值(元)</label><input id="r_amt" type="number" value="200" /></div>
+    <div class="field"><label>赠送(元)</label><input id="r_gift" type="number" value="30" /></div>
+    <div class="field"><label>赠次</label><input id="r_times" type="number" value="0" /></div>
+    <div class="field"><label>有效期(月)</label><input id="r_months" type="number" value="12" /></div>
+    <div class="row-btns" style="justify-content:flex-start">
+      <button class="btn ghost" onclick="adminRecharge('${esc(m.plateNo)}')">确认充值</button>
+      <button class="btn ghost" onclick="closeModal()">关闭</button>
+    </div>`;
+  $('#modal').classList.remove('hidden');
+}
+
+async function adminConsume(plate) {
+  const serviceId = $('#c_svc').value;
+  const useCount = $('#c_pay').value === '1';
+  try {
+    const r = await api('/consume', { method: 'POST', body: { plateNo: plate, serviceId, useCount, operator: '后台' } });
+    toast(`已核销 ${r.service}（${r.payType}），剩余 ${r.remainCount} 次`);
+    await openMember(plate);
+  } catch (e) { toast(e.message); }
+}
+async function adminRecharge(plate) {
+  try {
+    const r = await api('/recharge', {
+      method: 'POST',
+      body: {
+        plateNo: plate,
+        amount: Number($('#r_amt').value),
+        giftAmount: Number($('#r_gift').value || 0),
+        times: Number($('#r_times').value || 0),
+        months: Number($('#r_months').value || 0),
+        operator: '后台',
+      },
+    });
+    toast('充值成功，余额 ¥' + money(r.balance));
+    await openMember(plate);
+  } catch (e) { toast(e.message); }
+}
+
+/* ============ 弹窗 ============ */
+function closeModal() { $('#modal').classList.add('hidden'); state.editing = null; state.editingImage = ''; }
+$('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
+
+/* ============ 启动 ============ */
+$('#loginBtn').onclick = login;
+$('#pwd').addEventListener('keydown', (e) => { if (e.key === 'Enter') login(); });
+$('#logout').onclick = (e) => { e.preventDefault(); logout(); };
+if (state.token) enter(); else $('#pwd').focus();
+</script>
+</body>
+</html>

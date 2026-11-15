@@ -16,7 +16,7 @@
           <text wx:else class="tag grey">余额</text>
         </view>
         <view class="small" style="margin-top:8rpx">{{item.nickname}} · {{item.phone || '无手机'}} · {{item.memberNo}}</view>
-        <view class="small" style="margin-top:4rpx">累计服务 {{item.totalCount}} 次{{item.lastItem ? ' · 上次 ' + item.lastItem : ''}}</view>
+        <view class="small" style="margin-top:4rpx">洗车 {{item.washCount}} 次 · 打蜡 {{item.waxCount}} 次{{item.lastItem ? ' · 上次 ' + item.lastItem : ''}}</view>
       </view>
       <view class="col" style="align-items:flex-end">
         <text style="font-size:30rpx;font-weight:700">¥{{item.balanceText}}</text>

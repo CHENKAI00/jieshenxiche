@@ -12,6 +12,10 @@ node_modules/
 # 小程序本地开发偏好
 miniprogram/project.private.config.json
 
+# 后台上传的图片（部署时随服务器走，不入库）
+backend/uploads/*
+!backend/uploads/.gitkeep
+
 # 系统/编辑器
 .DS_Store
 Thumbs.db

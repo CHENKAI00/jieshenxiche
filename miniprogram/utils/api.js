@@ -77,10 +77,19 @@ function uploadPlate(filePath) {
   });
 }
 
+/** 把后端返回的相对图片地址拼成完整地址（小程序 image 组件需要绝对 URL） */
+function absUrl(p) {
+  if (!p) return '';
+  if (/^https?:\/\//.test(p)) return p;
+  return base() + (p.startsWith('/') ? p : '/' + p);
+}
+
 module.exports = {
   base,
   token,
   request,
+  absUrl,
+  catalog: () => request('/api/v1/catalog'),
   uploadPlate,
   // ===== 业务接口 =====
   meta: () => request('/api/v1/ocr/meta'),

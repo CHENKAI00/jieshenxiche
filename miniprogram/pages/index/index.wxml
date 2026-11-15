@@ -42,8 +42,8 @@
       </view>
       <view class="stat-split"></view>
       <view class="stat-item">
-        <view class="stat-num">¥{{stat.todayIncome || '0.00'}}</view>
-        <view class="stat-label">今日实收</view>
+        <view class="stat-num">{{stat.todayNew || 0}}</view>
+        <view class="stat-label">今日新客</view>
       </view>
       <view class="stat-split"></view>
       <view class="stat-item">
@@ -53,7 +53,7 @@
     </view>
     <view class="divider"></view>
     <view class="between">
-      <text class="small">储值总额 ¥{{stat.balanceSum || '0.00'}} · 待用次数 {{stat.remainSum || 0}} 次 · 今日新客 {{stat.todayNew || 0}}</text>
+      <text class="small">储值 ¥{{stat.balanceSum || '0.00'}} · 待用 {{stat.remainSum || 0}} 次 · 累计洗车 {{stat.washSum || 0}}</text>
       <text class="small" style="color:#0b7bd8" bindtap="refresh">刷新</text>
     </view>
   </view>
@@ -68,13 +68,13 @@
       <view class="grid-ico">🧾</view>
       <view class="grid-txt">服务核销</view>
     </view>
+    <view class="grid-item" bindtap="goCatalog">
+      <view class="grid-ico">🧽</view>
+      <view class="grid-txt">店内项目</view>
+    </view>
     <view class="grid-item" bindtap="goMembers">
       <view class="grid-ico">👥</view>
       <view class="grid-txt">会员名录</view>
-    </view>
-    <view class="grid-item" bindtap="showPrice">
-      <view class="grid-ico">💰</view>
-      <view class="grid-txt">价目表</view>
     </view>
   </view>
 
@@ -94,8 +94,8 @@
         <view class="small" style="margin-top:6rpx">{{item.nickname}} · {{item.agoText}}</view>
       </view>
       <view class="col" style="align-items:flex-end">
-        <view class="rec-amt">{{item.lastAmount > 0 ? '¥' + item.amountText : '扣次数'}}</view>
-        <view class="small">余 {{item.remainCount}} 次</view>
+        <view class="small">洗车 {{item.washCount}} · 打蜡 {{item.waxCount}}</view>
+        <view class="rec-amt">余 {{item.remainCount}} 次</view>
       </view>
     </view>
   </view>

@@ -1,12 +1,10 @@
 -- ============================================================
--- 洁神洗车 · 数据库初始化（精简版 v2）
--- 目标库：jieshenxiche   唯一业务表：js_member
+-- 洁神洗车 · 数据库初始化（精简版 v3）
+-- 目标库：jieshenxiche   唯一业务表：js_member（17 字段）
 --
--- v2 精简说明（按店主意见）：
---   删除 level（不做会员等级）、points（与余额重复）、package_name、
---         avatar、records（不存流水明细）、把 wash_total 改名为 total_count
---   保留：车牌、余额、剩余次数、总次数、到期日、最近到店、备注
---   服务不限于洗车：洗车 / 打蜡 / 抛光 / 内饰 / 玻璃镀膜 都在价目表里
+-- v3 变更：total_count 拆成 wash_count(洗车) / wax_count(打蜡)；
+--          删除 last_amount（不再记最近实收）
+-- 服务项目不在这张表：目录在 backend/data/services.json，后台可增删改
 -- ============================================================
 
 CREATE DATABASE IF NOT EXISTS `jieshenxiche`
@@ -24,15 +22,15 @@ CREATE TABLE IF NOT EXISTS `js_member` (
   `phone`            VARCHAR(20)   DEFAULT NULL            COMMENT '手机号（接口返回脱敏）',
   `balance`          DECIMAL(10,2) NOT NULL DEFAULT 0.00   COMMENT '储值余额（元），唯一的钱',
   `remain_count`     INT           NOT NULL DEFAULT 0      COMMENT '剩余次数（次卡）',
-  `total_count`      INT           NOT NULL DEFAULT 0      COMMENT '累计服务次数（洗车/打蜡/抛光…）',
+  `wash_count`       INT           NOT NULL DEFAULT 0      COMMENT '洗车次数',
+  `wax_count`        INT           NOT NULL DEFAULT 0      COMMENT '打蜡次数',
   `expire_at`        DATE          DEFAULT NULL            COMMENT '次数有效期（过期后核销按余额计价）',
   `last_service_at`  DATETIME      DEFAULT NULL            COMMENT '最近到店时间',
   `last_item`        VARCHAR(32)   DEFAULT NULL            COMMENT '最近一次服务项目（洗车/打蜡…）',
-  `last_amount`      DECIMAL(10,2) NOT NULL DEFAULT 0.00   COMMENT '最近一次实收金额（0=扣的次数卡）',
   `remark`           VARCHAR(255)  DEFAULT NULL            COMMENT '备注（只洗外观/充电口别冲水…）',
   `status`           TINYINT       NOT NULL DEFAULT 1      COMMENT '1正常 0停用（停用后不参与看板）',
-  `created_at`       DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at`       DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_at`       DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '建档时间',
+  `updated_at`       DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后改动时间',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_plate_no` (`plate_no`),
   KEY `idx_phone` (`phone`),
@@ -43,11 +41,12 @@ CREATE TABLE IF NOT EXISTS `js_member` (
 -- INSERT IGNORE 保证脚本可重复执行
 INSERT IGNORE INTO `js_member`
   (`plate_no`,`plate_color`,`member_no`,`nickname`,`phone`,`balance`,
-   `remain_count`,`total_count`,`expire_at`,`last_service_at`,`last_item`,`last_amount`,`remark`)
+   `remain_count`,`wash_count`,`wax_count`,`expire_at`,
+   `last_service_at`,`last_item`,`remark`)
 VALUES
-  ('粤B12345','蓝','JS2026001','张先生','13800138000',268.50,4,26,'2026-12-31',
-   NOW() - INTERVAL 3 DAY,'精洗SUV/MPV',50.00,'常客，喜欢周五下午来'),
-  ('粤B8888G','绿','JS2026002','李女士','13900139000',1024.00,12,58,'2027-06-30',
-   NOW() - INTERVAL 1 DAY,'标准洗车',0.00,'新能源，注意充电口别冲水'),
-  ('粤A66666','蓝','JS2026003','王先生','13700137000',96.00,0,9,'2026-11-30',
-   NOW() - INTERVAL 7 DAY,'打蜡',98.00,'喜欢打蜡，每月一次');
+  ('粤B12345','蓝','JS2026001','张先生','13800138000',268.50,4,26,2,'2026-12-31',
+   NOW() - INTERVAL 3 DAY,'精洗SUV/MPV','常客，喜欢周五下午来'),
+  ('粤B8888G','绿','JS2026002','李女士','13900139000',1024.00,12,58,1,'2027-06-30',
+   NOW() - INTERVAL 1 DAY,'标准洗车','新能源，注意充电口别冲水'),
+  ('粤A66666','蓝','JS2026003','王先生','13700137000',96.00,0,9,4,'2026-11-30',
+   NOW() - INTERVAL 7 DAY,'打蜡','喜欢打蜡，每月一次');
