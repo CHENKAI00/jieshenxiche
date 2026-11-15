@@ -39,7 +39,8 @@ CREATE TABLE IF NOT EXISTS `js_member` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='洁神洗车会员总表（单表设计）';
 
 -- 演示数据（可删）：用于小程序联调「拍照识车牌 → 查会员」链路
-INSERT INTO `js_member`
+-- INSERT IGNORE 保证脚本可重复执行（表/演示数据已存在时直接跳过）
+INSERT IGNORE INTO `js_member`
   (`plate_no`,`plate_color`,`member_no`,`nickname`,`phone`,`level`,`balance`,`points`,
    `wash_total`,`package_left`,`package_name`,`expire_at`,`last_wash_at`,`remark`,`records`)
 VALUES

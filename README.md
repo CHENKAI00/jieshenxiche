@@ -117,10 +117,9 @@ CREATE DATABASE IF NOT EXISTS `jieshenxiche` DEFAULT CHARSET utf8mb4 COLLATE utf
    cd backend && npm run db:init
    ```
 
-> ⚠️ 实测记录：`<DB_HOST>:3306` TCP 可达、握手返回 **MySQL 8.0.43**，但从本机用 `root` 登录返回
-> `ER_ACCESS_DENIED_ERROR Access denied for user 'root'@'<本机公网IP>' (using password: YES)`
-> 即账号存在、但来源主机未授权或口令不匹配（账号口令请以你自己的为准）。上表第 1/2 条任选其一即可建库，
-> `backend/.env` 与 `sql/init.sql` 都已就绪，授权后一条命令建完。
+> ✅ **已建库并跑通**（MySQL 8.0.43，`host=AH11-A8`）：库 `jieshenxiche` 内只有 **1 张表 `js_member`**（20 字段，3 条演示会员）。
+> 建库即 `cd backend && npm run db:init`，脚本幂等（`CREATE TABLE IF NOT EXISTS` + `INSERT IGNORE`），可反复执行。
+> 接口 `/health` 实测 `db:"up"`，核销（`SELECT ... FOR UPDATE` 事务）、充值、门店看板均已真实落库。
 
 ---
 
@@ -201,6 +200,17 @@ MOCK_OCR=0
 ```
 
 小程序侧：所有 JSON / JS / WXML 通过语法校验，WXML 中 30+ 个事件处理函数均已实现。
+
+**真实 MySQL 联调（2026-11-15，27.124.46.63:3306 / MySQL 8.0.43）：**
+
+```
+/health                    → {"db":"up","ocr":"mock"}
+/member/粤B12345           → 张先生 · 金卡会员 · 余额 268.50 · 套餐 4 次 · 流水 2 条
+/wash/consume 精洗SUV      → 扣套餐 1 次（余 3 次）· 积分 +45 · 演示「套餐优先」
+/wash/recharge 粤A66666    → ¥100 送 ¥10 + 2 次 · 到账 206.00 · 到期 2027-05-29
+/stats/overview            → 会员 3 · 储值 1498.50 · 待用套餐 17 次 · 今日营收 100
+/stats/recent              → 粤A·66666 充值 / 粤B·12345 精洗 / 粤B·8888G 标准洗车
+```
 
 ---
 
