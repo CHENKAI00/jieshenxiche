@@ -26,6 +26,8 @@ module.exports = {
     secret: env.WX_SECRET || '',
     mock: String(env.WX_MOCK || '0') === '1',
   },
+  // 老板本人的微信 openid（逗号分隔）：登录即自动进门店端，零成本
+  bossOpenids: String(env.BOSS_OPENID || '').split(',').map((x) => x.trim()).filter(Boolean),
   ocr: {
     secretId: env.TENCENT_SECRET_ID || '',
     secretKey: env.TENCENT_SECRET_KEY || '',

@@ -12,18 +12,36 @@ Page({
   /** 车主：只走 wx.login（免费），拿 openid 后进车主端 */
   async customerLogin() {
     const app = getApp();
-    app.setRole('customer');
     try {
-      await app.ensureCustomerLogin();
+      // 每次点都用最新 openid 判断身份（老板微信在 BOSS_OPENID 白名单里会自动进门店端）
+      const out = await new Promise((resolve, reject) => {
+        wx.login({
+          success: async (res) => {
+            try {
+              const r = await api.customerLogin(res.code);
+              app.setOpenid(r.openid);
+              resolve(r);
+            } catch (e) { reject(e); }
+          },
+          fail: reject,
+        });
+      });
+      if (out.role === 'staff' && out.token) {
+        app.setToken(out.token);
+        app.setRole('staff');
+        wx.showToast({ title: '门店端已登录', icon: 'success' });
+        setTimeout(() => wx.switchTab({ url: '/pages/index/index' }), 500);
+        return;
+      }
+      app.setRole('customer');
+      wx.reLaunch({ url: '/pages/customer/home/home' });
     } catch (e) {
       wx.showModal({
         title: '登录失败',
         content: '请检查「服务地址」是否正确、后端是否已启动。',
         showCancel: false,
       });
-      return;
     }
-    wx.reLaunch({ url: '/pages/customer/home/home' });
   },
 
   /** 老板/员工：输门店口令，不依赖手机号、不调收费接口 */

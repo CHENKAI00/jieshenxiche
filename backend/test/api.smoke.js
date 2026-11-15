@@ -227,7 +227,7 @@ function ok(name, cond, extra = '') {
   r = await fetch(`${base}/customer/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: 'devcode' }) });
   j = await r.json();
   const OID = j.openid;
-  ok('车主 wx.login 换 openid（mock）', r.status === 200 && !!OID && j.mock === true, OID);
+  ok('车主 wx.login 换 openid（mock）', r.status === 200 && !!OID && j.mock === true && j.role === 'customer', OID);
 
   r = await fetch(`${base}/customer/me`, { headers: { 'x-openid': OID } });
   j = await r.json();

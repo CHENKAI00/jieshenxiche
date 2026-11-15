@@ -17,7 +17,11 @@ function customerAuth(req, res, next) {
 router.post('/login', async (req, res, next) => {
   try {
     const r = await auth.wxLogin((req.body || {}).code);
-    res.json({ ok: true, ...r });
+    // 老板本人微信：openid 命中白名单 → 直接进门店端
+    if (cfg.bossOpenids.includes(r.openid)) {
+      return res.json({ ok: true, ...r, role: 'staff', token: cfg.adminToken });
+    }
+    res.json({ ok: true, ...r, role: 'customer' });
   } catch (e) { next(e); }
 });
 

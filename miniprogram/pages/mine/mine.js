@@ -9,6 +9,7 @@ Page({
     staffInitial: '前',
     showToken: false,
     health: { db: '—', ocr: '—' },
+    openid: '',
   },
 
   onShow() {
@@ -32,6 +33,18 @@ Page({
   onToken(e) { this.setData({ token: e.detail.value }); },
   onStaff(e) { this.setData({ staffName: e.detail.value, staffInitial: (e.detail.value || '前').slice(0, 1) }); },
   toggleToken() { this.setData({ showToken: !this.data.showToken }); },
+
+  async copyOpenid() {
+    const app = getApp();
+    try {
+      if (!app.globalData.openid) await app.ensureCustomerLogin();
+      const openid = app.globalData.openid || '';
+      this.setData({ openid });
+      wx.setClipboardData({ data: openid });
+    } catch (e) {
+      wx.showToast({ title: '获取失败，检查服务地址', icon: 'none' });
+    }
+  },
 
   async save() {
     const app = getApp();

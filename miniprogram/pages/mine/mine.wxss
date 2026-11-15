@@ -10,3 +10,5 @@
 .eye { color: #0b7bd8; font-size: 24rpx; }
 .arrow { color: #c3ccd6; font-size: 34rpx; }
 .foot { text-align: center; color: #b3bfcc; font-size: 20rpx; padding-top: 12rpx; }
+
+.mono-line { font-family: "SF Mono", Menlo, monospace; font-size: 22rpx; color: #35485a; margin-top: 6rpx; word-break: break-all; }

@@ -27,6 +27,17 @@
     </view>
     <button class="btn" bindtap="save">保存并测试连接</button>
     <view class="small" style="margin-top:16rpx">当前状态：数据库 {{health.db}} · OCR {{health.ocr}}</view>
+    <view class="divider"></view>
+    <view class="between" bindtap="copyOpenid">
+      <view class="col">
+        <text class="small">本机微信 openid</text>
+        <text class="mono-line">{{openid || '点一下获取'}}</text>
+      </view>
+      <text class="small" style="color:#0b7bd8">复制</text>
+    </view>
+    <view class="small" style="margin-top:10rpx;line-height:1.6">
+      把它填到服务器 .env 的 BOSS_OPENID（逗号分隔），这台微信以后点「微信登录」就直接进门店端，不用输口令。
+    </view>
   </view>
 
   <view class="card">

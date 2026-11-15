@@ -49,6 +49,8 @@ jieshenxiche/
 
 - **微信登录（车主）**：只调 `wx.login` → `code2session`（免费），然后车牌 + 手机号绑定
 - **老板 / 门店员工登录**：输门店员工口令（`ADMIN_TOKEN`），登录后进门店端
+- **老板免密（可选，零成本）**：员工端「我的」页一键复制本机 `openid`，填到服务器 `.env` 的
+  `BOSS_OPENID=oX7bI5...`（逗号分隔可多台），老板以后点「微信登录」就直接进门店端，不用再输口令
 
 选完记住，之后可在「我的」里切换：
 
@@ -60,8 +62,10 @@ jieshenxiche/
 登录与绑定（**没有任何按次收费的接口**）：
 
 ```
-① 车主登录
-   wx.login → POST /api/v1/customer/login {code} → openid（code2session，免费）
+① 登录（code2session 免费）
+   wx.login → POST /api/v1/customer/login {code} → { openid, role }
+       role=staff 且带 token ↔ openid 命中 BOSS_OPENID（老板本人微信）
+       role=customer ↔ 普通车主
 
 ② 绑定爱车
    POST /api/v1/customer/bind {plateNo, phone}
