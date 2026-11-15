@@ -1,0 +1,115 @@
+<view class="page">
+  <view wx:if="{{!loaded}}" class="loading">正在读取会员档案…</view>
+
+  <!-- 会员卡 -->
+  <view wx:if="{{loaded}}" class="mcard {{member.level >= 3 ? 'vip' : ''}}">
+    <view class="mcard-top between">
+      <view class="col">
+        <view class="plate" style="color:#fff">{{member.platePretty || platePretty}}</view>
+        <view class="mcard-sub">{{member.exists === false ? '未建档车牌' : member.nickname + ' · ' + member.levelName}}</view>
+      </view>
+      <view class="tag {{member.level >= 3 ? 'gold' : 'mint'}}">{{member.exists === false ? '待建档' : member.memberNo}}</view>
+    </view>
+
+    <view class="mcard-balance">
+      <view class="col">
+        <text class="mcard-label">储值余额</text>
+        <text class="mcard-money">¥{{balanceText}}</text>
+      </view>
+      <view class="col" style="align-items:flex-end">
+        <text class="mcard-label">套餐剩余</text>
+        <text class="mcard-money">{{member.packageLeft || 0}}<text class="unit">次</text></text>
+      </view>
+    </view>
+
+    <view class="mcard-foot between">
+      <text>累计洗车 {{member.washTotal || 0}} 次 · 积分 {{member.points || 0}}</text>
+      <text>{{member.expireAt ? '套餐到期 ' + member.expireAt : '无套餐'}}</text>
+    </view>
+  </view>
+
+  <!-- 已建档：快捷操作 -->
+  <block wx:if="{{member.exists}}">
+    <view class="actions">
+      <view class="action" bindtap="openWash">
+        <view class="action-ico">🧽</view>
+        <view class="action-txt">洗车核销</view>
+      </view>
+      <view class="action" bindtap="goRecharge">
+        <view class="action-ico">💳</view>
+        <view class="action-txt">充值开卡</view>
+      </view>
+      <view class="action" bindtap="openPoints">
+        <view class="action-ico">🎁</view>
+        <view class="action-txt">积分兑换</view>
+      </view>
+      <view class="action" bindtap="callOwner">
+        <view class="action-ico">📞</view>
+        <view class="action-txt">联系车主</view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="between">
+        <view class="h2">会员资料</view>
+        <text class="small" style="color:#0b7bd8" bindtap="goRecords">全部流水 ›</text>
+      </view>
+      <view class="info-row"><text class="info-k">卡号</text><text class="info-v">{{member.memberNo}}</text></view>
+      <view class="info-row"><text class="info-k">手机</text><text class="info-v">{{member.phone || '未登记'}}</text></view>
+      <view class="info-row"><text class="info-k">等级 / 折扣</text><text class="info-v">{{member.levelName}} · {{discountText}}</text></view>
+      <view class="info-row"><text class="info-k">套餐</text><text class="info-v">{{member.packageName || '无'}}（剩 {{member.packageLeft}} 次）</text></view>
+      <view class="info-row"><text class="info-k">最近到店</text><text class="info-v">{{member.lastWashAt || '—'}}</text></view>
+      <view class="info-row" wx:if="{{member.remark}}"><text class="info-k">备注</text><text class="info-v">{{member.remark}}</text></view>
+    </view>
+
+    <view class="card">
+      <view class="h2">最近流水</view>
+      <view wx:if="{{records.length === 0}}" class="empty">暂无记录</view>
+      <view wx:for="{{records}}" wx:key="id" class="flow">
+        <view class="col grow">
+          <view class="flow-title">{{item.item}}</view>
+          <view class="small">{{item.ts}} · {{item.operator}}</view>
+        </view>
+        <view class="col" style="align-items:flex-end">
+          <view class="flow-amt {{item.type === 'recharge' ? 'in' : ''}}">
+            {{item.type === 'recharge' ? '+' : (item.type === 'points' ? '' : '-')}}{{item.type === 'points' ? item.points + '分' : '¥' + item.amountText}}
+          </view>
+          <view class="small">{{item.payType}}</view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 未建档：建档表单 -->
+  <block wx:else>
+    <view class="card">
+      <view class="h2">新建会员档案</view>
+      <view class="small" style="margin:12rpx 0 28rpx">一次建档，之后拍照即可识别</view>
+      <view class="field">
+        <text class="field-k">车牌</text>
+        <input class="input grow" value="{{form.plateNo}}" bindinput="onForm" data-k="plateNo" maxlength="8" />
+      </view>
+      <view class="field">
+        <text class="field-k">称呼</text>
+        <input class="input grow" value="{{form.nickname}}" placeholder="如 张先生" bindinput="onForm" data-k="nickname" />
+      </view>
+      <view class="field">
+        <text class="field-k">手机</text>
+        <input class="input grow" type="number" value="{{form.phone}}" placeholder="用于联系车主" bindinput="onForm" data-k="phone" maxlength="11" />
+      </view>
+      <view class="field">
+        <text class="field-k">等级</text>
+        <picker class="grow" range="{{levelNames}}" value="{{levelIndex}}" bindchange="onLevel">
+          <view class="input">{{levelNames[levelIndex]}}</view>
+        </picker>
+      </view>
+      <view class="field">
+        <text class="field-k">备注</text>
+        <input class="input grow" value="{{form.remark}}" placeholder="如 只洗外观 / 有充电口注意" bindinput="onForm" data-k="remark" />
+      </view>
+      <button class="btn warn" style="margin-top:12rpx" bindtap="submitCreate">建档并开通</button>
+    </view>
+  </block>
+
+  <view class="foot">洁神洗车 · 会员卡</view>
+</view>

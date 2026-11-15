@@ -1,0 +1,51 @@
+{
+  "description": "洁神洗车 · 门店会员小程序（拍照识车牌查会员）",
+  "appid": "touristappid",
+  "projectname": "jieshenxiche",
+  "miniprogramRoot": "./",
+  "compileType": "miniprogram",
+  "libVersion": "3.5.5",
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": false,
+    "newFeature": true,
+    "coverView": true,
+    "nodeModules": false,
+    "autoAudits": false,
+    "showShadowRootInWxmlPanel": true,
+    "scopeDataCheck": false,
+    "uglifyFileName": false,
+    "checkInvalidKey": true,
+    "checkSiteMap": true,
+    "uploadWithSourceMap": true,
+    "compileHotReLoad": true,
+    "lazyloadPlaceholderEnable": false,
+    "useMultiFrameRuntime": true,
+    "useApiHook": true,
+    "useApiHostProcess": true,
+    "showES6CompileOption": false,
+    "useCompilerPlugins": false,
+    "ignoreUploadUnusedFiles": true
+  },
+  "condition": {
+    "miniprogram": {
+      "list": [
+        {
+          "name": "会员卡-示例车牌",
+          "pathName": "pages/member/member",
+          "query": "plate=%E7%B2%A4B12345",
+          "scene": null
+        },
+        {
+          "name": "会员名录",
+          "pathName": "pages/records/records",
+          "query": "mode=members",
+          "scene": null
+        }
+      ]
+    }
+  }
+}

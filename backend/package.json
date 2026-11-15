@@ -1,0 +1,23 @@
+{
+  "name": "jieshenxiche-api",
+  "version": "1.0.0",
+  "description": "洁神洗车小程序后端 API（车牌识别查会员）",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js",
+    "db:init": "node scripts/init-db.js",
+    "test": "node test/api.smoke.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.10",
+    "express": "^5.3.0",
+    "multer": "^2.5.0",
+    "mysql2": "^3.24.6"
+  }
+}

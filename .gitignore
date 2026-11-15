@@ -1,0 +1,20 @@
+# 依赖
+node_modules/
+**/node_modules/
+
+# 环境变量与密钥（真实数据库口令只放本地 .env，绝不入库）
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# 小程序本地开发偏好
+miniprogram/project.private.config.json
+
+# 系统/编辑器
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/

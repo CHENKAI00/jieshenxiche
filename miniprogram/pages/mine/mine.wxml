@@ -1,0 +1,47 @@
+<view class="page">
+  <view class="card profile">
+    <view class="avatar">{{staffInitial}}</view>
+    <view class="col grow" style="margin-left:22rpx">
+      <view class="h2">{{staffName}}</view>
+      <view class="small" style="margin-top:6rpx">洁神洗车 · 门店员工</view>
+    </view>
+    <view class="tag mint">在线</view>
+  </view>
+
+  <view class="card">
+    <view class="h2">连接设置</view>
+    <view class="small" style="margin:12rpx 0 24rpx">真机预览时请把地址换成可访问的公网地址或域名</view>
+
+    <view class="field">
+      <text class="field-k">服务地址</text>
+      <input class="input grow" value="{{baseUrl}}" placeholder="http://127.0.0.1:8099" bindinput="onBase" />
+    </view>
+    <view class="field">
+      <text class="field-k">员工口令</text>
+      <input class="input grow" value="{{token}}" password="{{!showToken}}" placeholder="门店员工口令" bindinput="onToken" />
+      <text class="eye" bindtap="toggleToken">{{showToken ? '隐藏' : '显示'}}</text>
+    </view>
+    <view class="field">
+      <text class="field-k">员工姓名</text>
+      <input class="input grow" value="{{staffName}}" placeholder="用于流水记录的操作人" bindinput="onStaff" />
+    </view>
+    <button class="btn" bindtap="save">保存并测试连接</button>
+    <view class="small" style="margin-top:16rpx">当前状态：数据库 {{health.db}} · OCR {{health.ocr}}</view>
+  </view>
+
+  <view class="card">
+    <view class="between" bindtap="openMembers">
+      <text>会员名录</text><text class="arrow">›</text>
+    </view>
+    <view class="divider"></view>
+    <view class="between" bindtap="showPrice">
+      <text>洗车价目表</text><text class="arrow">›</text>
+    </view>
+    <view class="divider"></view>
+    <view class="between" bindtap="showAbout">
+      <text>关于洁神洗车</text><text class="arrow">›</text>
+    </view>
+  </view>
+
+  <view class="foot">v1.0.0 · 单表会员系统</view>
+</view>

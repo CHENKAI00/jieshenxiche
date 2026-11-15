@@ -1,0 +1,65 @@
+<view class="page">
+  <!-- 会员名录模式 -->
+  <block wx:if="{{mode === 'members'}}">
+    <view class="search">
+      <input class="search-input" value="{{keyword}}" placeholder="车牌 / 姓名 / 手机 / 卡号"
+             bindinput="onKeyword" confirm-type="search" bindconfirm="doSearch" />
+      <view class="search-btn" bindtap="doSearch">搜索</view>
+    </view>
+
+    <view wx:if="{{list.length === 0}}" class="empty">没有匹配的会员</view>
+
+    <view wx:for="{{list}}" wx:key="id" class="card mrow" data-plate="{{item.plateNo}}" bindtap="openMember">
+      <view class="between">
+        <view class="col">
+          <view class="row" style="gap:12rpx">
+            <text class="plate" style="font-size:34rpx">{{item.platePretty}}</text>
+            <text class="tag {{item.level >= 3 ? 'gold' : ''}}">{{item.levelName}}</text>
+          </view>
+          <view class="small" style="margin-top:8rpx">{{item.nickname}} · {{item.phone || '无手机'}} · {{item.memberNo}}</view>
+        </view>
+        <view class="col" style="align-items:flex-end">
+          <text style="font-size:30rpx;font-weight:700">¥{{item.balanceText}}</text>
+          <text class="small">套餐 {{item.packageLeft}} 次</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{hasMore}}" class="more" bindtap="loadMore">加载更多</view>
+  </block>
+
+  <!-- 单会员流水模式 -->
+  <block wx:else>
+    <view class="card">
+      <view class="between">
+        <view class="col">
+          <view class="plate" style="font-size:38rpx">{{platePretty}}</view>
+          <view class="small" style="margin-top:6rpx">{{member.nickname}} · {{member.levelName}}</view>
+        </view>
+        <view class="col" style="align-items:flex-end">
+          <text class="small">余额</text>
+          <text class="h2">¥{{balanceText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="h2">全部流水（{{records.length}}）</view>
+      <view wx:if="{{records.length === 0}}" class="empty">暂无流水</view>
+      <view wx:for="{{records}}" wx:key="id" class="flow">
+        <view class="col grow">
+          <view class="flow-title">{{item.item}}</view>
+          <view class="small">{{item.ts}} · {{item.operator}}{{item.note ? ' · ' + item.note : ''}}</view>
+        </view>
+        <view class="col" style="align-items:flex-end">
+          <view class="flow-amt {{item.type === 'recharge' ? 'in' : ''}}">
+            {{item.type === 'recharge' ? '+' : (item.type === 'points' ? '' : '-')}}{{item.type === 'points' ? item.points + '分' : '¥' + item.amountText}}
+          </view>
+          <view class="small">余额 ¥{{item.balanceText}}</view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <view class="foot">共 {{mode === 'members' ? total : records.length}} 条</view>
+</view>

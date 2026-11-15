@@ -1,0 +1,97 @@
+const api = require('../../utils/api');
+const fmt = require('../../utils/fmt');
+
+Page({
+  data: {
+    stat: {},
+    recent: [],
+    health: { db: '—', ocr: '—' },
+    plate: '',
+    quickMember: null,
+    quickBalance: '0.00',
+    items: [],
+  },
+
+  onShow() {
+    this.refresh();
+    this.checkHealth();
+    this.loadMeta();
+  },
+
+  async loadMeta() {
+    try {
+      const meta = await api.meta();
+      this.setData({ items: meta.items || [] });
+    } catch (e) {}
+  },
+
+  async checkHealth() {
+    const h = await api.health();
+    this.setData({ health: { db: h.db || 'down', ocr: h.ocr || '—' } });
+  },
+
+  async refresh() {
+    try {
+      const [stat, recent] = await Promise.all([api.overview(), api.recent(12)]);
+      stat.todayIncome = fmt.money(stat.todayIncome);
+      stat.balanceSum = fmt.money(stat.balanceSum);
+      this.setData({
+        stat,
+        recent: (recent.list || []).map((r) => ({
+          ...r, amountText: fmt.money(r.amount), typeText: fmt.typeText(r.type),
+        })),
+      });
+    } catch (e) {}
+  },
+
+  onPlate(e) {
+    this.setData({ plate: (e.detail.value || '').toUpperCase() });
+  },
+
+  async quickLookup() {
+    const p = (this.data.plate || '').replace(/[·\s]/g, '').toUpperCase();
+    if (p.length < 7) return wx.showToast({ title: '车牌至少 7 位', icon: 'none' });
+    try {
+      const m = await api.lookup(p);
+      this.setData({ quickMember: m, quickBalance: fmt.money(m.balance) });
+    } catch (e) {}
+  },
+
+  openWash() {
+    const items = this.data.items;
+    if (!items.length) return wx.showToast({ title: '价目表未加载', icon: 'none' });
+    const m = this.data.quickMember;
+    if (!m || !m.exists) return;
+    wx.showActionSheet({
+      itemList: items.map((i) => `${i.name} ¥${i.price}`),
+      success: (res) => {
+        const item = items[res.tapIndex];
+        const usePackage = m.packageLeft > 0 && !m.expireWarn;
+        const price = Math.round(item.price * (m.discount || 1) * 100) / 100;
+        wx.showModal({
+          title: '确认核销',
+          content: `${m.platePretty}\n${item.name}\n${usePackage ? '扣套餐 1 次（余 ' + m.packageLeft + '）' : '余额支付 ¥' + price.toFixed(2)}`,
+          success: async (r) => {
+            if (!r.confirm) return;
+            try {
+              await api.consume({ plateNo: m.plateNo, itemId: item.id, usePackage, operator: getApp().globalData.staffName });
+              wx.showToast({ title: '核销成功', icon: 'success' });
+              this.quickLookup();
+              this.refresh();
+            } catch (e) {}
+          },
+        });
+      },
+    });
+  },
+
+  goCreate() {
+    const p = (this.data.plate || '').toUpperCase();
+    wx.navigateTo({ url: `/pages/member/member?plate=${encodeURIComponent(p)}&create=1` });
+  },
+
+  openMember(e) {
+    const plate = e.currentTarget.dataset.plate;
+    if (plate) wx.navigateTo({ url: `/pages/member/member?plate=${encodeURIComponent(plate)}` });
+  },
+});

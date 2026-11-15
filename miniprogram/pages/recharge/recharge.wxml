@@ -1,0 +1,68 @@
+<view class="page">
+  <view class="card">
+    <view class="between">
+      <view class="col">
+        <view class="h2">{{platePretty}}</view>
+        <view class="small" style="margin-top:8rpx">{{memberName}}</view>
+      </view>
+      <view class="col" style="align-items:flex-end">
+        <text class="small">当前余额</text>
+        <text class="h2">¥{{balanceText}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="h2">选择充值方案</view>
+    <view class="plans">
+      <view wx:for="{{plans}}" wx:key="index"
+            class="plan {{index === active ? 'on' : ''}}"
+            data-index="{{index}}" bindtap="pickPlan">
+        <view class="plan-amt">¥{{item.amount}}</view>
+        <view class="plan-gift" wx:if="{{item.gift}}">送 ¥{{item.gift}}</view>
+        <view class="plan-gift" wx:else>无赠送</view>
+        <view class="plan-times" wx:if="{{item.times}}">+{{item.times}} 次</view>
+      </view>
+    </view>
+
+    <view class="field" style="margin-top:28rpx">
+      <text class="field-k">自定义</text>
+      <input class="input grow" type="digit" value="{{custom}}" placeholder="输入金额，0 表示不用"
+             bindinput="onCustom" />
+    </view>
+    <view class="field">
+      <text class="field-k">有效期</text>
+      <picker class="grow" range="{{monthOptions}}" value="{{monthIndex}}" bindchange="onMonth">
+        <view class="input">{{monthOptions[monthIndex]}}</view>
+      </picker>
+    </view>
+    <view class="field">
+      <text class="field-k">升级</text>
+      <picker class="grow" range="{{levelNames}}" value="{{levelIndex}}" bindchange="onLevel">
+        <view class="input">{{levelNames[levelIndex]}}</view>
+      </picker>
+    </view>
+  </view>
+
+  <view class="card summary">
+    <view class="between">
+      <text class="small">实收金额</text>
+      <text class="pay-amt">¥{{payText}}</text>
+    </view>
+    <view class="between" style="margin-top:14rpx">
+      <text class="small">到账余额</text>
+      <text>¥{{creditText}}</text>
+    </view>
+    <view class="between" style="margin-top:14rpx">
+      <text class="small">赠送次数</text>
+      <text>{{timesText}} 次</text>
+    </view>
+    <view class="between" style="margin-top:14rpx">
+      <text class="small">套餐名称</text>
+      <text>{{packageName}}</text>
+    </view>
+  </view>
+
+  <button class="btn" bindtap="submit">确认充值 ¥{{payText}}</button>
+  <view class="foot">演示版走「确认即到账」；接入商户号后替换为 wx.requestPayment</view>
+</view>

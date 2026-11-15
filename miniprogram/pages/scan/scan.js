@@ -1,0 +1,139 @@
+const api = require('../../utils/api');
+const fmt = require('../../utils/fmt');
+
+Page({
+  data: {
+    imagePath: '',
+    loading: false,
+    result: null,
+    confText: '',
+    balanceText: '0.00',
+    memberInitial: '',
+    showInput: false,
+    plateInput: '',
+  },
+
+  onShow() {
+    // 从会员卡返回后，如果停在结果页则静默刷新一次
+    if (this.data.result && this.data.result.plateNo) this.lookupByPlate(this.data.result.plateNo);
+  },
+
+  takePhoto() {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: this.data.imagePath ? ['camera', 'album'] : ['camera'],
+      camera: 'back',
+      sizeType: ['compressed'],
+      success: (res) => {
+        const file = res.tempFiles && res.tempFiles[0];
+        if (file) this.doRecognize(file.tempFilePath);
+      },
+    });
+  },
+
+  chooseAlbum() {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: ['album'],
+      sizeType: ['compressed'],
+      success: (res) => {
+        const file = res.tempFiles && res.tempFiles[0];
+        if (file) this.doRecognize(file.tempFilePath);
+      },
+    });
+  },
+
+  async doRecognize(filePath) {
+    this.setData({ imagePath: filePath, loading: true });
+    try {
+      const r = await api.uploadPlate(filePath);
+      this.applyResult(r);
+      if (r.exists && r.member) {
+        wx.vibrateShort && wx.vibrateShort({ type: 'light' });
+        wx.showToast({ title: `${r.member.nickname} 已到店`, icon: 'success' });
+      } else if (r.plateNo) {
+        wx.showToast({ title: '未建档，可一键建档', icon: 'none' });
+      }
+    } catch (e) {
+      // 识别服务异常时直接进手输
+      this.setData({ showInput: true, plateInput: '' });
+    } finally {
+      this.setData({ loading: false });
+    }
+  },
+
+  applyResult(r) {
+    const member = r.member || null;
+    this.setData({
+      result: r,
+      confText: r.confidence ? Math.round(r.confidence * 100) + '%' : '—',
+      balanceText: member ? fmt.money(member.balance) : '0.00',
+      memberInitial: member && member.nickname ? member.nickname.slice(0, 1) : '车',
+    });
+    const app = getApp();
+    app.globalData.lastPlate = r.plateNo || '';
+  },
+
+  async lookupByPlate(plate) {
+    try {
+      const m = await api.lookup(plate);
+      const result = {
+        plateNo: m.plateNo,
+        platePretty: m.platePretty,
+        plateValid: m.plateValid,
+        plateColor: m.plateColor || '',
+        engine: 'manual',
+        exists: m.exists,
+        member: m.exists ? m : null,
+        confidence: 0,
+      };
+      this.applyResult(result);
+    } catch (e) { /* ignore */ }
+  },
+
+  reset() {
+    this.setData({ imagePath: '', result: null });
+  },
+
+  editPlate() {
+    this.setData({ showInput: true, plateInput: (this.data.result && this.data.result.plateNo) || '' });
+  },
+
+  focusInput() {
+    this.setData({ showInput: true, plateInput: '' });
+  },
+
+  onInput(e) {
+    this.setData({ plateInput: (e.detail.value || '').toUpperCase() });
+  },
+
+  closeInput() { this.setData({ showInput: false }); },
+  noop() {},
+
+  submitPlate() {
+    const p = (this.data.plateInput || '').replace(/[·\s]/g, '').toUpperCase();
+    if (p.length < 7) return wx.showToast({ title: '车牌至少 7 位', icon: 'none' });
+    this.setData({ showInput: false });
+    this.lookupByPlate(p);
+  },
+
+  openMember() {
+    const p = this.data.result && this.data.result.plateNo;
+    if (!p) return;
+    wx.navigateTo({ url: `/pages/member/member?plate=${encodeURIComponent(p)}` });
+  },
+
+  openRecharge() {
+    const p = this.data.result && this.data.result.plateNo;
+    if (!p) return;
+    wx.navigateTo({ url: `/pages/recharge/recharge?plate=${encodeURIComponent(p)}` });
+  },
+
+  goCreate() {
+    const p = this.data.result && this.data.result.plateNo;
+    if (!p) return;
+    wx.navigateTo({ url: `/pages/member/member?plate=${encodeURIComponent(p)}&create=1` });
+  },
+});

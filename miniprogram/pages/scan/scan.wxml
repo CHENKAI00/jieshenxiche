@@ -1,0 +1,112 @@
+<view class="page">
+  <view class="tip-bar">
+    <text>对准车牌拍摄，自动识别并调出会员档案</text>
+  </view>
+
+  <!-- 拍摄区 -->
+  <view class="shoot {{imagePath ? 'has-img' : ''}}" bindtap="takePhoto">
+    <block wx:if="{{imagePath}}">
+      <image class="shot" src="{{imagePath}}" mode="aspectFill" />
+      <view class="shot-mask">
+        <text>{{loading ? '识别中…' : '点击重拍'}}</text>
+      </view>
+    </block>
+    <block wx:else>
+      <view class="shoot-inner">
+        <view class="shoot-ico">📷</view>
+        <view class="shoot-title">拍摄车牌</view>
+        <view class="small">支持蓝牌 / 绿牌（新能源）/ 黄牌</view>
+      </view>
+      <view class="frame"></view>
+    </block>
+  </view>
+
+  <view class="pick-row">
+    <view class="pick" bindtap="takePhoto">📷 拍照</view>
+    <view class="pick" bindtap="chooseAlbum">🖼 相册</view>
+    <view class="pick" bindtap="focusInput">⌨️ 手输</view>
+  </view>
+
+  <!-- 识别结果 -->
+  <view wx:if="{{result}}" class="card result-card">
+    <view class="between">
+      <view class="col">
+        <view class="plate">{{result.platePretty || result.plateNo}}</view>
+        <view class="small" style="margin-top:8rpx">
+          置信度 {{confText}} · 车牌颜色 {{result.plateColor || '未知'}}
+          <text wx:if="{{result.engine === 'mock'}}"> · 演示模式</text>
+        </view>
+      </view>
+      <view class="tag {{result.exists ? 'mint' : 'grey'}}">{{result.exists ? '已建档' : '未建档'}}</view>
+    </view>
+
+    <view wx:if="{{!result.plateValid}}" class="warn-box">
+      <text>{{result.reason || '识别结果不完整，请重拍或手动修正车牌'}}</text>
+    </view>
+
+    <block wx:if="{{result.exists && result.member}}">
+      <view class="divider"></view>
+      <view class="member-row">
+        <view class="avatar">{{memberInitial}}</view>
+        <view class="col grow" style="margin-left:20rpx">
+          <view class="row" style="gap:12rpx">
+            <text class="h2">{{result.member.nickname}}</text>
+            <text class="tag gold">{{result.member.levelName}}</text>
+          </view>
+          <view class="small" style="margin-top:6rpx">
+            卡号 {{result.member.memberNo}} · 累计洗车 {{result.member.washTotal}} 次
+          </view>
+        </view>
+      </view>
+
+      <view class="mini-grid">
+        <view class="mini">
+          <view class="mini-num">¥{{balanceText}}</view>
+          <view class="mini-label">储值余额</view>
+        </view>
+        <view class="mini">
+          <view class="mini-num">{{result.member.packageLeft}}<text class="unit">次</text></view>
+          <view class="mini-label">套餐剩余</view>
+        </view>
+        <view class="mini">
+          <view class="mini-num">{{result.member.points}}</view>
+          <view class="mini-label">积分</view>
+        </view>
+      </view>
+
+      <view wx:if="{{result.member.expireWarn}}" class="warn-box">
+        <text>套餐已于 {{result.member.expireAt}} 到期，核销将按余额计价</text>
+      </view>
+
+      <view class="row" style="gap:18rpx;margin-top:24rpx">
+        <button class="btn grow" bindtap="openMember">进入会员卡</button>
+        <button class="btn ghost" style="width:220rpx" bindtap="openRecharge">充值</button>
+      </view>
+    </block>
+
+    <block wx:elif="{{result.plateValid}}">
+      <view class="divider"></view>
+      <view class="empty" style="padding:24rpx 0">
+        这个车牌还没有会员档案，可直接建档并开通储值/次卡
+      </view>
+      <button class="btn warn" bindtap="goCreate">立即为 {{result.platePretty}} 建档</button>
+    </block>
+
+    <view class="row" style="margin-top:18rpx;gap:18rpx">
+      <button class="btn ghost grow" bindtap="reset">重新识别</button>
+      <button class="btn ghost grow" bindtap="editPlate">修正车牌</button>
+    </view>
+  </view>
+
+  <!-- 手输弹层 -->
+  <view wx:if="{{showInput}}" class="mask" bindtap="closeInput">
+    <view class="sheet" catchtap="noop">
+      <view class="h2">手动输入车牌</view>
+      <input class="input" style="margin-top:24rpx" focus="{{showInput}}" value="{{plateInput}}"
+             placeholder="如 粤B12345（新能源 8 位）" maxlength="8" bindinput="onInput" />
+      <button class="btn" style="margin-top:28rpx" bindtap="submitPlate">查询会员</button>
+    </view>
+  </view>
+
+  <view class="foot">识别失败也可手输车牌，不影响查会员</view>
+</view>

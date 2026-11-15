@@ -1,0 +1,38 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/scan/scan",
+    "pages/member/member",
+    "pages/recharge/recharge",
+    "pages/records/records",
+    "pages/admin/admin",
+    "pages/mine/mine"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#0b2b4a",
+    "navigationBarTitleText": "洁神洗车",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f4f7fb"
+  },
+  "tabBar": {
+    "color": "#8a97a6",
+    "selectedColor": "#0b7bd8",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "首页" },
+      { "pagePath": "pages/scan/scan", "text": "拍车牌" },
+      { "pagePath": "pages/admin/admin", "text": "门店" },
+      { "pagePath": "pages/mine/mine", "text": "我的" }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "permission": {
+    "scope.camera": {
+      "desc": "拍摄车牌用于识别会员信息"
+    }
+  },
+  "lazyCodeLoading": "requiredComponents"
+}

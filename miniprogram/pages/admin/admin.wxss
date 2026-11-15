@@ -1,0 +1,37 @@
+.board {
+  background: linear-gradient(150deg, #0b2b4a, #0b5f96 65%, #0b7bd8);
+  color: #fff;
+  box-shadow: 0 16rpx 40rpx rgba(11, 43, 74, 0.24);
+}
+.board-grid { display: flex; margin-top: 32rpx; }
+.b-item { flex: 1; text-align: center; }
+.b-num { font-size: 44rpx; font-weight: 700; }
+.b-label { font-size: 22rpx; color: rgba(255,255,255,0.7); margin-top: 6rpx; }
+.board-sub {
+  margin-top: 28rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid rgba(255,255,255,0.16);
+  font-size: 22rpx;
+  color: rgba(255,255,255,0.72);
+}
+
+.qbtn {
+  width: 150rpx; height: 88rpx; line-height: 88rpx;
+  text-align: center; border-radius: 16rpx;
+  background: linear-gradient(135deg, #0b7bd8, #17c3b2);
+  color: #fff; font-size: 26rpx; font-weight: 600;
+}
+.quick-res {
+  margin-top: 22rpx;
+  background: #f6f9fc;
+  border-radius: 18rpx;
+  padding: 22rpx;
+}
+
+.flow { display: flex; align-items: center; padding: 18rpx 0; border-bottom: 1rpx solid #f4f7fa; }
+.flow:last-child { border-bottom: none; }
+.flow-plate { font-family: "SF Mono", Menlo, monospace; font-size: 28rpx; font-weight: 700; }
+.flow-amt { font-size: 28rpx; font-weight: 700; color: #e8543a; }
+.flow-amt.in { color: #0f9b8e; }
+
+.foot { text-align: center; color: #b3bfcc; font-size: 20rpx; padding-top: 8rpx; }

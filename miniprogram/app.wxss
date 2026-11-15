@@ -1,0 +1,89 @@
+/* 洁神洗车 · 全局样式 */
+page {
+  --brand: #0b7bd8;
+  --brand-deep: #0b2b4a;
+  --mint: #17c3b2;
+  --gold: #e8b23a;
+  --text: #16232f;
+  --sub: #7b8a9a;
+  --card: #ffffff;
+  background: #f4f7fb;
+  color: var(--text);
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+  font-size: 28rpx;
+}
+
+.page {
+  padding: 24rpx 28rpx 60rpx;
+  box-sizing: border-box;
+}
+
+.card {
+  background: var(--card);
+  border-radius: 24rpx;
+  padding: 28rpx;
+  box-shadow: 0 8rpx 30rpx rgba(11, 43, 74, 0.06);
+  margin-bottom: 24rpx;
+}
+
+.row { display: flex; align-items: center; }
+.between { display: flex; align-items: center; justify-content: space-between; }
+.col { display: flex; flex-direction: column; }
+.grow { flex: 1; }
+
+.h1 { font-size: 40rpx; font-weight: 700; letter-spacing: 1rpx; }
+.h2 { font-size: 32rpx; font-weight: 700; }
+.sub { color: var(--sub); font-size: 24rpx; }
+.small { font-size: 22rpx; color: var(--sub); }
+.mono { font-family: "SF Mono", Menlo, monospace; letter-spacing: 2rpx; }
+
+.btn {
+  height: 88rpx;
+  line-height: 88rpx;
+  text-align: center;
+  border-radius: 44rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #0b7bd8, #17c3b2);
+  border: none;
+}
+.btn::after { border: none; }
+.btn.ghost {
+  background: #eef5fd;
+  color: var(--brand);
+}
+.btn.warn {
+  background: linear-gradient(135deg, #f08c3a, #e8543a);
+}
+.btn.disabled { opacity: 0.5; }
+
+.tag {
+  display: inline-block;
+  padding: 4rpx 16rpx;
+  border-radius: 20rpx;
+  font-size: 20rpx;
+  background: #eef5fd;
+  color: var(--brand);
+}
+.tag.gold { background: #fdf5e3; color: #a97a11; }
+.tag.mint { background: #e6f9f6; color: #0f8d80; }
+.tag.grey { background: #f0f2f5; color: var(--sub); }
+
+.plate {
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 44rpx;
+  font-weight: 700;
+  letter-spacing: 3rpx;
+}
+
+.divider { height: 1rpx; background: #eef1f5; margin: 24rpx 0; }
+.empty { text-align: center; color: var(--sub); padding: 60rpx 0; font-size: 26rpx; }
+
+.input {
+  height: 88rpx;
+  background: #f4f7fb;
+  border-radius: 16rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+}

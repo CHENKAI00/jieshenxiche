@@ -1,0 +1,26 @@
+.plans { display: flex; flex-wrap: wrap; gap: 18rpx; margin-top: 24rpx; }
+.plan {
+  width: calc((100% - 36rpx) / 3);
+  box-sizing: border-box;
+  border: 2rpx solid #e8eef5;
+  border-radius: 20rpx;
+  padding: 22rpx 0;
+  text-align: center;
+  background: #fbfdff;
+}
+.plan.on {
+  border-color: #0b7bd8;
+  background: #eef7ff;
+  box-shadow: 0 8rpx 22rpx rgba(11, 123, 216, 0.14);
+}
+.plan-amt { font-size: 34rpx; font-weight: 700; color: #0b2b4a; }
+.plan-gift { font-size: 20rpx; color: #c9871a; margin-top: 6rpx; }
+.plan-times { font-size: 20rpx; color: #0f9b8e; margin-top: 4rpx; }
+
+.field { display: flex; align-items: center; gap: 20rpx; margin-bottom: 20rpx; }
+.field-k { width: 110rpx; color: #7b8a9a; font-size: 26rpx; }
+
+.summary { background: #f9fbfe; }
+.pay-amt { font-size: 40rpx; font-weight: 700; color: #e8543a; }
+
+.foot { text-align: center; color: #b3bfcc; font-size: 20rpx; padding: 16rpx 0; }
