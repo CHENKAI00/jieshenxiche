@@ -27,4 +27,12 @@ router.post('/', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+/** PATCH /api/v1/member/:plate  员工补登手机号/改称呼备注（车主绑定前常需要） */
+router.patch('/:plate', async (req, res, next) => {
+  try {
+    const data = await svc.updateMember({ plateNo: req.params.plate, ...(req.body || {}) });
+    res.json({ ok: true, ...data });
+  } catch (e) { next(e); }
+});
+
 module.exports = router;

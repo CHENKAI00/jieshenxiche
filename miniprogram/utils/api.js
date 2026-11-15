@@ -108,6 +108,7 @@ module.exports = {
   listMembers: (kw, page = 1, size = 20) =>
     request(`/api/v1/member?keyword=${encodeURIComponent(kw || '')}&page=${page}&size=${size}`),
   createMember: (payload) => request('/api/v1/member', { method: 'POST', data: payload, loading: true, tip: '建档中' }),
+  updateMember: (plate, payload) => request(`/api/v1/member/${encodeURIComponent(plate)}`, { method: 'PATCH', data: payload, loading: true, tip: '保存中' }),
   consume: (payload) => request('/api/v1/wash/consume', { method: 'POST', data: payload, loading: true, tip: '核销中' }),
   recharge: (payload) => request('/api/v1/wash/recharge', { method: 'POST', data: payload, loading: true, tip: '充值中' }),
   overview: () => request('/api/v1/stats/overview'),

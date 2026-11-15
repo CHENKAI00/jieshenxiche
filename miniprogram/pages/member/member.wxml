@@ -53,7 +53,7 @@
     <view class="card">
       <view class="between">
         <view class="h2">会员资料</view>
-        <text class="small">单表精简版 · 只记最近一次</text>
+        <text class="small" style="color:#0b7bd8" bindtap="editPhone">{{member.phone ? '改手机号' : '补登手机号'}}</text>
       </view>
       <view class="info-row"><text class="info-k">卡号</text><text class="info-v">{{member.memberNo}}</text></view>
       <view class="info-row"><text class="info-k">手机</text><text class="info-v">{{member.phone || '未登记'}}</text></view>

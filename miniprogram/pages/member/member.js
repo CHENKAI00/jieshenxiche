@@ -130,6 +130,26 @@ Page({
     wx.switchTab({ url: '/pages/catalog/catalog' });
   },
 
+  editPhone() {
+    const m = this.data.member;
+    wx.showModal({
+      title: '补登 / 修改手机号',
+      editable: true,
+      placeholderText: '车主绑定需要手机号，11 位',
+      content: m.phoneRaw || '',
+      success: async (r) => {
+        if (!r.confirm) return;
+        const phone = String(r.content || '').replace(/\D/g, '');
+        if (phone.length !== 11) return wx.showToast({ title: '请填写 11 位手机号', icon: 'none' });
+        try {
+          await api.updateMember(m.plateNo, { phone });
+          wx.showToast({ title: '已保存', icon: 'success' });
+          this.load(m.plateNo);
+        } catch (e) {}
+      },
+    });
+  },
+
   callOwner() {
     const phone = this.data.member.phoneRaw;
     if (!phone) return wx.showToast({ title: '未登记手机号', icon: 'none' });

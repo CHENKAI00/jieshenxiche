@@ -193,6 +193,22 @@ async function recharge({ plateNo, amount, giftAmount = 0, times = 0, months = 0
   }
 }
 
+/** 员工补登/修改会员资料（车主绑定需要有手机号，常用来补登） */
+async function updateMember({ plateNo, phone, nickname, remark }) {
+  const row = await findByPlate(plateNo);
+  if (!row) {
+    const e = new Error('会员不存在'); e.status = 404; throw e;
+  }
+  if (phone && !/^1[3-9]\d{9}$/.test(String(phone))) {
+    const e = new Error('手机号格式不正确'); e.status = 400; throw e;
+  }
+  await pool.query(
+    `UPDATE ${TABLE} SET phone=?, nickname=COALESCE(NULLIF(?,''), nickname), remark=COALESCE(NULLIF(?,''), remark) WHERE id=?`,
+    [phone || row.phone, nickname || '', remark || '', row.id]
+  );
+  return getMemberView(row.plate_no);
+}
+
 async function listMembers({ keyword = '', page = 1, size = 20 }) {
   const kw = String(keyword || '').trim();
   const lim = Math.min(Math.max(Number(size) || 20, 1), 200);
@@ -249,6 +265,6 @@ async function getCustomerView(openid) {
 }
 
 module.exports = {
-  getMemberView, createMember, consume, recharge, listMembers, overview, recentVisits,
+  getMemberView, createMember, updateMember, consume, recharge, listMembers, overview, recentVisits,
   getCustomerView, toViewModel,
 };

@@ -72,6 +72,12 @@ function exec(sql, params = []) {
     if (incWax) r.wax_count += 1;
     return [{ affectedRows: 1 }];
   }
+  if (/^UPDATE `js_member` SET phone=\?, nickname=COALESCE\(NULLIF\(\?,''\), nickname\), remark=COALESCE/i.test(s)) {
+    const [phone, nickname, remark, id] = params;
+    const r = store.find((x) => x.id === id);
+    if (r) Object.assign(r, { phone, nickname: nickname || r.nickname, remark: remark || r.remark });
+    return [{ affectedRows: r ? 1 : 0 }];
+  }
   // 充值
   if (/^UPDATE `js_member` SET balance=\?, remain_count=\?, expire_at=\?, remark=COALESCE/i.test(s)) {
     const [balance, remain_count, expire_at, remark, id] = params;
@@ -200,6 +206,13 @@ function ok(name, cond, extra = '') {
   j = await r.json();
   ok('详情：洗车/打蜡分开计数', j.washCount === 1 && j.waxCount === 1 && j.remainCount === 9);
   ok('详情不再有 lastAmount', j.lastAmount === undefined);
+
+  // 10.5 员工补登手机号（车主绑定前提）
+  r = await fetch(`${base}/member/${encodeURIComponent('粤B12345')}`, { method: 'PATCH', headers: H, body: JSON.stringify({ phone: '13800138000' }) });
+  j = await r.json();
+  ok('员工补登手机号成功', r.status === 200 && j.phone === '138****8000');
+  r = await fetch(`${base}/member/${encodeURIComponent('粤B12345')}`, { method: 'PATCH', headers: H, body: JSON.stringify({ phone: '123' }) });
+  ok('非法手机号 400', r.status === 400);
 
   // 11. 看板
   r = await fetch(`${base}/stats/overview`, { headers: H });
