@@ -31,6 +31,23 @@ function ensureKey() {
 }
 
 (async () => {
+  // 安全闸：库里已有密文但本地没有密钥时，绝不自动生成新密钥（否则历史数据永久解不开）
+  const rawEnv = fs.existsSync(ENV_PATH) ? fs.readFileSync(ENV_PATH, 'utf8') : '';
+  const hasKey = /^PHONE_ENC_KEY=.+$/m.test(rawEnv);
+  if (!hasKey) {
+    const probeCfg = require('../src/config');
+    const probe = await require('mysql2/promise').createConnection({
+      host: probeCfg.db.host, port: probeCfg.db.port, user: probeCfg.db.user,
+      password: probeCfg.db.password, database: probeCfg.db.database,
+    });
+    const [r] = await probe.query("SELECT COUNT(*) n FROM `js_member` WHERE phone LIKE 'enc:v1.%'").catch(() => [[{ n: 0 }]]);
+    await probe.end();
+    if (Number(r[0].n) > 0) {
+      console.error(`❌ 数据库里已有 ${r[0].n} 条加密手机号，但本机 .env 没有 PHONE_ENC_KEY。`);
+      console.error('   请先恢复原密钥（PHONE_ENC_KEY=...）再执行迁移，否则历史手机号将无法解密。');
+      process.exit(1);
+    }
+  }
   ensureKey();
   const cfg = require('../src/config');
   const { encryptPhone, hashPhone, tailHash } = require('../src/utils/crypto');
