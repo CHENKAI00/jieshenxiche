@@ -122,3 +122,58 @@ page {
 .page-head { padding: 8rpx 4rpx 20rpx; }
 .page-head .t { font-size: 40rpx; font-weight: 700; letter-spacing: 0.5rpx; }
 .page-head .s { font-size: 23rpx; color: var(--sub); margin-top: 8rpx; }
+
+/* ============================================================
+   设计令牌（详见 docs/UI规范.md）
+   命名：--c-* 颜色 / --radius-* 圆角 / --space-* 间距
+         --font-* 字号 / --shadow-* 阴影
+   落地时页面只用这些变量，不再写死色值。
+   ============================================================ */
+page {
+  --c-primary:         #146FE0;
+  --c-primary-pressed: #0F57B3;
+  --c-primary-weak:    #EAF3FF;
+  --c-primary-border:  #C7DDF8;
+
+  --c-success:      #12A150;
+  --c-success-weak: #E8F7EF;
+  --c-warning:      #D97917;
+  --c-warning-weak: #FDF3E5;
+  --c-error:        #D93F3F;
+  --c-error-weak:   #FDECEC;
+
+  --c-text:        #1A2230;
+  --c-text-2:      #5A6B7F;
+  --c-text-3:      #8C9AAB;
+  --c-placeholder: #A9B4C2;
+
+  --c-bg:            #F4F7FA;
+  --c-card:          #FFFFFF;
+  --c-fill:          #F6F8FB;
+  --c-fill-disabled: #F1F4F8;
+  --c-border:        #E3E9F0;
+  --c-border-strong: #D6E0EC;
+
+  --radius-sm:   8rpx;
+  --radius-md:   12rpx;
+  --radius-lg:   16rpx;
+  --radius-xl:   24rpx;
+  --radius-pill: 999rpx;
+
+  --space-1: 4rpx;
+  --space-2: 8rpx;
+  --space-3: 12rpx;
+  --space-4: 16rpx;
+  --space-5: 24rpx;
+  --space-6: 32rpx;
+
+  --font-24: 24rpx;
+  --font-26: 26rpx;
+  --font-28: 28rpx;
+  --font-30: 30rpx;
+  --font-32: 32rpx;
+
+  --shadow-card:  0 8rpx 24rpx rgba(20, 40, 70, 0.06);
+  --shadow-float: 0 16rpx 48rpx rgba(20, 40, 70, 0.12);
+  --shadow-btn:   0 4rpx 12rpx rgba(20, 111, 224, 0.12);
+}
