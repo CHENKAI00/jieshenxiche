@@ -16,6 +16,19 @@ const customerBookingRouter = require('./routes/customerBooking');
 const staffBookingRouter = require('./routes/staffBooking');
 
 const app = express();
+
+// 轻量访问日志：谁在什么时候打了哪个接口、耗时多少、结果如何
+app.use((req, res, next) => {
+  const t0 = Date.now();
+  res.on('finish', () => {
+    const ms = Date.now() - t0;
+    console.log(
+      `[${new Date().toISOString()}] ${req.method} ${req.originalUrl} ${res.statusCode} ${ms}ms ` +
+      `${req.ip} ${String(req.headers['user-agent'] || '').slice(0, 40)} openid=${req.headers['x-openid'] || '-'}`
+    );
+  });
+  next();
+});
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));

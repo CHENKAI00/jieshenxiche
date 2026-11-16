@@ -7,8 +7,8 @@
  */
 module.exports = {
   cloud: {
-    enabled: false,          // 填好 env 后改成 true
-    env: '',                 // 云托管环境 ID，形如 prod-8gxxxxxx / jieshen-prod-xxxx
+    enabled: true,          // 填好 env 后改成 true
+    env: 'jieshen-proxy-002',                 // 云托管环境 ID，形如 prod-8gxxxxxx / jieshen-prod-xxxx
     service: 'jieshen-proxy',// 云托管服务名（部署时填的那个）
   },
 };

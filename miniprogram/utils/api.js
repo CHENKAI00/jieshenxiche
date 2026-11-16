@@ -23,8 +23,7 @@ function useCloud() {
   return !!(app && app.globalData.useCloud && cfg.cloud && cfg.cloud.enabled && cfg.cloud.env && wx.cloud);
 }
 
-function cloudRequest(path, { method = 'GET', data = {}, loading = false, tip = '处理中' } = {}) {
-  const cfg = require('../config/env').cloud;
+function cloudRequestOnce(cfg, path, { method = 'GET', data = {}, loading = false, tip = '处理中' } = {}) {
   if (loading) wx.showLoading({ title: tip, mask: true });
   return new Promise((resolve, reject) => {
     wx.cloud.callContainer({
@@ -32,7 +31,7 @@ function cloudRequest(path, { method = 'GET', data = {}, loading = false, tip = 
       path,
       method,
       data,
-      timeout: 20000,
+      timeout: 45000,
       header: {
         'X-WX-SERVICE': cfg.service,
         'content-type': 'application/json',
@@ -50,6 +49,17 @@ function cloudRequest(path, { method = 'GET', data = {}, loading = false, tip = 
         reject(err);
       },
     });
+  });
+}
+
+/** 云托管冷启动可能要 10~20 秒：超时自动重试一次，再失败才算失败 */
+function cloudRequest(path, opts) {
+  const cfg = require('../config/env').cloud;
+  return cloudRequestOnce(cfg, path, opts).catch((err) => {
+    if (/timeout/i.test((err && err.errMsg) || '')) {
+      return cloudRequestOnce(cfg, path, { ...opts, loading: false });
+    }
+    throw err;
   });
 }
 
