@@ -29,3 +29,9 @@ Thumbs.db
 *.log
 .idea/
 .vscode/
+
+# 微信开发者工具「版本管理」自己 init 的仓库（不纳入主仓库）
+miniprogram/.git/
+miniprogram/jieshenxiche/
+miniprogram/README.md
+miniprogram/.gitignore

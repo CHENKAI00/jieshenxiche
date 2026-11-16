@@ -32,7 +32,7 @@ jieshenxiche/
 │   └── test/api.smoke.js        30 条端到端断言（不需要数据库）
 └── miniprogram/                 微信开发者工具直接导入
     ├── app.js / app.json / app.wxss
-    ├── miniprogram_npm/@vant/weapp/  Vant Weapp 组件（已内置，无需构建 npm）
+    ├── miniprogram_npm/@vant/weapp/  Vant Weapp（已按需精简到 0.2MB，无需构建 npm）
     ├── utils/api.js             请求封装（x-token / x-openid、图片绝对地址）
     ├── utils/role.js            角色守卫（门店端 / 车主端互不串门）
     ├── components/customer-tabbar/  车主端底部导航（我的卡 / 项目 / 我的）
@@ -138,6 +138,12 @@ curl -s localhost:8099/health      # → "ocr":"hyperlpr"
 **为了准到接近 100%**：连拍 3 张投票（`POST /ocr/plate-batch`）+ 会员库**闭集校正**（OCR 与会员车牌只差 1 位且唯一命中 → 直接纠到会员库，仅在 ≥2 帧一致或置信度 ≥0.9 时自动改）+ 结果页永远保留「修正车牌」。详见 [docs/车牌识别原理.md](docs/车牌识别原理.md#六怎么逼近100已实现--待做)。
 
 ## 四、界面方案：Vant Weapp 打底 + 两个地方做重（预约日历 / 订单状态）
+
+> **包体积**：Vant 全量 dist 有 1.9MB，会让主包超过微信 2MB 上限。仓库里的 `miniprogram_npm/@vant/weapp`
+> 已用 `scripts/prune-vant.js` 按「页面实际 usingComponents + 组件间 require/wxs/@import」递归裁剪，
+> 只留 12 个组件与公共模块（约 0.2MB），整个小程序上传体积 **0.66MB**。
+> 以后要加新 Vant 组件：`cd miniprogram && npm i @vant/weapp`，在页面 json 里引用后执行
+> `node ../scripts/prune-vant.js`，再删掉 `node_modules` 即可。
 
 组件层用 **Vant Weapp（已内置在 `miniprogram/miniprogram_npm/`，不需要在开发者工具里「构建 npm」）**，
 表单、单元格、按钮、标签、空状态、步骤条全部走 Vant；自研只做业务外壳，不再手写基础控件。
