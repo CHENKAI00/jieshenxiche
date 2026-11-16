@@ -67,7 +67,7 @@ function request(path, { method = 'GET', data = {}, loading = false, tip = '处�
   });
 }
 
-/** 读本地图片为 base64（连拍识别用） */
+/** 读本地图片为 base64（车主端识别用） */
 function readBase64(filePath) {
   return new Promise((resolve, reject) => {
     wx.getFileSystemManager().readFile({
@@ -77,14 +77,6 @@ function readBase64(filePath) {
       fail: reject,
     });
   });
-}
-
-/** 连拍多帧识别：投票 + 会员库闭集校正（比单张准得多） */
-function uploadPlateBatch(filePaths) {
-  wx.showLoading({ title: '识别中（多帧）', mask: true });
-  return Promise.all(filePaths.map(readBase64))
-    .then((images) => request('/api/v1/ocr/plate-batch', { method: 'POST', data: { images } }))
-    .finally(() => wx.hideLoading());
 }
 
 /** 上传图片做车牌识别（wx.uploadFile） */
@@ -165,7 +157,6 @@ module.exports = {
   staffBookingStatus: (id, status) => request(`/api/v1/staff/bookings/${id}/status`, { method: 'POST', data: { status }, loading: true }),
   staffBookingFinish: (id, useCount) => request(`/api/v1/staff/bookings/${id}/finish`, { method: 'POST', data: { useCount }, loading: true, tip: '核销中' }),
   uploadPlate,
-  uploadPlateBatch,
   // ===== 业务接口 =====
   meta: () => request('/api/v1/ocr/meta'),
   lookup: (plate) => request(`/api/v1/member/${encodeURIComponent(plate)}`),

@@ -34,11 +34,11 @@ Page({
   pickImage() {
     if (this.data.ocrLoading) return;
     wx.showActionSheet({
-      itemList: ['拍照识别', '从相册选择（最多 3 张）'],
+      itemList: ['拍照识别', '从相册选择'],
       success: (r) => {
         const fromCamera = r.tapIndex === 0;
         wx.chooseMedia({
-          count: fromCamera ? 1 : 3,
+          count: 1,
           mediaType: ['image'],
           sourceType: [fromCamera ? 'camera' : 'album'],
           camera: 'back',

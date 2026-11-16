@@ -22,12 +22,10 @@
   </view>
 
   <view class="pick-row">
-    <view class="pick strong" bindtap="shootBatch">📸 连拍 3 张识别</view>
-    <view class="pick" bindtap="takePhoto">📷 单张</view>
+    <view class="pick strong" bindtap="takePhoto">📷 拍照识别</view>
     <view class="pick" bindtap="chooseAlbum">🖼 相册</view>
     <view class="pick" bindtap="focusInput">⌨️ 手输</view>
   </view>
-  <view class="batch-tip">连拍会对比多帧结果投票，明显比单张准；拍完可直接改车牌</view>
 
   <!-- 识别结果 -->
   <view wx:if="{{result}}" class="card result-card">
