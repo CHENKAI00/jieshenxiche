@@ -12,4 +12,8 @@
   <view class="or small-or">使用门店员工口令，登录后可拍车牌核销</view>
 
   <view class="tip">车主登录免费、不需要短信；一个微信绑定一辆车</view>
+
+  <view class="server-entry" bindtap="openServer">
+    服务器：{{serverHost}}
+  </view>
 </view>

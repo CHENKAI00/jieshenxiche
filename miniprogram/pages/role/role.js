@@ -1,12 +1,48 @@
 const api = require('../../utils/api');
 
 Page({
+  data: { serverHost: '' },
+
   onLoad(options) {
+    const app = getApp();
+    this.setData({ serverHost: (app.globalData.baseUrl || '').replace(/^https?:\/\//, '') });
     // ?switch=1 表示主动来换身份，不自动跳
     if (options && options.switch === '1') return;
     const role = wx.getStorageSync('role');
     if (role === 'customer') wx.reLaunch({ url: '/pages/customer/home/home' });
     else if (role === 'staff') wx.switchTab({ url: '/pages/index/index' });
+  },
+
+  /** 服务器设置：现场改地址 + 测连通（排查「连不上服务器」用） */
+  openServer() {
+    const app = getApp();
+    wx.showModal({
+      title: '服务器地址',
+      editable: true,
+      content: '',
+      placeholderText: app.globalData.baseUrl,
+      success: async (r) => {
+        if (!r.confirm) return;
+        const url = (String(r.content || '').trim() || app.globalData.baseUrl).replace(/\/+$/, '');
+        if (!/^https?:\/\//.test(url)) return wx.showToast({ title: '要带 http:// 或 https://', icon: 'none' });
+        app.setBaseUrl(url);
+        this.setData({ serverHost: url.replace(/^https?:\/\//, '') });
+        wx.showLoading({ title: '测试连接', mask: true });
+        const h = await require('../../utils/api').health();
+        wx.hideLoading();
+        wx.showModal({
+          title: h.ok ? '连接正常' : '连不上',
+          content: [
+            `地址：${url}`,
+            `服务：${h.ok ? '在线' : '不可达'}`,
+            `数据库：${h.db || '未知'}`,
+            `识别：${h.ocr || '未知'}`,
+            h.ok ? '' : '\n体验版/正式版必须是 https 域名，且加到「request 合法域名」。',
+          ].filter(Boolean).join('\n'),
+          showCancel: false,
+        });
+      },
+    });
   },
 
   /** 车主：只走 wx.login（免费），拿 openid 后进车主端 */

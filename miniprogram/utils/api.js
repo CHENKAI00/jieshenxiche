@@ -56,6 +56,9 @@ function request(path, { method = 'GET', data = {}, loading = false, tip = '处�
         if (/domain list/i.test(msg)) hint = '开发者工具「详情 → 本地设置」要勾选「不校验合法域名」';
         else if (/timeout/i.test(msg)) hint = '请求超时：服务器可能卡住或网络很慢，稍后重试';
         else if (/refused/i.test(msg)) hint = '端口被拒绝：服务没启动，或被防火墙拦了';
+        else if (/^http:\/\//.test(base())) {
+          hint = '体验版/正式版只允许 https 域名；现在是 http，只能在开发者工具或「真机调试」里访问。';
+        }
         wx.showModal({
           title: '连不上服务器',
           content: `地址：${base()}\n\n${hint}\n\n${msg}`,
