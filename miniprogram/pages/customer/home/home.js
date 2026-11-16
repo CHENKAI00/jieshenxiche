@@ -56,6 +56,7 @@ Page({
   },
 
   bookService(e) {
+    if (!this.data.bound) return this.goBind();
     const id = e.currentTarget.dataset.id;
     wx.navigateTo({ url: `/pages/customer/booking/booking?serviceId=${id}` });
   },
@@ -75,7 +76,10 @@ Page({
     } catch (e) {}
   },
 
-  goBooking() { wx.reLaunch({ url: '/pages/customer/booking/booking' }); },
+  goBooking() {
+    if (!this.data.bound) return this.goBind();
+    wx.navigateTo({ url: '/pages/customer/booking/booking' });
+  },
   goOrders() { wx.reLaunch({ url: '/pages/customer/orders/orders' }); },
 
   onPullDownRefresh() {

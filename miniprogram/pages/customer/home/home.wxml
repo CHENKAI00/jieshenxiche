@@ -31,6 +31,11 @@
         <view class="hs-sep"></view>
         <view class="hs"><text class="hs-n">{{member.remainCount}}</text><text class="hs-l">可用次数</text></view>
       </view>
+
+      <view class="hero-actions">
+        <button class="hero-btn" bindtap="goBooking">预约到店</button>
+        <view class="hero-link" bindtap="goOrders">我的预约 ›</view>
+      </view>
     </view>
 
     <!-- 进行中预约 -->
@@ -47,10 +52,6 @@
 
     <!-- 四宫格 -->
     <view class="actions">
-      <view class="action" bindtap="goBooking">
-        <view class="a-ico a-blue"><van-icon name="calendar-o" size="40rpx" color="#0b7bd8" /></view>
-        <text class="a-t">预约</text>
-      </view>
       <view class="action" bindtap="goServices">
         <view class="a-ico a-mint"><van-icon name="shop-o" size="40rpx" color="#0d9a8c" /></view>
         <text class="a-t">项目</text>
@@ -111,7 +112,7 @@
     </view>
 
     <view wx:if="{{services.length}}" class="svc-list">
-      <view wx:for="{{services}}" wx:key="id" class="svc-item">
+      <view wx:for="{{services}}" wx:key="id" class="svc-item" data-id="{{item.id}}" bindtap="bookService">
         <view class="svc-img ph-{{item.phClass}}">
           <image wx:if="{{item.imageUrl}}" class="svc-img__pic" src="{{item.imageUrl}}" mode="aspectFill" />
           <text wx:else class="svc-img__emoji">{{item.emoji}}</text>
@@ -127,7 +128,7 @@
             <text class="svc-mins">约 {{item.mins}} 分钟</text>
           </view>
         </view>
-        <button class="btn-mini primary" data-id="{{item.id}}" bindtap="bookService">预约</button>
+        <text class="svc-arrow">›</text>
       </view>
     </view>
 
