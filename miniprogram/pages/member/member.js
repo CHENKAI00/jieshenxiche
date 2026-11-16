@@ -11,7 +11,9 @@ Page({
     lastAgo: '',
     services: [],
     loaded: false,
-    form: { plateNo: '', nickname: '', phone: '', remark: '' },
+    form: { plateNo: '', nickname: '', phone: '', remark: '', carModel: '' },
+    carModelOptions: ['不填'],
+    carModelIndex: 0,
   },
 
   onLoad(options) {
@@ -31,6 +33,7 @@ Page({
       const meta = await api.meta();
       this.setData({
         services: (meta.services || []).map((s) => ({ ...s, imageUrl: api.absUrl(s.image) })),
+        carModelOptions: ['不填'].concat(meta.carModels || []),
       });
     } catch (e) {}
   },
@@ -62,6 +65,11 @@ Page({
     this.setData({ [`form.${k}`]: v });
   },
 
+  onCarModel(e) {
+    const idx = Number(e.detail.value);
+    this.setData({ carModelIndex: idx, 'form.carModel': idx > 0 ? this.data.carModelOptions[idx] : '' });
+  },
+
   async submitCreate() {
     const f = this.data.form;
     if (!f.plateNo || f.plateNo.length < 7) return wx.showToast({ title: '请填写完整车牌', icon: 'none' });
@@ -71,6 +79,7 @@ Page({
         nickname: f.nickname || '车主',
         phone: f.phone,
         remark: f.remark,
+        carModel: f.carModel || '',
       });
       wx.showToast({ title: r.created ? '建档成功' : '该车牌已有档案', icon: 'success' });
       this.setData({ plate: r.plateNo, platePretty: r.platePretty });

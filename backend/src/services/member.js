@@ -19,6 +19,7 @@ function toViewModel(row) {
     plateColor: row.plate_color,
     memberNo: row.member_no,
     nickname: row.nickname || '车主',
+    carModel: row.car_model || '',
     phone: maskPhone(phonePlain),
     phoneRaw: phonePlain,
     balance: Number(row.balance),
@@ -50,7 +51,7 @@ async function getMemberView(plateNo) {
   return { exists: true, ...toViewModel(row) };
 }
 
-async function createMember({ plateNo, nickname, phone, remark }) {
+async function createMember({ plateNo, nickname, phone, remark, carModel }) {
   const v = validatePlate(plateNo);
   if (!v.ok) {
     const e = new Error(`车牌格式不正确：${v.reason}`);
@@ -66,11 +67,12 @@ async function createMember({ plateNo, nickname, phone, remark }) {
   if (exist) return { created: false, ...toViewModel(exist) };
 
   const phonePlain = phone ? String(phone).replace(/\D/g, '') : '';
+  // 只有车牌是必填，其余（称呼/车型/手机/备注）都可以空
   const [r] = await pool.query(
-    `INSERT INTO ${TABLE} (plate_no, plate_color, member_no, nickname, phone, phone_hash, phone_tail_hash, remark)
-     VALUES (?,?,?,?,?,?,?,?)`,
+    `INSERT INTO ${TABLE} (plate_no, plate_color, member_no, nickname, car_model, phone, phone_hash, phone_tail_hash, remark)
+     VALUES (?,?,?,?,?,?,?,?,?)`,
     [
-      v.plate, v.color || '蓝', genMemberNo(), nickname || '车主',
+      v.plate, v.color || '蓝', genMemberNo(), nickname || null, carModel || null,
       phonePlain ? encryptPhone(phonePlain) : null,
       phonePlain ? hashPhone(phonePlain) : null,
       phonePlain ? tailHash(phonePlain) : null,
@@ -200,7 +202,7 @@ async function recharge({ plateNo, amount, giftAmount = 0, times = 0, months = 0
 }
 
 /** 员工补登/修改会员资料（车主绑定需要有手机号，常用来补登） */
-async function updateMember({ plateNo, phone, nickname, remark }) {
+async function updateMember({ plateNo, phone, nickname, remark, carModel }) {
   const row = await findByPlate(plateNo);
   if (!row) {
     const e = new Error('会员不存在'); e.status = 404; throw e;
@@ -212,14 +214,18 @@ async function updateMember({ plateNo, phone, nickname, remark }) {
   if (phonePlain) {
     await pool.query(
       `UPDATE ${TABLE} SET phone=?, phone_hash=?, phone_tail_hash=?,
-              nickname=COALESCE(NULLIF(?,''), nickname), remark=COALESCE(NULLIF(?,''), remark)
+              nickname=COALESCE(NULLIF(?,''), nickname),
+              car_model=COALESCE(NULLIF(?,''), car_model),
+              remark=COALESCE(NULLIF(?,''), remark)
         WHERE id=?`,
-      [encryptPhone(phonePlain), hashPhone(phonePlain), tailHash(phonePlain), nickname || '', remark || '', row.id]
+      [encryptPhone(phonePlain), hashPhone(phonePlain), tailHash(phonePlain), nickname || '', carModel || '', remark || '', row.id]
     );
   } else {
     await pool.query(
-      `UPDATE ${TABLE} SET nickname=COALESCE(NULLIF(?,''), nickname), remark=COALESCE(NULLIF(?,''), remark) WHERE id=?`,
-      [nickname || '', remark || '', row.id]
+      `UPDATE ${TABLE} SET nickname=COALESCE(NULLIF(?,''), nickname),
+              car_model=COALESCE(NULLIF(?,''), car_model),
+              remark=COALESCE(NULLIF(?,''), remark) WHERE id=?`,
+      [nickname || '', carModel || '', remark || '', row.id]
     );
   }
   return getMemberView(row.plate_no);

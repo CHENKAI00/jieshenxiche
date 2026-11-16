@@ -55,9 +55,9 @@ function exec(sql, params = []) {
     return [[store.find((r) => r.id === params[0])].filter(Boolean).map(clone)];
   }
   if (/^INSERT INTO `js_member`/i.test(s)) {
-    const [plate_no, plate_color, member_no, nickname, phone, phone_hash, phone_tail_hash, remark] = params;
+    const [plate_no, plate_color, member_no, nickname, car_model, phone, phone_hash, phone_tail_hash, remark] = params;
     const row = {
-      id: ++seq, plate_no, plate_color, member_no, nickname, phone, phone_hash, phone_tail_hash,
+      id: ++seq, plate_no, plate_color, member_no, nickname, car_model, phone, phone_hash, phone_tail_hash,
       openid: null,
       balance: 0, remain_count: 0, wash_count: 0, wax_count: 0, expire_at: null,
       last_service_at: null, last_item: null, remark: remark || null,
@@ -82,15 +82,15 @@ function exec(sql, params = []) {
     return [{ affectedRows: 1 }];
   }
   if (/^UPDATE `js_member` SET phone=\?, phone_hash=\?, phone_tail_hash=\?, nickname=COALESCE/i.test(s)) {
-    const [phone, phone_hash, phone_tail_hash, nickname, remark, id] = params;
+    const [phone, phone_hash, phone_tail_hash, nickname, car_model, remark, id] = params;
     const r = store.find((x) => x.id === id);
-    if (r) Object.assign(r, { phone, phone_hash, phone_tail_hash, nickname: nickname || r.nickname, remark: remark || r.remark });
+    if (r) Object.assign(r, { phone, phone_hash, phone_tail_hash, nickname: nickname || r.nickname, car_model: car_model || r.car_model, remark: remark || r.remark });
     return [{ affectedRows: r ? 1 : 0 }];
   }
   if (/^UPDATE `js_member` SET nickname=COALESCE/i.test(s)) {
-    const [nickname, remark, id] = params;
+    const [nickname, car_model, remark, id] = params;
     const r = store.find((x) => x.id === id);
-    if (r) Object.assign(r, { nickname: nickname || r.nickname, remark: remark || r.remark });
+    if (r) Object.assign(r, { nickname: nickname || r.nickname, car_model: car_model || r.car_model, remark: remark || r.remark });
     return [{ affectedRows: r ? 1 : 0 }];
   }
   // 充值
@@ -107,11 +107,21 @@ function exec(sql, params = []) {
     return [store.filter((r) => r.phone_tail_hash && r.phone_tail_hash === params[0]).map(clone)];
   }
   if (/^SELECT \* FROM `js_member` WHERE \(\?='' OR plate_no LIKE \?/i.test(s)) {
+    const kw = String(params[0] || '');
     const lim = params[params.length - 2];
     const off = params[params.length - 1];
-    return [store.slice(off, off + lim).map(clone)];
+    const rows = kw
+      ? store.filter((r) => (r.plate_no || '').includes(kw) || (r.nickname || '').includes(kw) || (r.member_no || '').includes(kw))
+      : store;
+    return [rows.slice(off, off + lim).map(clone)];
   }
-  if (/^SELECT COUNT\(\*\) total FROM `js_member`/i.test(s)) return [[{ total: store.length }]];
+  if (/^SELECT COUNT\(\*\) total FROM `js_member`/i.test(s)) {
+    const kw = String(params[0] || '');
+    const n = kw
+      ? store.filter((r) => (r.plate_no || '').includes(kw) || (r.nickname || '').includes(kw) || (r.member_no || '').includes(kw)).length
+      : store.length;
+    return [[{ total: n }]];
+  }
   if (/^SELECT COUNT\(\*\) members, SUM\(balance\) balance, SUM\(remain_count\) remain/i.test(s)) {
     return [[{
       members: store.length,
@@ -191,6 +201,19 @@ function ok(name, cond, extra = '') {
   ok('新会员 洗车/打蜡 均为 0', j.washCount === 0 && j.waxCount === 0 && j.remainCount === 0);
   ok('不再返回 totalCount / lastAmount', j.totalCount === undefined && j.lastAmount === undefined);
   ok('手机号落库是密文（enc:v1）', /^enc:v1\./.test(store[0].phone) && !!store[0].phone_hash, String(store[0].phone).slice(0, 14));
+
+  // 3.5 只填车牌建档（其它全空）+ 车型号
+  r = await fetch(`${base}/member`, { method: 'POST', headers: H, body: JSON.stringify({ plateNo: '粤B99999' }) });
+  j = await r.json();
+  ok('只填车牌也能建档（其它可空）', r.status === 201 && j.plateNo === '粤B99999' && j.phone === '' && j.carModel === '', `nickname=${j.nickname}`);
+
+  r = await fetch(`${base}/member`, { method: 'POST', headers: H, body: JSON.stringify({ plateNo: '粤B88888', nickname: '', phone: '', carModel: '新能源SUV', remark: '' }) });
+  j = await r.json();
+  ok('车型号可写入并可读出', r.status === 201 && j.carModel === '新能源SUV');
+
+  r = await fetch(`${base}/ocr/meta`, { headers: H });
+  j = await r.json();
+  ok('meta 返回车型可选项', Array.isArray(j.carModels) && j.carModels.includes('SUV'));
 
   // 4. 拍照识别（单张：只给建议，不自动改）
   r = await fetch(`${base}/ocr/plate`, { method: 'POST', headers: { 'x-token': TOKEN }, body: (() => { const f = new FormData(); f.append('file', new Blob([Buffer.from('x')], { type: 'image/jpeg' }), 'p.jpg'); return f; })() });

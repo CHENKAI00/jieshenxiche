@@ -93,12 +93,17 @@ async function hyperlprOcr(imageBase64) {
   });
   const j = await res.json().catch(() => ({}));
   if (!res.ok || j.ok === false) throw new Error(`本地识别服务异常：${j.msg || res.status}`);
-  const list = (j.results || []).map((x) => ({
-    plate: fixOcrConfusion(x.plate || ''),
-    color: x.color || '',
-    confidence: Number(x.confidence || 0),
-    bbox: x.bbox || [],
-  }));
+  const list = (j.results || []).map((x) => {
+    const plate = fixOcrConfusion(x.plate || '');
+    const v = validatePlate(plate);
+    return {
+      plate,
+      // 颜色不信模型（hyperlpr3 的 type 索引不是颜色）：8 位=绿、尾字挂学警港澳=黄、其余蓝
+      color: v.ok ? v.color : (x.color || ''),
+      confidence: Number(x.confidence || 0),
+      bbox: x.bbox || [],
+    };
+  });
   list.sort((a, b) => b.confidence - a.confidence);
   const top = list[0] || { plate: '', color: '', confidence: 0 };
   return { plate: top.plate, color: top.color, confidence: top.confidence, raw: j, candidates: list };

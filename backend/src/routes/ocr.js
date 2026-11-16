@@ -62,7 +62,7 @@ router.post('/plate', upload.single('file'), async (req, res, next) => {
       engine: result.engine,
       plateNo: fv.ok ? fv.plate : finalPlate,
       platePretty: prettyPlate(fv.ok ? fv.plate : finalPlate),
-      plateColor: result.color || fv.color || '',
+      plateColor: fv.color || result.color || '',
       confidence: result.confidence,
       votes: 1,
       corrected: resolved.corrected,
@@ -129,7 +129,7 @@ router.post('/plate-batch', upload.array('files', 5), async (req, res, next) => 
       votes: top.votes,
       plateNo: fv.ok ? fv.plate : finalPlate,
       platePretty: prettyPlate(fv.ok ? fv.plate : finalPlate),
-      plateColor: top.color || fv.color || '',
+      plateColor: fv.color || top.color || '',
       confidence: top.avgConfidence,
       corrected: resolved.corrected,
       suggestion: resolved.suggestion,
@@ -154,6 +154,7 @@ router.get('/meta', async (req, res, next) => {
       services,
       tags,
       rechargePlans: cfg.rechargePlans,
+      carModels: cfg.carModels,
       ocrEngine: cfg.ocr.mock ? 'mock' : cfg.ocr.engine,
     });
   } catch (e) { next(e); }

@@ -40,6 +40,11 @@ module.exports = {
     mockPlates: String(env.OCR_MOCK_PLATES || '').split(',').map((x) => x.trim()).filter(Boolean),
   },
   // 服务项目目录已挪到 data/services.json（后台可增删改），见 src/services/catalog.js
+  /** 车型号可选项（建档时选填，不填也行） */
+  carModels: [
+    '轿车', 'SUV', 'MPV', '两厢车', '跑车', '皮卡', '微面',
+    '新能源轿车', '新能源SUV', '新能源MPV', '其他',
+  ],
   // 充值常用档位（小程序展示，可后端也用来校验）
   rechargePlans: [
     { amount: 100, gift: 0, times: 0 },

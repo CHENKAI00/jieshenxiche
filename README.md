@@ -205,7 +205,9 @@ pending(待确认) → confirmed(待到店) → serving(服务中) → done(已�
 | plate_no | VARCHAR(16) UNIQUE | 车牌，检索键 |
 | plate_color | VARCHAR(8) | 蓝 / 绿 / 黄 |
 | member_no | VARCHAR(24) | 卡号 JS+yyMMdd+4位 |
-| nickname / phone | VARCHAR | 称呼、手机（返回脱敏） |
+| nickname | VARCHAR(32) | 车主称呼（**选填**，空则显示「车主」） |
+| **car_model** | VARCHAR(32) | **车型号（选填）**：轿车/SUV/MPV/新能源… 后台与小程序的 picker 可选项 |
+| phone | VARCHAR(255) | 手机号密文（选填） |
 | **openid** | VARCHAR(64) UNIQUE | 车主端绑定的微信 openid（NULL=未绑定） |
 | **phone** | VARCHAR(255) | 手机号**密文**（AES-256-GCM，`enc:v1.…`） |
 | **phone_hash / phone_tail_hash** | CHAR(64) | 手机号盲索引（完整号 / 后 4 位），用于搜索与绑定校验 |
@@ -248,7 +250,7 @@ v3 迁移时旧的 `total_count` 会一次性折算进 `wash_count`（打蜡从 
 | GET | `/catalog/:id` | 单个项目 |
 | GET | `/member/:plate` | 车牌查会员 |
 | GET | `/member?keyword&page&size` | 会员检索 |
-| POST | `/member` | 建档 `{plateNo,nickname,phone,remark}` |
+| POST | `/member` | 建档：**只有 `plateNo` 必填**，其余 `nickname/carModel/phone/remark` 均可空 |
 | POST | `/wash/consume` | 核销 `{plateNo,serviceId,useCount,operator}` |
 | POST | `/wash/recharge` | 充值 `{plateNo,amount,giftAmount,times,months}` |
 | GET | `/stats/overview` · `/stats/recent` | 小程序看板 / 最近到店 |

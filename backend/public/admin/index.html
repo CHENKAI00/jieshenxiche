@@ -410,6 +410,7 @@ async function openMember(plate) {
     <h3>${esc(m.platePretty)} · ${esc(m.nickname)}</h3>
     <div class="kv">
       <b>卡号</b><span>${esc(m.memberNo || '—')}</span>
+      <b>车型</b><span>${esc(m.carModel || '未填写')}</span>
       <b>手机</b><span>${esc(m.phone || '未登记')}</span>
       <b>余额</b><span>¥${money(m.balance)}</span>
       <b>剩余次数</b><span>${m.remainCount} 次${m.expireAt ? '（至 ' + esc(m.expireAt) + '）' : ''}</span>

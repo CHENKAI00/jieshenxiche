@@ -56,6 +56,7 @@
         <text class="small" style="color:#0b7bd8" bindtap="editPhone">{{member.phone ? '改手机号' : '补登手机号'}}</text>
       </view>
       <view class="info-row"><text class="info-k">卡号</text><text class="info-v">{{member.memberNo}}</text></view>
+      <view class="info-row"><text class="info-k">车型</text><text class="info-v">{{member.carModel || '未填写'}}</text></view>
       <view class="info-row"><text class="info-k">手机</text><text class="info-v">{{member.phone || '未登记'}}</text></view>
       <view class="info-row"><text class="info-k">剩余次数</text><text class="info-v">{{member.remainCount}} 次{{member.expireAt ? '（有效期至 ' + member.expireAt + '）' : ''}}</text></view>
       <view class="info-row"><text class="info-k">洗车 / 打蜡</text><text class="info-v">{{member.washCount}} 次 / {{member.waxCount}} 次</text></view>
@@ -91,6 +92,12 @@
       <view class="field">
         <text class="field-k">称呼</text>
         <input class="input grow" value="{{form.nickname}}" placeholder="如 张先生" bindinput="onForm" data-k="nickname" />
+      </view>
+      <view class="field">
+        <text class="field-k">车型</text>
+        <picker class="grow" range="{{carModelOptions}}" value="{{carModelIndex}}" bindchange="onCarModel">
+          <view class="input">{{carModelOptions[carModelIndex]}}</view>
+        </picker>
       </view>
       <view class="field">
         <text class="field-k">手机</text>
