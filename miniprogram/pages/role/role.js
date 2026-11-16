@@ -5,12 +5,17 @@ Page({
 
   onLoad(options) {
     const app = getApp();
-    this.setData({ serverHost: (app.globalData.baseUrl || '').replace(/^https?:\/\//, '') });
+    const cfg = require('../../config/env').cloud;
+    this.setData({
+      serverHost: app.globalData.useCloud
+        ? `云托管直连 · ${cfg.service}`
+        : (app.globalData.baseUrl || '').replace(/^https?:\/\//, ''),
+    });
     // 体验版/正式版不允许 http，直接在首页提示去改地址
     try {
       const info = wx.getAccountInfoSync && wx.getAccountInfoSync();
       const env = info && info.miniProgram && info.miniProgram.envVersion;
-      if (env && env !== 'develop' && /^http:\/\//.test(app.globalData.baseUrl || '')) {
+      if (env && env !== 'develop' && !app.globalData.useCloud && /^http:\/\//.test(app.globalData.baseUrl || '')) {
         wx.showModal({
           title: '需要 https 域名',
           content: '体验版/正式版不能用 http 地址。\n请点页面底部「服务器」填云托管的 https 域名（xxx.run.tcloudbase.com）。',

@@ -392,7 +392,26 @@ crontab -e   # 加一行：@reboot cd /opt/jieshenxiche && bash deploy/manage.sh
 cp deploy/jieshenxiche.service /etc/systemd/system/ && systemctl daemon-reload && systemctl enable --now jieshenxiche
 ```
 
-### 5. 没有备案域名？用云托管做 https 入口（方案 C）
+### 5. 云托管直连（callContainer）：不配合法域名也能发体验版
+
+微信**不允许**把 `*.run.tcloudbase.com` 填进 `request 合法域名`（会红字拒绝保存），
+云托管的官方通道是 `wx.cloud.callContainer`，它不走域名白名单。
+
+1. 云托管控制台记下 **环境 ID**（形如 `prod-8gxxxx`）和 **服务名**（如 `jieshen-proxy`）
+2. 改 `miniprogram/config/env.js`：
+
+```js
+module.exports = {
+  cloud: { enabled: true, env: '你的环境ID', service: 'jieshen-proxy' },
+};
+```
+
+3. 重新编译上传。之后所有 API 走 `callContainer`，`baseUrl` 只用于显示项目图片
+4. 识别图片会自动压到 260KB 以内再 base64（callContainer 的 JSON 有大小限制）
+
+> 小程序后台的「服务器域名」留空即可，不用再填云托管域名。
+
+### 5.1 没有备案域名又不想用 callContainer？用云托管做 https 入口（方案 C 备选）
 
 `deploy/cloudrun-nginx/` 是一个 20 行的 nginx 容器：云托管给它一个**已备案 https 域名**，
 它反代到现有 `27.124.46.63:8099`，小程序只换地址即可，详见该目录 README。

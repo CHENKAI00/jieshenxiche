@@ -16,6 +16,46 @@ function openid() {
 
 let authTipAt = 0;
 
+/** 是否走云托管直连（wx.cloud.callContainer，绕过 request 合法域名） */
+function useCloud() {
+  const app = getApp();
+  const cfg = require('../config/env');
+  return !!(app && app.globalData.useCloud && cfg.cloud && cfg.cloud.enabled && cfg.cloud.env && wx.cloud);
+}
+
+function cloudRequest(path, { method = 'GET', data = {}, loading = false, tip = '处理中' } = {}) {
+  const cfg = require('../config/env').cloud;
+  if (loading) wx.showLoading({ title: tip, mask: true });
+  return new Promise((resolve, reject) => {
+    wx.cloud.callContainer({
+      config: { env: cfg.env },
+      path,
+      method,
+      data,
+      timeout: 20000,
+      header: {
+        'X-WX-SERVICE': cfg.service,
+        'content-type': 'application/json',
+        'x-token': token(),
+        'x-openid': openid(),
+      },
+      success: (res) => {
+        if (loading) wx.hideLoading();
+        handle(res.statusCode || 200, res.data).then(resolve).catch(reject);
+      },
+      fail: (err) => {
+        if (loading) wx.hideLoading();
+        wx.showModal({
+          title: '云托管调用失败',
+          content: `环境：${cfg.env}\n服务：${cfg.service}\n\n${(err && err.errMsg) || ''}\n\n请确认云托管服务已部署且在运行。`,
+          showCancel: false,
+        });
+        reject(err);
+      },
+    });
+  });
+}
+
 function handle(status, data) {
   if (status === 401) {
     // 10 秒内只提示一次，避免连环弹窗
@@ -37,6 +77,7 @@ function handle(status, data) {
 }
 
 function request(path, { method = 'GET', data = {}, loading = false, tip = '处理中' } = {}) {
+  if (useCloud()) return cloudRequest(path, { method, data, loading, tip });
   if (loading) wx.showLoading({ title: tip, mask: true });
   return new Promise((resolve, reject) => {
     wx.request({
@@ -71,13 +112,31 @@ function request(path, { method = 'GET', data = {}, loading = false, tip = '处�
 }
 
 /** 读本地图片为 base64（车主端识别用） */
+/**
+ * 读成 base64。云托管 callContainer 走 JSON，图片太大会被截断，
+ * 所以超过 260KB 先压一道（车牌识别对画质要求不高，压完仍够用）。
+ */
 function readBase64(filePath) {
   return new Promise((resolve, reject) => {
-    wx.getFileSystemManager().readFile({
-      filePath,
+    const fs = wx.getFileSystemManager();
+    const read = (p) => fs.readFile({
+      filePath: p,
       encoding: 'base64',
       success: (r) => resolve(r.data),
       fail: reject,
+    });
+    fs.stat({
+      path: filePath,
+      success: (st) => {
+        if (st.stats.size <= 260 * 1024) return read(filePath);
+        wx.compressImage({
+          src: filePath,
+          quality: 60,
+          success: (c) => read(c.tempFilePath || filePath),
+          fail: () => read(filePath),
+        });
+      },
+      fail: () => read(filePath),
     });
   });
 }

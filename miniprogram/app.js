@@ -1,7 +1,10 @@
+const envCfg = require('./config/env');
+
 App({
   globalData: {
     // 默认走云托管 https 入口；本机调试在「我的 → 开发者设置」改成 http://127.0.0.1:8099
     baseUrl: 'https://jieshen-proxy-348830-13-1326952250.sh.run.tcloudbase.com',
+    useCloud: false,
     token: '123456',
     staffName: '前台',
     lastPlate: '',
@@ -14,6 +17,13 @@ App({
   },
 
   onLaunch() {
+    // 云托管直连（不需要 request 合法域名）
+    if (envCfg.cloud && envCfg.cloud.enabled && envCfg.cloud.env && wx.cloud) {
+      try {
+        wx.cloud.init({ env: envCfg.cloud.env, traceUser: true });
+        this.globalData.useCloud = true;
+      } catch (e) { /* 低版本基础库忽略 */ }
+    }
     // 静默预热：云托管实例可能缩容到 0，先打一枪 /health，减少首屏等待
     setTimeout(() => {
       try { require('./utils/api').health().catch(() => {}); } catch (e) { /* ignore */ }
