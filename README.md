@@ -392,7 +392,12 @@ crontab -e   # 加一行：@reboot cd /opt/jieshenxiche && bash deploy/manage.sh
 cp deploy/jieshenxiche.service /etc/systemd/system/ && systemctl daemon-reload && systemctl enable --now jieshenxiche
 ```
 
-### 5. 接域名 / HTTPS（小程序正式上线必须）
+### 5. 没有备案域名？用云托管做 https 入口（方案 C）
+
+`deploy/cloudrun-nginx/` 是一个 20 行的 nginx 容器：云托管给它一个**已备案 https 域名**，
+它反代到现有 `27.124.46.63:8099`，小程序只换地址即可，详见该目录 README。
+
+### 6. 接域名 / HTTPS（小程序正式上线必须）
 
 ```bash
 cp deploy/nginx-jieshenxiche.conf /etc/nginx/conf.d/

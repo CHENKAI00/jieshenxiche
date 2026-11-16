@@ -6,6 +6,18 @@ Page({
   onLoad(options) {
     const app = getApp();
     this.setData({ serverHost: (app.globalData.baseUrl || '').replace(/^https?:\/\//, '') });
+    // 体验版/正式版不允许 http，直接在首页提示去改地址
+    try {
+      const info = wx.getAccountInfoSync && wx.getAccountInfoSync();
+      const env = info && info.miniProgram && info.miniProgram.envVersion;
+      if (env && env !== 'develop' && /^http:\/\//.test(app.globalData.baseUrl || '')) {
+        wx.showModal({
+          title: '需要 https 域名',
+          content: '体验版/正式版不能用 http 地址。\n请点页面底部「服务器」填云托管的 https 域名（xxx.run.tcloudbase.com）。',
+          showCancel: false,
+        });
+      }
+    } catch (e) { /* 低版本基础库忽略 */ }
     // ?switch=1 表示主动来换身份，不自动跳
     if (options && options.switch === '1') return;
     const role = wx.getStorageSync('role');
