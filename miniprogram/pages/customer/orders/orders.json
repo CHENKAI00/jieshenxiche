@@ -4,7 +4,6 @@
     "van-tabs": "/miniprogram_npm/@vant/weapp/tabs/index",
     "van-tab": "/miniprogram_npm/@vant/weapp/tab/index",
     "van-tag": "/miniprogram_npm/@vant/weapp/tag/index",
-    "van-button": "/miniprogram_npm/@vant/weapp/button/index",
     "van-empty": "/miniprogram_npm/@vant/weapp/empty/index",
     "van-steps": "/miniprogram_npm/@vant/weapp/steps/index"
   },

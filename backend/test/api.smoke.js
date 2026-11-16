@@ -163,7 +163,7 @@ function ok(name, cond, extra = '') {
   const app = require('../src/app');
   const server = app.listen(0);
   const base = `http://127.0.0.1:${server.address().port}/api/v1`;
-  const TOKEN = 'js-wash-2026';
+  const TOKEN = '123456';
   const H = { 'x-token': TOKEN, 'content-type': 'application/json' };
 
   // 0. 工具

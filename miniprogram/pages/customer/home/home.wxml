@@ -84,7 +84,7 @@
       <view class="bind-ico">🚗</view>
       <view class="bind-title">绑定我的爱车</view>
       <view class="bind-desc">填车牌 + 门店登记的手机号（或后 4 位），就能看到余额、剩余次数和到店记录。</view>
-      <van-button type="primary" round block custom-class="bind-btn" bind:click="goBind">立即绑定</van-button>
+      <button class="btn" bindtap="goBind">立即绑定</button>
     </view>
 
     <view class="card">

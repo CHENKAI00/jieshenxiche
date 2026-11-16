@@ -48,7 +48,7 @@ function request(path, { method = 'GET', data = {}, loading = false, tip = '处�
         if (loading) wx.hideLoading();
         wx.showModal({
           title: '连不上服务',
-          content: `请确认后端已启动、且「我的」页地址正确：\n${base()}\n\n${err.errMsg || ''}`,
+          content: `连不上服务器：\n${base()}\n\n请确认后端已启动；地址可在「我的 → 开发者设置」修改。\n${err.errMsg || ''}`,
           showCancel: false,
         });
         reject(err);

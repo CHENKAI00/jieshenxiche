@@ -7,7 +7,7 @@
 
   <view wx:if="{{loaded && list.length === 0}}" class="empty-wrap">
     <van-empty description="{{tab === 0 ? '还没有进行中的预约' : '还没有预约记录'}}" />
-    <van-button type="primary" round size="small" bind:click="goBooking">去预约</van-button>
+    <button class="btn" style="margin-top:20rpx" bindtap="goBooking">去预约</button>
   </view>
 
   <view wx:for="{{list}}" wx:key="id" class="order">
@@ -36,10 +36,8 @@
 
     <view class="foot">
       <text class="small">{{item.hint}}</text>
-      <van-button wx:if="{{item.canCancel}}" size="small" plain round
-                  bind:click="cancel" data-id="{{item.id}}">取消</van-button>
-      <van-button wx:if="{{item.status === 'done'}}" size="small" round type="primary"
-                  bind:click="rebook" data-index="{{index}}">再来一次</van-button>
+      <button wx:if="{{item.canCancel}}" class="btn-mini" bindtap="cancel" data-id="{{item.id}}">取消</button>
+      <button wx:if="{{item.status === 'done'}}" class="btn-mini primary" bindtap="rebook" data-index="{{index}}">再来一次</button>
     </view>
   </view>
 

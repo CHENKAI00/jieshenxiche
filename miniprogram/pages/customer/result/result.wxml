@@ -18,8 +18,8 @@
   </view>
 
   <view class="actions">
-    <van-button type="primary" round block bind:click="goOrders">查看我的预约</van-button>
-    <van-button plain round block custom-style="margin-top:24rpx" bind:click="goHome">返回我的卡</van-button>
+    <button class="btn" bindtap="goOrders">查看我的预约</button>
+    <button class="btn ghost" style="margin-top:24rpx" bindtap="goHome">返回我的卡</button>
   </view>
 
   <view class="tip">请按时到店，迟到 15 分钟以上可能需要重新排队</view>

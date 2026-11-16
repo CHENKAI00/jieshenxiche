@@ -43,7 +43,7 @@
   </view>
 
   <view class="bottom">
-    <van-button type="primary" round block loading="{{submitting}}" bind:click="submit">确认预约</van-button>
+    <button class="btn" loading="{{submitting}}" bindtap="submit">{{submitting ? '提交中…' : '确认预约'}}</button>
     <view class="tip">预约免费，到店按次数卡或余额结算</view>
   </view>
 

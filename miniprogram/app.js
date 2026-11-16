@@ -1,8 +1,8 @@
 App({
   globalData: {
-    // 本地调试：微信开发者工具里勾「不校验合法域名」即可直连
-    baseUrl: 'http://127.0.0.1:8099',
-    token: 'js-wash-2026',
+    // 默认连服务器；本机调试时在「我的 → 开发者设置」里改成 http://127.0.0.1:8099
+    baseUrl: 'http://27.124.46.63:8099',
+    token: '123456',
     staffName: '前台',
     lastPlate: '',
     // 门店电话（车主端「联系门店」用），改成你们店的号码
@@ -19,8 +19,14 @@ App({
     const staffName = wx.getStorageSync('staffName');
     const role = wx.getStorageSync('role');
     const openid = wx.getStorageSync('openid');
-    if (baseUrl) this.globalData.baseUrl = baseUrl;
-    if (token) this.globalData.token = token;
+    // 一次性迁移：老的本地地址 / 老口令自动换成新的默认值
+    if (baseUrl && /^https?:\/\/(127\.0\.0\.1|localhost)/.test(baseUrl)) {
+      this.setBaseUrl(this.globalData.baseUrl);
+    } else if (baseUrl) {
+      this.globalData.baseUrl = baseUrl;
+    }
+    if (token && token !== 'js-wash-2026') this.globalData.token = token;
+    else if (token === 'js-wash-2026') this.setToken('123456');
     if (staffName) this.globalData.staffName = staffName;
     if (role === 'customer' || role === 'staff') this.globalData.role = role;
     if (openid) this.globalData.openid = openid;

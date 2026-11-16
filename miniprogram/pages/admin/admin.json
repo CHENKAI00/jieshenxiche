@@ -1,6 +1,5 @@
 {
   "usingComponents": {
-    "van-button": "/miniprogram_npm/@vant/weapp/button/index",
     "van-tag": "/miniprogram_npm/@vant/weapp/tag/index"
   },
   "navigationBarTitleText": "门店工作台"

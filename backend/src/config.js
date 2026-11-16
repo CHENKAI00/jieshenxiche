@@ -6,7 +6,7 @@ const env = process.env;
 module.exports = {
   port: Number(env.PORT || 8099),
   publicBaseUrl: env.PUBLIC_BASE_URL || 'http://127.0.0.1:8099',
-  adminToken: env.ADMIN_TOKEN || 'js-wash-2026', // 演示默认值，上线务必改 .env
+  adminToken: env.ADMIN_TOKEN || '123456', // 生产请改成强口令
   db: {
     host: env.DB_HOST || '127.0.0.1',
     port: Number(env.DB_PORT || 3306),

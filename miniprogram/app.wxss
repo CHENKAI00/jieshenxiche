@@ -46,18 +46,45 @@ page {
   height: 92rpx;
   line-height: 92rpx;
   text-align: center;
-  border-radius: 999rpx;
+  border-radius: 18rpx;
   font-size: 30rpx;
   font-weight: 600;
+  letter-spacing: 1rpx;
   color: #fff;
-  background: linear-gradient(135deg, #0b7bd8, #17c3b2);
+  background: #0b7bd8;
   border: none;
-  box-shadow: 0 12rpx 28rpx rgba(11, 123, 216, 0.22);
+  box-shadow: 0 6rpx 18rpx rgba(11, 123, 216, 0.16);
+  transition: transform 0.12s ease, opacity 0.12s ease;
 }
 .btn::after { border: none; }
-.btn.ghost { background: #eef5fd; color: var(--brand); box-shadow: none; }
-.btn.warn { background: linear-gradient(135deg, #f0913f, #e8543a); }
+.btn:active { transform: scale(0.985); opacity: 0.92; }
+.btn.ghost {
+  background: #fff;
+  color: var(--brand);
+  border: 1.5rpx solid #cfe2f5;
+  box-shadow: none;
+}
+.btn.ghost:active { background: #f4f9ff; }
+.btn.warn { background: #e8543a; box-shadow: 0 6rpx 18rpx rgba(232, 84, 58, 0.18); }
 .btn.disabled { opacity: 0.5; }
+
+/* 小按钮（列表里的操作） */
+.btn-mini {
+  display: inline-block;
+  height: 58rpx;
+  line-height: 56rpx;
+  padding: 0 24rpx;
+  border-radius: 12rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  color: #0b7bd8;
+  background: #fff;
+  border: 1.5rpx solid #cfe2f5;
+  margin-left: 12rpx;
+}
+.btn-mini::after { border: none; }
+.btn-mini.primary { background: #0b7bd8; color: #fff; border-color: #0b7bd8; }
+.btn-mini.danger { color: #d9463a; border-color: #f3cdc8; }
 
 .tag {
   display: inline-block;
