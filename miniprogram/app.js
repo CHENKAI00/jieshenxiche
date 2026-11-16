@@ -1,7 +1,7 @@
 App({
   globalData: {
-    // 默认连服务器；本机调试时在「我的 → 开发者设置」里改成 http://127.0.0.1:8099
-    baseUrl: 'http://27.124.46.63:8099',
+    // 默认走云托管 https 入口；本机调试在「我的 → 开发者设置」改成 http://127.0.0.1:8099
+    baseUrl: 'https://jieshen-proxy-348830-13-1326952250.sh.run.tcloudbase.com',
     token: '123456',
     staffName: '前台',
     lastPlate: '',
@@ -14,6 +14,10 @@ App({
   },
 
   onLaunch() {
+    // 静默预热：云托管实例可能缩容到 0，先打一枪 /health，减少首屏等待
+    setTimeout(() => {
+      try { require('./utils/api').health().catch(() => {}); } catch (e) { /* ignore */ }
+    }, 300);
     const baseUrl = wx.getStorageSync('baseUrl');
     const token = wx.getStorageSync('token');
     const staffName = wx.getStorageSync('staffName');
