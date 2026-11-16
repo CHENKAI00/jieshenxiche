@@ -21,7 +21,7 @@
         <text wx:else class="cam__icon">📷</text>
       </view>
     </wash-field>
-    <view class="hint">点右侧相机可拍照或从相册选图（最多 3 张），自动识别车牌</view>
+    <view class="hint">点右侧相机可拍照或从相册选一张，自动识别车牌</view>
 
     <view class="gap"></view>
 
