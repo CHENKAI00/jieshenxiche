@@ -30,8 +30,34 @@ Page({
     else if (role === 'staff') wx.switchTab({ url: '/pages/index/index' });
   },
 
-  /** 服务器设置：现场改地址 + 测连通（排查「连不上服务器」用） */
-  openServer() {
+  /** 点底部那行：先做连接诊断，再给改地址的入口 */
+  async openServer() {
+    wx.showLoading({ title: '诊断中', mask: true });
+    let d = null;
+    try { d = await require('../../utils/api').diagnose(); } catch (e) { d = null; }
+    wx.hideLoading();
+    wx.showModal({
+      title: '连接诊断',
+      content: d
+        ? [
+            `基础库：${d.sdk}`,
+            `当前通道：${d.transport}`,
+            `云托管开关：${d.enabled ? '开' : '关'}`,
+            `环境：${d.env}`,
+            `服务：${d.service}`,
+            `云托管：${d.cloud}`,
+            `域名：${d.baseUrl}`,
+            `域名测试：${d.http}`,
+          ].join('\n')
+        : '诊断失败',
+      cancelText: '改地址',
+      confirmText: '关闭',
+      success: (r) => { if (r.cancel) this.editServer(); },
+    });
+  },
+
+  /** 服务器设置：现场改地址 + 测连通 */
+  editServer() {
     const app = getApp();
     wx.showModal({
       title: '服务器地址',

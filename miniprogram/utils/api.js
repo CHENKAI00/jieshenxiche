@@ -45,11 +45,8 @@ function cloudRequest(path, { method = 'GET', data = {}, loading = false, tip = 
       },
       fail: (err) => {
         if (loading) wx.hideLoading();
-        wx.showModal({
-          title: '云托管调用失败',
-          content: `环境：${cfg.env}\n服务：${cfg.service}\n\n${(err && err.errMsg) || ''}\n\n请确认云托管服务已部署且在运行。`,
-          showCancel: false,
-        });
+        err = err || {};
+        err.__cloud = true;
         reject(err);
       },
     });
@@ -77,7 +74,37 @@ function handle(status, data) {
 }
 
 function request(path, { method = 'GET', data = {}, loading = false, tip = '处理中' } = {}) {
-  if (useCloud()) return cloudRequest(path, { method, data, loading, tip });
+  if (useCloud()) {
+    return cloudRequest(path, { method, data, loading, tip }).catch((cloudErr) =>
+      httpRequest(path, { method, data, loading, tip }).then(
+        (r) => {
+          // 云托管不通但域名能通：自动降级，后续都走域名
+          const app = getApp();
+          if (app) app.globalData.useCloud = false;
+          return r;
+        },
+        (httpErr) => {
+          const cfg = require('../config/env').cloud;
+          wx.showModal({
+            title: '两种通道都连不上',
+            content: [
+              `通道：云托管 callContainer`,
+              `环境：${cfg.env || '(空)'}  服务：${cfg.service || '(空)'}`,
+              `云托管错误：${(cloudErr && cloudErr.errMsg) || 'fail'}`,
+              `域名：${base()}`,
+              `域名错误：${(httpErr && httpErr.errMsg) || 'fail'}`,
+            ].join('\n'),
+            showCancel: false,
+          });
+          throw httpErr;
+        }
+      )
+    );
+  }
+  return httpRequest(path, { method, data, loading, tip });
+}
+
+function httpRequest(path, { method = 'GET', data = {}, loading = false, tip = '处理中' } = {}) {
   if (loading) wx.showLoading({ title: tip, mask: true });
   return new Promise((resolve, reject) => {
     wx.request({
@@ -179,6 +206,46 @@ module.exports = {
   request,
   absUrl,
   catalog: () => request('/api/v1/catalog'),
+  /** 连接诊断：分别测 callContainer 与 https 域名，返回明细（不弹任何窗） */
+  diagnose: async () => {
+    const cfg = require('../config/env').cloud;
+    const sdk = (wx.getAppBaseInfo && wx.getAppBaseInfo().SDKVersion) || (wx.getSystemInfoSync && wx.getSystemInfoSync().SDKVersion) || '';
+    const out = {
+      sdk,
+      transport: useCloud() ? '云托管 callContainer' : '域名 request',
+      env: cfg.env || '(空)',
+      service: cfg.service || '(空)',
+      enabled: !!cfg.enabled,
+      baseUrl: base(),
+      cloud: '未测试',
+      http: '未测试',
+    };
+
+    out.cloud = await new Promise((resolve) => {
+      if (!wx.cloud || !cfg.env) return resolve('未配置（缺 wx.cloud 或 env）');
+      wx.cloud.callContainer({
+        config: { env: cfg.env },
+        path: '/health',
+        method: 'GET',
+        header: { 'X-WX-SERVICE': cfg.service, 'content-type': 'application/json' },
+        timeout: 15000,
+        success: (r) => resolve(`${r.statusCode} ${JSON.stringify(r.data).slice(0, 60)}`),
+        fail: (e) => resolve((e && e.errMsg) || 'fail'),
+      });
+    });
+
+    out.http = await new Promise((resolve) => {
+      wx.request({
+        url: base() + '/health',
+        method: 'GET',
+        timeout: 15000,
+        success: (r) => resolve(`${r.statusCode} ${JSON.stringify(r.data).slice(0, 60)}`),
+        fail: (e) => resolve((e && e.errMsg) || 'fail'),
+      });
+    });
+    return out;
+  },
+
   /** 校验员工口令（独立请求，不触发全局 401 弹窗） */
   adminLogin: (password) => new Promise((resolve, reject) => {
     wx.request({
