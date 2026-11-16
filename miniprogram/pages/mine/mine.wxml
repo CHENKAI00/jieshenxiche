@@ -17,6 +17,7 @@
     <van-cell title="会员名录" icon="friends-o" is-link bind:click="openMembers" />
     <van-cell title="店内项目与价目" icon="shop-o" is-link bind:click="showPrice" />
     <van-cell title="切换到车主端" icon="exchange" is-link bind:click="goCustomer" />
+    <van-cell title="连接诊断" icon="exchange" is-link bind:click="diagnose" />
     <van-cell title="关于洁神洗车" icon="info-o" is-link bind:click="showAbout" />
   </van-cell-group>
 

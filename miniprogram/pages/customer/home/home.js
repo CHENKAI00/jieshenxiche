@@ -10,6 +10,8 @@ Page({
     balanceText: '0.00',
     lastAgo: '',
     activeBooking: null,
+    services: [],
+    servicesError: '',
   },
 
   onShow() {
@@ -33,9 +35,29 @@ Page({
       });
       app.globalData.customerBound = !!d.bound;
       if (d.bound) this.loadActiveBooking();
+      this.loadServices();
     } catch (e) {
       this.setData({ loading: false, bound: false });
     }
+  },
+
+  async loadServices() {
+    try {
+      const d = await api.customerServices();
+      const services = (d.services || []).slice(0, 4).map((s) => ({
+        ...s,
+        imageUrl: api.absUrl(s.image),
+        phClass: s.tag === '洗车' ? 'wash' : 'beauty',
+      }));
+      this.setData({ services, servicesError: '' });
+    } catch (e) {
+      this.setData({ servicesError: (e && e.message) || '接口不可用' });
+    }
+  },
+
+  bookService(e) {
+    const id = e.currentTarget.dataset.id;
+    wx.navigateTo({ url: `/pages/customer/booking/booking?serviceId=${id}` });
   },
 
   async loadActiveBooking() {

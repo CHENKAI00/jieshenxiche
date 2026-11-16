@@ -95,6 +95,48 @@
     </view>
   </block>
 
+  <!-- 店内服务与优惠：不绑卡也能看 -->
+  <view class="svc-sec">
+    <view class="between" style="margin-bottom:20rpx">
+      <text class="sec-title">店内服务与优惠</text>
+      <text class="small" bindtap="goServices">全部 ›</text>
+    </view>
+
+    <view class="promo" bindtap="callStore">
+      <view class="col">
+        <text class="promo-title">开业优惠</text>
+        <text class="promo-desc">充 500 送 150 · 首次洗车立减 10 元</text>
+      </view>
+      <text class="promo-btn">咨询</text>
+    </view>
+
+    <view wx:if="{{services.length}}" class="svc-list">
+      <view wx:for="{{services}}" wx:key="id" class="svc-item">
+        <view class="svc-img ph-{{item.phClass}}">
+          <image wx:if="{{item.imageUrl}}" class="svc-img__pic" src="{{item.imageUrl}}" mode="aspectFill" />
+          <text wx:else class="svc-img__emoji">{{item.emoji}}</text>
+        </view>
+        <view class="svc-info">
+          <view class="svc-head">
+            <text class="svc-name">{{item.name}}</text>
+            <text class="svc-tag {{item.tag === '美容' ? 'is-beauty' : ''}}">{{item.tag}}</text>
+          </view>
+          <text class="svc-desc">{{item.desc}}</text>
+          <view class="svc-meta">
+            <text class="svc-price">¥{{item.price}}</text>
+            <text class="svc-mins">约 {{item.mins}} 分钟</text>
+          </view>
+        </view>
+        <button class="btn-mini primary" data-id="{{item.id}}" bindtap="bookService">预约</button>
+      </view>
+    </view>
+
+    <view wx:elif="{{servicesError}}" class="svc-empty">
+      服务列表暂时读不到：{{servicesError}}
+    </view>
+    <view wx:else class="svc-empty">正在加载店内服务…</view>
+  </view>
+
   <view class="gap"></view>
   <customer-tabbar active="home" />
 </view>

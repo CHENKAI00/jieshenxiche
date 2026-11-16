@@ -51,15 +51,33 @@ Page({
 
   async save() {
     const app = getApp();
-    app.setBaseUrl(this.data.baseUrl);
-    app.setToken(this.data.token);
-    app.setStaffName(this.data.staffName || '前台');
-    wx.showToast({ title: '已保存', icon: 'success' });
+    const pwd = String(this.data.token || '').trim();
+    const baseUrl = String(this.data.baseUrl || '').trim();
+    if (!pwd) return wx.showToast({ title: '请填写员工口令', icon: 'none' });
+
+    // 先落地址，再拿这个地址去校验口令，校验通过才算保存成功
+    app.setBaseUrl(baseUrl);
+    wx.showLoading({ title: '验证口令', mask: true });
+    try {
+      await api.adminLogin(pwd);
+      app.setToken(pwd);
+      app.setStaffName(this.data.staffName || '前台');
+      wx.hideLoading();
+      wx.showToast({ title: '已保存并通过验证', icon: 'success' });
+    } catch (e) {
+      wx.hideLoading();
+      wx.showModal({
+        title: '口令没通过',
+        content: `${e.message || '口令不正确'}\n\n服务器：${baseUrl}\n如果服务器还没更新，口令仍是旧值，请在服务器 .env 里改成 ${pwd} 后重启。`,
+        showCancel: false,
+      });
+      return;
+    }
     await this.test();
     if (this.data.health.db !== 'up') {
       wx.showModal({
         title: '数据库未连通',
-        content: '请检查后端 npm start 是否运行、.env 数据库账号是否正确。',
+        content: '地址和口令都通了，但数据库没连上，检查服务器 .env 的数据库账号。',
         showCancel: false,
       });
     }
@@ -89,6 +107,34 @@ Page({
         showCancel: false,
       });
     } catch (e) {}
+  },
+
+  async diagnose() {
+    const app = getApp();
+    const base = app.globalData.baseUrl;
+    const pwd = String(this.data.token || '').trim();
+    wx.showLoading({ title: '诊断中', mask: true });
+    const health = await api.health();
+    let auth = '未校验';
+    try {
+      await api.adminLogin(pwd);
+      auth = '口令正确';
+    } catch (e) {
+      auth = `口令不通过（${e.message || '未知'}）`;
+    }
+    wx.hideLoading();
+    wx.showModal({
+      title: '连接诊断',
+      content: [
+        `地址：${base}`,
+        `服务：${health.ok ? '在线' : '不可达'}`,
+        `版本：${health.version || '旧版（无版本号）'}`,
+        `数据库：${health.db || '未知'}`,
+        `识别引擎：${health.ocr || '未知'}`,
+        `员工口令：${auth}`,
+      ].join('\n'),
+      showCancel: false,
+    });
   },
 
   showAbout() {

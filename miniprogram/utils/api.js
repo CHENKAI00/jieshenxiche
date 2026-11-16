@@ -14,11 +14,16 @@ function openid() {
   return (app && app.globalData.openid) || '';
 }
 
+let authTipAt = 0;
+
 function handle(status, data) {
   if (status === 401) {
+    // 10 秒内只提示一次，避免连环弹窗
+    if (Date.now() - authTipAt < 10000) return Promise.reject(new Error('NO_AUTH'));
+    authTipAt = Date.now();
     wx.showModal({
-      title: '需要员工口令',
-      content: '请到「我的」页填写门店员工口令后再操作',
+      title: '口令未通过',
+      content: '当前口令被服务器拒绝。打开「我的 → 开发者设置」重新保存（服务器口令需与之一致）。',
       confirmText: '去设置',
       success: (res) => { if (res.confirm) wx.switchTab({ url: '/pages/mine/mine' }); },
     });
@@ -115,6 +120,23 @@ module.exports = {
   request,
   absUrl,
   catalog: () => request('/api/v1/catalog'),
+  /** 校验员工口令（独立请求，不触发全局 401 弹窗） */
+  adminLogin: (password) => new Promise((resolve, reject) => {
+    wx.request({
+      url: base() + '/api/v1/admin/login',
+      method: 'POST',
+      timeout: 12000,
+      header: { 'content-type': 'application/json' },
+      data: { password },
+      success: (res) => {
+        if (res.statusCode === 200 && res.data && res.data.ok) resolve(res.data);
+        else if (res.statusCode === 404) reject(new Error('服务器版本较旧，缺少登录接口'));
+        else reject(new Error((res.data && res.data.msg) || '口令不正确'));
+      },
+      fail: () => reject(new Error('连不上服务器')),
+    });
+  }),
+
   // ===== 车主端 =====
   customerLogin: (code) => request('/api/v1/customer/login', { method: 'POST', data: { code } }),
   staffLogin: (password) => request('/api/v1/customer/staff-login', { method: 'POST', data: { password }, loading: true, tip: '登录中' }),

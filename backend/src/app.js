@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const cfg = require('./config');
+const pkg = require('../package.json');
 const { ping } = require('./db');
 const { staffAuth } = require('./middleware/auth');
 const ocrRouter = require('./routes/ocr');
@@ -29,6 +30,8 @@ app.get('/health', async (req, res) => {
   res.json({
     ok: true,
     service: 'jieshenxiche-api',
+    version: pkg.version,
+    startedAt: new Date(Date.now() - process.uptime() * 1000).toISOString(),
     db,
     ocr: cfg.ocr.mock ? 'mock'
       : cfg.ocr.engine === 'auto'

@@ -129,3 +129,84 @@
 
 .loading { text-align: center; color: var(--sub); font-size: 26rpx; padding: 140rpx 0; }
 .gap { height: 140rpx; }
+
+/* ============ 店内服务与优惠 ============ */
+.svc-sec { margin-top: 24rpx; }
+.sec-title { font-size: 32rpx; font-weight: 700; color: var(--color-text, #1f2937); }
+
+.promo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  background: var(--color-primary-light, #eaf2ff);
+  margin-bottom: 20rpx;
+}
+.promo-title { font-size: 28rpx; font-weight: 700; color: var(--color-primary, #2b7fff); }
+.promo-desc { margin-top: 6rpx; font-size: 23rpx; color: #5a6b7f; }
+.promo-btn {
+  flex: none;
+  padding: 10rpx 22rpx;
+  border-radius: 999rpx;
+  background: #fff;
+  color: var(--color-primary, #2b7fff);
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.svc-list {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 4rpx 24rpx;
+  box-shadow: 0 8rpx 24rpx rgba(20, 40, 70, 0.05);
+}
+.svc-item {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 24rpx 0;
+  border-top: 1rpx solid #eef1f5;
+}
+.svc-item:first-child { border-top: none; }
+.svc-img {
+  width: 96rpx; height: 96rpx;
+  border-radius: 14rpx;
+  flex: none;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  background: #eef5fd;
+}
+.svc-img.ph-beauty { background: #fdf3e5; }
+.svc-img__pic { width: 100%; height: 100%; }
+.svc-img__emoji { font-size: 44rpx; }
+.svc-info { flex: 1; min-width: 0; }
+.svc-head { display: flex; align-items: center; gap: 10rpx; }
+.svc-name { font-size: 28rpx; font-weight: 600; color: #1f2937; }
+.svc-tag {
+  padding: 2rpx 10rpx;
+  border-radius: 999rpx;
+  font-size: 18rpx;
+  background: #eaf2ff;
+  color: #2b7fff;
+}
+.svc-tag.is-beauty { background: #fdf3e5; color: #b26a12; }
+.svc-desc {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: #8c9aab;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.svc-meta { display: flex; align-items: baseline; gap: 12rpx; margin-top: 8rpx; }
+.svc-price { font-size: 28rpx; font-weight: 700; color: #1f2937; }
+.svc-mins { font-size: 20rpx; color: #a9b4c2; }
+.svc-empty {
+  padding: 28rpx;
+  border-radius: 16rpx;
+  background: #fff;
+  font-size: 23rpx;
+  color: #8c9aab;
+  text-align: center;
+}

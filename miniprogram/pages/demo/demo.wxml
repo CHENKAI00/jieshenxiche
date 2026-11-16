@@ -19,7 +19,7 @@
 
   <view class="demo-card">
     <view class="demo-card__title">按钮 · 尺寸</view>
-    <view class="demo-row demo-row--baseline">
+    <view class="demo-row">
       <wash-button type="primary" size="large">Large 88</wash-button>
       <wash-button type="primary" size="medium">Medium 72</wash-button>
       <wash-button type="primary" size="small">Small 56</wash-button>
