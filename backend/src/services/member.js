@@ -3,16 +3,15 @@ const cfg = require('../config');
 const catalog = require('./catalog');
 const auth = require('./auth');
 const { validatePlate, normalizePlate, prettyPlate, genMemberNo } = require('../utils/plate');
+const { encryptPhone, decryptPhone, hashPhone, tailHash, maskPhone } = require('../utils/crypto');
 
 const TABLE = '`js_member`';
 
-function maskPhone(phone) {
-  return phone ? String(phone).replace(/^(\d{3})\d{4}(\d{4})$/, '$1****$2') : '';
-}
 
 function toViewModel(row) {
   if (!row) return null;
   const expired = row.expire_at ? new Date(`${row.expire_at}T23:59:59+08:00`).getTime() < Date.now() : false;
+  const phonePlain = decryptPhone(row.phone);
   return {
     id: row.id,
     plateNo: row.plate_no,
@@ -20,8 +19,8 @@ function toViewModel(row) {
     plateColor: row.plate_color,
     memberNo: row.member_no,
     nickname: row.nickname || '车主',
-    phone: maskPhone(row.phone),
-    phoneRaw: row.phone || '',
+    phone: maskPhone(phonePlain),
+    phoneRaw: phonePlain,
     balance: Number(row.balance),
     remainCount: row.remain_count,
     washCount: row.wash_count,
@@ -66,10 +65,17 @@ async function createMember({ plateNo, nickname, phone, remark }) {
   const exist = await findByPlate(v.plate);
   if (exist) return { created: false, ...toViewModel(exist) };
 
+  const phonePlain = phone ? String(phone).replace(/\D/g, '') : '';
   const [r] = await pool.query(
-    `INSERT INTO ${TABLE} (plate_no, plate_color, member_no, nickname, phone, remark)
-     VALUES (?,?,?,?,?,?)`,
-    [v.plate, v.color || '蓝', genMemberNo(), nickname || '车主', phone || null, remark || null]
+    `INSERT INTO ${TABLE} (plate_no, plate_color, member_no, nickname, phone, phone_hash, phone_tail_hash, remark)
+     VALUES (?,?,?,?,?,?,?,?)`,
+    [
+      v.plate, v.color || '蓝', genMemberNo(), nickname || '车主',
+      phonePlain ? encryptPhone(phonePlain) : null,
+      phonePlain ? hashPhone(phonePlain) : null,
+      phonePlain ? tailHash(phonePlain) : null,
+      remark || null,
+    ]
   );
   const [rows] = await pool.query(`SELECT * FROM ${TABLE} WHERE id = ?`, [r.insertId]);
   return { created: true, ...toViewModel(rows[0]) };
@@ -202,10 +208,20 @@ async function updateMember({ plateNo, phone, nickname, remark }) {
   if (phone && !/^1[3-9]\d{9}$/.test(String(phone))) {
     const e = new Error('手机号格式不正确'); e.status = 400; throw e;
   }
-  await pool.query(
-    `UPDATE ${TABLE} SET phone=?, nickname=COALESCE(NULLIF(?,''), nickname), remark=COALESCE(NULLIF(?,''), remark) WHERE id=?`,
-    [phone || row.phone, nickname || '', remark || '', row.id]
-  );
+  const phonePlain = phone ? String(phone).replace(/\D/g, '') : '';
+  if (phonePlain) {
+    await pool.query(
+      `UPDATE ${TABLE} SET phone=?, phone_hash=?, phone_tail_hash=?,
+              nickname=COALESCE(NULLIF(?,''), nickname), remark=COALESCE(NULLIF(?,''), remark)
+        WHERE id=?`,
+      [encryptPhone(phonePlain), hashPhone(phonePlain), tailHash(phonePlain), nickname || '', remark || '', row.id]
+    );
+  } else {
+    await pool.query(
+      `UPDATE ${TABLE} SET nickname=COALESCE(NULLIF(?,''), nickname), remark=COALESCE(NULLIF(?,''), remark) WHERE id=?`,
+      [nickname || '', remark || '', row.id]
+    );
+  }
   return getMemberView(row.plate_no);
 }
 
@@ -214,12 +230,23 @@ async function listMembers({ keyword = '', page = 1, size = 20 }) {
   const lim = Math.min(Math.max(Number(size) || 20, 1), 200);
   const off = (Math.max(Number(page) || 1, 1) - 1) * lim;
   const like = `%${kw}%`;
-  const where = `(?='' OR plate_no LIKE ? OR nickname LIKE ? OR phone LIKE ? OR member_no LIKE ?)`;
+
+  // 手机号已加密：11 位走精确盲索引，4 位走后 4 位盲索引，其它按车牌/称呼/卡号模糊
+  let where; let params;
+  if (/^1[3-9]\d{9}$/.test(kw)) {
+    where = 'phone_hash = ?'; params = [hashPhone(kw)];
+  } else if (/^\d{4}$/.test(kw)) {
+    where = 'phone_tail_hash = ?'; params = [tailHash(kw)];
+  } else {
+    where = "(?='' OR plate_no LIKE ? OR nickname LIKE ? OR member_no LIKE ?)";
+    params = [kw, like, like, like];
+  }
+
   const [rows] = await pool.query(
     `SELECT * FROM ${TABLE} WHERE ${where} ORDER BY last_service_at DESC, id DESC LIMIT ? OFFSET ?`,
-    [kw, like, like, like, like, lim, off]
+    [...params, lim, off]
   );
-  const [[{ total }]] = await pool.query(`SELECT COUNT(*) total FROM ${TABLE} WHERE ${where}`, [kw, like, like, like, like]);
+  const [[{ total }]] = await pool.query(`SELECT COUNT(*) total FROM ${TABLE} WHERE ${where}`, params);
   return { total, page: Number(page) || 1, size: lim, list: rows.map(toViewModel) };
 }
 
@@ -248,6 +275,12 @@ async function overview() {
   };
 }
 
+/** 会员库里的车牌（闭集校正用） */
+async function listPlates() {
+  const [rows] = await pool.query('SELECT plate_no, nickname FROM `js_member` WHERE status = 1');
+  return rows.map((r) => ({ plateNo: r.plate_no, nickname: r.nickname }));
+}
+
 /** 最近到店 */
 async function recentVisits(limit = 10) {
   const lim = Math.min(Math.max(Number(limit) || 10, 1), 100);
@@ -266,5 +299,5 @@ async function getCustomerView(openid) {
 
 module.exports = {
   getMemberView, createMember, updateMember, consume, recharge, listMembers, overview, recentVisits,
-  getCustomerView, toViewModel,
+  getCustomerView, toViewModel, listPlates,
 };

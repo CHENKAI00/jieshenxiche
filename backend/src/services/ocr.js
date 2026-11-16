@@ -107,7 +107,8 @@ async function hyperlprOcr(imageBase64) {
 const MOCK_PLATES = ['粤B12345', '粤BD12345', '粤A66666', '粤B12346', '粤B8888G'];
 
 function mockOcr() {
-  const plate = MOCK_PLATES[Math.floor(Math.random() * MOCK_PLATES.length)];
+  const pool = (cfg.ocr.mockPlates && cfg.ocr.mockPlates.length) ? cfg.ocr.mockPlates : MOCK_PLATES;
+  const plate = pool[Math.floor(Math.random() * pool.length)];
   const v = validatePlate(plate);
   return {
     plate: v.plate,
@@ -175,4 +176,39 @@ async function recognizePlate(input) {
   return { ...mockOcr(), engine: 'mock', note: `本地识别未启动（${local.error}），已降级 mock` };
 }
 
-module.exports = { recognizePlate, ACTION };
+/**
+ * 连拍多帧识别 + 投票
+ * 同一辆车连拍 3 张，按「出现次数优先、平均置信度次之」选结果，
+ * 能消掉单帧的偶发误识别（O/0、1/7、5/S 混淆）。
+ */
+async function recognizeBatch(inputs = []) {
+  const frames = [];
+  for (const input of inputs.slice(0, 5)) {
+    try {
+      frames.push(await recognizePlate(input));
+    } catch (e) {
+      frames.push({ plate: '', color: '', confidence: 0, engine: 'error', error: e.message, candidates: [] });
+    }
+  }
+  const votes = new Map();
+  for (const f of frames) {
+    const p = fixOcrConfusion(f.plate || '');
+    if (!p) continue;
+    const cur = votes.get(p) || { plate: p, votes: 0, conf: 0, colors: {} };
+    cur.votes += 1;
+    cur.conf += Number(f.confidence || 0);
+    if (f.color) cur.colors[f.color] = (cur.colors[f.color] || 0) + 1;
+    votes.set(p, cur);
+  }
+  const ranked = [...votes.values()]
+    .map((v) => ({
+      plate: v.plate,
+      votes: v.votes,
+      avgConfidence: Number((v.conf / v.votes).toFixed(4)),
+      color: Object.entries(v.colors).sort((a, b) => b[1] - a[1])[0]?.[0] || '',
+    }))
+    .sort((a, b) => b.votes - a.votes || b.avgConfidence - a.avgConfidence);
+  return { frames, ranked, top: ranked[0] || null, totalFrames: frames.length };
+}
+
+module.exports = { recognizePlate, recognizeBatch, ACTION };

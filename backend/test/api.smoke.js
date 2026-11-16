@@ -11,6 +11,8 @@ const path = require('path');
 // 项目目录用临时文件，避免测试改到真实 data/services.json
 process.env.CATALOG_FILE = path.join(os.tmpdir(), `js-catalog-test-${Date.now()}.json`);
 process.env.BOOKINGS_FILE = path.join(os.tmpdir(), `js-bookings-test-${Date.now()}.json`);
+// mock OCR 固定返回一个「和会员库差 1 位」的车牌，用来验证闭集校正
+process.env.OCR_MOCK_PLATES = '粤B12346';
 fs.copyFileSync(path.join(__dirname, '..', 'data', 'services.json'), process.env.CATALOG_FILE);
 
 /* ---------------- 内存假库（对齐 v3 的 17 字段） ---------------- */
@@ -25,6 +27,9 @@ function exec(sql, params = []) {
 
   if (/^SELECT \* FROM `js_member` WHERE plate_no = \? (LIMIT 1|FOR UPDATE)/i.test(s)) {
     return [[store.find((r) => r.plate_no === params[0])].filter(Boolean).map(clone)];
+  }
+  if (/^SELECT plate_no, nickname FROM `js_member` WHERE status = 1/i.test(s)) {
+    return [store.filter((r) => r.status === 1).map((r) => ({ plate_no: r.plate_no, nickname: r.nickname }))];
   }
   if (/^SELECT \* FROM `js_member` WHERE phone = \? ORDER BY/i.test(s)) {
     return [store.filter((r) => r.phone && r.phone === params[0]).map(clone)];
@@ -50,9 +55,9 @@ function exec(sql, params = []) {
     return [[store.find((r) => r.id === params[0])].filter(Boolean).map(clone)];
   }
   if (/^INSERT INTO `js_member`/i.test(s)) {
-    const [plate_no, plate_color, member_no, nickname, phone, remark] = params;
+    const [plate_no, plate_color, member_no, nickname, phone, phone_hash, phone_tail_hash, remark] = params;
     const row = {
-      id: ++seq, plate_no, plate_color, member_no, nickname, phone,
+      id: ++seq, plate_no, plate_color, member_no, nickname, phone, phone_hash, phone_tail_hash,
       openid: null,
       balance: 0, remain_count: 0, wash_count: 0, wax_count: 0, expire_at: null,
       last_service_at: null, last_item: null, remark: remark || null,
@@ -76,10 +81,16 @@ function exec(sql, params = []) {
     if (incWax) r.wax_count += 1;
     return [{ affectedRows: 1 }];
   }
-  if (/^UPDATE `js_member` SET phone=\?, nickname=COALESCE\(NULLIF\(\?,''\), nickname\), remark=COALESCE/i.test(s)) {
-    const [phone, nickname, remark, id] = params;
+  if (/^UPDATE `js_member` SET phone=\?, phone_hash=\?, phone_tail_hash=\?, nickname=COALESCE/i.test(s)) {
+    const [phone, phone_hash, phone_tail_hash, nickname, remark, id] = params;
     const r = store.find((x) => x.id === id);
-    if (r) Object.assign(r, { phone, nickname: nickname || r.nickname, remark: remark || r.remark });
+    if (r) Object.assign(r, { phone, phone_hash, phone_tail_hash, nickname: nickname || r.nickname, remark: remark || r.remark });
+    return [{ affectedRows: r ? 1 : 0 }];
+  }
+  if (/^UPDATE `js_member` SET nickname=COALESCE/i.test(s)) {
+    const [nickname, remark, id] = params;
+    const r = store.find((x) => x.id === id);
+    if (r) Object.assign(r, { nickname: nickname || r.nickname, remark: remark || r.remark });
     return [{ affectedRows: r ? 1 : 0 }];
   }
   // 充值
@@ -88,6 +99,12 @@ function exec(sql, params = []) {
     const r = store.find((x) => x.id === id);
     Object.assign(r, { balance, remain_count, expire_at, remark: remark || r.remark });
     return [{ affectedRows: 1 }];
+  }
+  if (/^SELECT \* FROM `js_member` WHERE phone_hash = \?/i.test(s)) {
+    return [store.filter((r) => r.phone_hash && r.phone_hash === params[0]).map(clone)];
+  }
+  if (/^SELECT \* FROM `js_member` WHERE phone_tail_hash = \?/i.test(s)) {
+    return [store.filter((r) => r.phone_tail_hash && r.phone_tail_hash === params[0]).map(clone)];
   }
   if (/^SELECT \* FROM `js_member` WHERE \(\?='' OR plate_no LIKE \?/i.test(s)) {
     const lim = params[params.length - 2];
@@ -173,8 +190,19 @@ function ok(name, cond, extra = '') {
   ok('建档成功', r.status === 201 && j.created === true);
   ok('新会员 洗车/打蜡 均为 0', j.washCount === 0 && j.waxCount === 0 && j.remainCount === 0);
   ok('不再返回 totalCount / lastAmount', j.totalCount === undefined && j.lastAmount === undefined);
+  ok('手机号落库是密文（enc:v1）', /^enc:v1\./.test(store[0].phone) && !!store[0].phone_hash, String(store[0].phone).slice(0, 14));
 
-  // 4. 拍照识别
+  // 4. 拍照识别（单张：只给建议，不自动改）
+  r = await fetch(`${base}/ocr/plate`, { method: 'POST', headers: { 'x-token': TOKEN }, body: (() => { const f = new FormData(); f.append('file', new Blob([Buffer.from('x')], { type: 'image/jpeg' }), 'p.jpg'); return f; })() });
+  j = await r.json();
+  ok('单张识别保留原始结果 + 给出会员库建议', j.plateNo === '粤B12346' && j.corrected === false && j.suggestion && j.suggestion.plate === '粤B12345', `识别=${j.plateNo} 建议=${j.suggestion && j.suggestion.plate}`);
+
+  // 4.1 连拍 3 张：投票 + 闭集校正
+  r = await fetch(`${base}/ocr/plate-batch`, { method: 'POST', headers: { 'x-token': TOKEN, 'content-type': 'application/json' }, body: JSON.stringify({ images: ['a', 'b', 'c'] }) });
+  j = await r.json();
+  ok('连拍投票 + 闭集校正到会员车牌', j.votes === 3 && j.corrected === true && j.plateNo === '粤B12345' && j.exists === true, `votes=${j.votes} plate=${j.plateNo} corrected=${j.corrected}`);
+
+  // 4.2 拍照识别
   const form = new FormData();
   form.append('file', new Blob([Buffer.from('fake')], { type: 'image/jpeg' }), 'p.jpg');
   r = await fetch(`${base}/ocr/plate`, { method: 'POST', headers: { 'x-token': TOKEN }, body: form });
@@ -217,6 +245,14 @@ function ok(name, cond, extra = '') {
   ok('员工补登手机号成功', r.status === 200 && j.phone === '138****8000');
   r = await fetch(`${base}/member/${encodeURIComponent('粤B12345')}`, { method: 'PATCH', headers: H, body: JSON.stringify({ phone: '123' }) });
   ok('非法手机号 400', r.status === 400);
+
+  // 10.8 加密后的检索：完整手机号 / 后 4 位
+  r = await fetch(`${base}/member?keyword=13800138000`, { headers: H });
+  j = await r.json();
+  ok('按完整手机号能搜到（盲索引）', j.list.length === 1 && j.list[0].plateNo === '粤B12345');
+  r = await fetch(`${base}/member?keyword=8000`, { headers: H });
+  j = await r.json();
+  ok('按后 4 位能搜到（尾号盲索引）', j.list.length === 1);
 
   // 11. 看板
   r = await fetch(`${base}/stats/overview`, { headers: H });

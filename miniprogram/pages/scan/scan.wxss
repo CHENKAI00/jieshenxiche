@@ -94,3 +94,14 @@
   box-sizing: border-box;
 }
 .foot { text-align: center; color: #b3bfcc; font-size: 20rpx; padding-top: 8rpx; }
+
+.pick.strong {
+  flex: 1.6;
+  background: linear-gradient(135deg, #0b7bd8, #17c3b2);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 10rpx 24rpx rgba(11, 123, 216, 0.25);
+}
+.batch-tip { font-size: 21rpx; color: #9aa7b4; text-align: center; margin: -8rpx 0 20rpx; }
+.correct-tip { margin-top: 12rpx; font-size: 22rpx; color: #0d8d80; background: #e7f8f5; padding: 10rpx 16rpx; border-radius: 10rpx; display: inline-block; }
+.suggest-tip { margin-top: 12rpx; font-size: 22rpx; color: #9a7220; background: #fbf3e2; padding: 10rpx 16rpx; border-radius: 10rpx; display: inline-block; }

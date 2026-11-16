@@ -9,6 +9,7 @@
 const cfg = require('../config');
 const { pool } = require('../db');
 const { validatePlate, normalizePlate } = require('../utils/plate');
+const { hashPhone, tailHash, decryptPhone } = require('../utils/crypto');
 
 async function wxLogin(code) {
   if (!code) {
@@ -44,13 +45,18 @@ function throttle(key) {
   }
 }
 
-/** 手机号比对：完整 11 位，或后 4 位（都来自门店建档时登记的手机号） */
-function phoneMatches(stored, input) {
-  const s = String(stored || '');
+/** 手机号比对（密文存储 + HMAC 盲索引；兼容未迁移的旧明文行） */
+function phoneMatches(row, input) {
   const v = String(input || '').replace(/\D/g, '');
-  if (!s) return false;
-  if (v.length === 11) return s === v;
-  if (v.length === 4) return s.slice(-4) === v;
+  if (!v) return false;
+  if (v.length === 11) {
+    if (row.phone_hash) return row.phone_hash === hashPhone(v);
+    return decryptPhone(row.phone) === v;           // 旧数据兜底
+  }
+  if (v.length === 4) {
+    if (row.phone_tail_hash) return row.phone_tail_hash === tailHash(v);
+    return decryptPhone(row.phone).slice(-4) === v; // 旧数据兜底
+  }
   return false;
 }
 
@@ -81,7 +87,7 @@ async function bindMember({ openid, plateNo, phone }) {
   if (!row.phone) {
     const e = new Error('这辆车还没登记手机号，请到门店补登后再绑定'); e.status = 400; throw e;
   }
-  if (!phoneMatches(row.phone, input)) {
+  if (!phoneMatches(row, input)) {
     const e = new Error('手机号与门店登记的不一致'); e.status = 403; throw e;
   }
   try {

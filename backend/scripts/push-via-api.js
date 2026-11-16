@@ -49,7 +49,8 @@ async function api(path, opts = {}) {
   const remoteCommit = await api(`/repos/${REPO}/git/commits/${remoteHead}`);
   console.log('远程 HEAD:', remoteHead.slice(0, 8), '| 本地 HEAD:', localSha.slice(0, 8));
 
-  const changes = sh('git diff-tree --no-commit-id --name-status -r -z HEAD')
+  // 用「远程 tree ↔ 本地 tree」做差异，能一次补上本地领先的多个提交
+  const changes = sh(`git diff --name-status -z ${remoteCommit.tree.sha} ${localTree}`)
     .split('\0').filter(Boolean)
     .reduce((acc, v, i, arr) => { if (i % 2 === 0) acc.push({ status: v, path: arr[i + 1] }); return acc; }, []);
 
@@ -63,6 +64,10 @@ async function api(path, opts = {}) {
     console.log('  blob', path, '→', blob.sha.slice(0, 8));
   }
 
+  if (!treeItems.length) {
+    console.log('远程与本地内容已一致，无需推送');
+    return;
+  }
   const tree = await api(`/repos/${REPO}/git/trees`, {
     method: 'POST',
     body: { base_tree: remoteCommit.tree.sha, tree: treeItems },

@@ -49,6 +49,42 @@ Page({
     });
   },
 
+  /** 连拍：一次拍/选最多 3 张，走投票识别 */
+  shootBatch() {
+    wx.chooseMedia({
+      count: 3,
+      mediaType: ['image'],
+      sourceType: ['camera', 'album'],
+      camera: 'back',
+      sizeType: ['compressed'],
+      success: async (res) => {
+        const files = (res.tempFiles || []).map((f) => f.tempFilePath).filter(Boolean);
+        if (!files.length) return;
+        this.setData({ imagePath: files[0], loading: true });
+        try {
+          const r = await api.uploadPlateBatch(files);
+          this.applyResult({ ...r, rawPlate: r.corrected ? (r.candidates && r.candidates[0] && r.candidates[0].plate) || '' : '' });
+          if (r.exists && r.member) {
+            wx.vibrateShort && wx.vibrateShort({ type: 'light' });
+            wx.showToast({ title: `${r.member.nickname} 已到店`, icon: 'success' });
+          } else if (r.plateNo) {
+            wx.showToast({ title: r.corrected ? '已按会员库校正' : '未建档，可一键建档', icon: 'none' });
+          }
+        } catch (e) {
+          this.setData({ showInput: true, plateInput: '' });
+        } finally {
+          this.setData({ loading: false });
+        }
+      },
+    });
+  },
+
+  useSuggestion() {
+    const sug = this.data.result && this.data.result.suggestion;
+    if (!sug) return;
+    this.lookupByPlate(sug.plate);
+  },
+
   async doRecognize(filePath) {
     this.setData({ imagePath: filePath, loading: true });
     try {

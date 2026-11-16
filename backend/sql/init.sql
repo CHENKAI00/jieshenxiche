@@ -19,7 +19,9 @@ CREATE TABLE IF NOT EXISTS `js_member` (
   `plate_color`      VARCHAR(8)    NOT NULL DEFAULT '蓝'    COMMENT '车牌颜色：蓝/绿(新能源)/黄',
   `member_no`        VARCHAR(24)   DEFAULT NULL            COMMENT '会员卡号 JS+yyMMdd+4位',
   `nickname`         VARCHAR(32)   DEFAULT NULL            COMMENT '车主称呼',
-  `phone`            VARCHAR(20)   DEFAULT NULL            COMMENT '手机号（接口返回脱敏）',
+  `phone`            VARCHAR(255)  DEFAULT NULL            COMMENT '手机号密文（AES-256-GCM，enc:v1.…）',
+  `phone_hash`       CHAR(64)      DEFAULT NULL            COMMENT '手机号 HMAC 盲索引（完整号）',
+  `phone_tail_hash`  CHAR(64)      DEFAULT NULL            COMMENT '手机号后 4 位 HMAC 盲索引',
   `balance`          DECIMAL(10,2) NOT NULL DEFAULT 0.00   COMMENT '储值余额（元），唯一的钱',
   `remain_count`     INT           NOT NULL DEFAULT 0      COMMENT '剩余次数（次卡）',
   `wash_count`       INT           NOT NULL DEFAULT 0      COMMENT '洗车次数',
@@ -33,12 +35,13 @@ CREATE TABLE IF NOT EXISTS `js_member` (
   `updated_at`       DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后改动时间',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_plate_no` (`plate_no`),
-  KEY `idx_phone` (`phone`),
+  KEY `idx_phone_hash` (`phone_hash`),
   KEY `idx_last_service` (`last_service_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='洁神洗车会员总表（单表精简版）';
 
 -- 演示数据（可删）：用于小程序联调「拍照识车牌 → 查会员」链路
 -- INSERT IGNORE 保证脚本可重复执行
+-- 注意：这里的手机号是明文，首次执行后请跑 `npm run migrate:v5` 加密回填
 INSERT IGNORE INTO `js_member`
   (`plate_no`,`plate_color`,`member_no`,`nickname`,`phone`,`balance`,
    `remain_count`,`wash_count`,`wax_count`,`expire_at`,

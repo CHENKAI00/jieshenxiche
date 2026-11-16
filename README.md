@@ -122,6 +122,8 @@ wx.chooseMedia 拍照 → wx.uploadFile → POST /api/v1/ocr/plate
 
 `auto` 降级链：本地 HyperLPR → 腾讯云 → mock，任何一环挂了都不影响前台出结果（最差手输车牌）。
 
+**为了准到接近 100%**：连拍 3 张投票（`POST /ocr/plate-batch`）+ 会员库**闭集校正**（OCR 与会员车牌只差 1 位且唯一命中 → 直接纠到会员库，仅在 ≥2 帧一致或置信度 ≥0.9 时自动改）+ 结果页永远保留「修正车牌」。详见 [docs/车牌识别原理.md](docs/车牌识别原理.md#六怎么逼近100已实现--待做)。
+
 ## 四、界面方案：Vant Weapp 打底 + 两个地方做重（预约日历 / 订单状态）
 
 组件层用 **Vant Weapp（已内置在 `miniprogram/miniprogram_npm/`，不需要在开发者工具里「构建 npm」）**，
@@ -182,7 +184,7 @@ pending(待确认) → confirmed(待到店) → serving(服务中) → done(已�
 
 ---
 
-## 七、数据库：`jieshenxiche` 库 + `js_member` 一张表（18 字段）
+## 七、数据库：`jieshenxiche` 库 + `js_member` 一张表（20 字段）
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
@@ -192,6 +194,8 @@ pending(待确认) → confirmed(待到店) → serving(服务中) → done(已�
 | member_no | VARCHAR(24) | 卡号 JS+yyMMdd+4位 |
 | nickname / phone | VARCHAR | 称呼、手机（返回脱敏） |
 | **openid** | VARCHAR(64) UNIQUE | 车主端绑定的微信 openid（NULL=未绑定） |
+| **phone** | VARCHAR(255) | 手机号**密文**（AES-256-GCM，`enc:v1.…`） |
+| **phone_hash / phone_tail_hash** | CHAR(64) | 手机号盲索引（完整号 / 后 4 位），用于搜索与绑定校验 |
 | balance | DECIMAL(10,2) | 储值余额（唯一的钱） |
 | remain_count | INT | 次卡剩余次数（通用） |
 | **wash_count** | INT | **洗车次数** |
@@ -263,7 +267,15 @@ v3 迁移时旧的 `total_count` 会一次性折算进 `wash_count`（打蜡从 
 
 ---
 
-## 九、跑起来
+## 九、数据安全：手机号加密存储
+
+- 落库：`phone` 存 **AES-256-GCM 密文**（`enc:v1.iv.tag.data`），整库泄露也看不到明文；同一号码两次加密结果不同（随机 IV）
+- 检索：`phone_hash`（完整号 HMAC）/ `phone_tail_hash`（后 4 位 HMAC）两个**盲索引**，支持「按手机号搜会员」「车主填后 4 位绑定」，无需解密全表
+- 展示：门店端/车主端接口默认返回脱敏 `138****8000`；只有员工点「拨打车主」时，服务端才解密后回传
+- 密钥：`.env` 的 `PHONE_ENC_KEY`（32 字节 base64，`npm run keygen -- --write` 生成）。**丢了历史手机号不可解**，务必连同数据库一起备份
+- 迁移：`npm run migrate:v5`（加列 + 老明文加密回填，幂等）；`npm run migrate:v4`/`v3` 照旧
+
+## 十、跑起来
 
 ```bash
 cd backend
@@ -278,9 +290,9 @@ npm test             # 30 条断言，不需要数据库
 
 ---
 
-## 十、已验证
+## 十一、已验证
 
-`npm test` → **54/54 通过**（内存假库 + 临时项目文件，跑真实路由与业务代码）：
+`npm test` → **59/59 通过**（内存假库 + 临时项目文件，跑真实路由与业务代码）：
 
 ```
 车牌归一化 / 新能源绿牌 / OCR 纠偏 / 无口令 401
@@ -292,6 +304,8 @@ npm test             # 30 条断言，不需要数据库
 车主端：mock 登录换 openid / 未绑定 bound=false / 无 openid 401 / 手机号不匹配 403 / 绑定成功 / 重复绑定幂等 / 解绑
 绑定增强：后 4 位可绑定 / 后 4 位不匹配 403 / 员工口令登录（错 401、对返回 token）
 预约：时段剩余量 / 下单 / 同时段重复 409 / 门店可见 / 确认 / 状态机拦非法跳转 / 我的列表 / 取消
+识别：单张只给建议不改 / 连拍 3 帧投票 + 闭集校正到会员车牌（粤B12346 → 粤B12345）
+加密：手机号落库为 enc:v1 密文 / 按完整号盲索引搜索 / 按后 4 位盲索引搜索
 ```
 
 **真实环境联调（MySQL 8.0.43）**：登录返回 token、上传 PNG 后 `/uploads/xxx.png` 200、新增项目、核销后
@@ -299,7 +313,7 @@ npm test             # 30 条断言，不需要数据库
 
 ---
 
-## 十一、部署到服务器（nohup 常驻）
+## 十二、部署到服务器（nohup 常驻）
 
 服务器上跑的是 `backend/`，`deploy/` 里是配套脚本（Node ≥ 18）。
 
@@ -368,7 +382,7 @@ cp deploy/nginx-jieshenxiche.conf /etc/nginx/conf.d/
 
 > 自测阶段可以先不配域名：小程序填 `http://<服务器IP>:8099`，开发者工具勾「不校验合法域名」即可。
 
-## 十二、还能接着做
+## 十三、还能接着做
 
 - **微信支付**：充值页「确认收款」换 `wx.requestPayment`（后端统一下单 + 回调）。
 - **项目进库**：要按项目做报表时，把 `data/services.json` 换成 `js_service` 表，接口不变。

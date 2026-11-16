@@ -22,10 +22,12 @@
   </view>
 
   <view class="pick-row">
-    <view class="pick" bindtap="takePhoto">📷 拍照</view>
+    <view class="pick strong" bindtap="shootBatch">📸 连拍 3 张识别</view>
+    <view class="pick" bindtap="takePhoto">📷 单张</view>
     <view class="pick" bindtap="chooseAlbum">🖼 相册</view>
     <view class="pick" bindtap="focusInput">⌨️ 手输</view>
   </view>
+  <view class="batch-tip">连拍会对比多帧结果投票，明显比单张准；拍完可直接改车牌</view>
 
   <!-- 识别结果 -->
   <view wx:if="{{result}}" class="card result-card">
@@ -34,7 +36,14 @@
         <view class="plate">{{result.platePretty || result.plateNo}}</view>
         <view class="small" style="margin-top:8rpx">
           置信度 {{confText}} · 车牌颜色 {{result.plateColor || '未知'}}
+          <text wx:if="{{result.votes > 1}}"> · {{result.votes}} 帧一致</text>
           <text wx:if="{{result.engine === 'mock'}}"> · 演示模式</text>
+        </view>
+        <view wx:if="{{result.corrected}}" class="correct-tip">
+          已按会员库校正为 {{result.platePretty}}（原识别 {{result.rawPlate}}）
+        </view>
+        <view wx:elif="{{result.suggestion}}" class="suggest-tip" bindtap="useSuggestion">
+          是不是 {{result.suggestion.platePretty || result.suggestion.plate}}？点这里改用
         </view>
       </view>
       <view class="tag {{result.exists ? 'mint' : 'grey'}}">{{result.exists ? '已建档' : '未建档'}}</view>

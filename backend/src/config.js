@@ -36,6 +36,8 @@ module.exports = {
     secretKey: env.TENCENT_SECRET_KEY || '',
     region: env.TENCENT_OCR_REGION || 'ap-guangzhou',
     mock: String(env.MOCK_OCR || '0') === '1',
+    // 调试/测试用：指定 mock 返回的车牌（逗号分隔），不填则随机
+    mockPlates: String(env.OCR_MOCK_PLATES || '').split(',').map((x) => x.trim()).filter(Boolean),
   },
   // 服务项目目录已挪到 data/services.json（后台可增删改），见 src/services/catalog.js
   // 充值常用档位（小程序展示，可后端也用来校验）
