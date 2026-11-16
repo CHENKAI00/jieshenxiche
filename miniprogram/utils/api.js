@@ -51,9 +51,14 @@ function request(path, { method = 'GET', data = {}, loading = false, tip = '处�
       },
       fail: (err) => {
         if (loading) wx.hideLoading();
+        const msg = (err && err.errMsg) || '';
+        let hint = '请确认服务器上的 Node 服务在运行（bash deploy/manage.sh status）';
+        if (/domain list/i.test(msg)) hint = '开发者工具「详情 → 本地设置」要勾选「不校验合法域名」';
+        else if (/timeout/i.test(msg)) hint = '请求超时：服务器可能卡住或网络很慢，稍后重试';
+        else if (/refused/i.test(msg)) hint = '端口被拒绝：服务没启动，或被防火墙拦了';
         wx.showModal({
-          title: '连不上服务',
-          content: `连不上服务器：\n${base()}\n\n请确认后端已启动；地址可在「我的 → 开发者设置」修改。\n${err.errMsg || ''}`,
+          title: '连不上服务器',
+          content: `地址：${base()}\n\n${hint}\n\n${msg}`,
           showCancel: false,
         });
         reject(err);
