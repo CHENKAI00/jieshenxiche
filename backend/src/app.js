@@ -30,7 +30,10 @@ app.get('/health', async (req, res) => {
     ok: true,
     service: 'jieshenxiche-api',
     db,
-    ocr: cfg.ocr.mock || !cfg.ocr.secretId ? 'mock' : 'tencent',
+    ocr: cfg.ocr.mock ? 'mock'
+      : cfg.ocr.engine === 'auto'
+        ? (cfg.ocr.secretId ? 'auto(local→tencent)' : 'auto(local→mock)')
+        : cfg.ocr.engine,
     admin: '/admin/',
     time: new Date().toISOString(),
   });

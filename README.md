@@ -100,6 +100,8 @@ jieshenxiche/
 
 ## 三、特色功能：拍照识车牌查会员
 
+> 识别原理、开源方案对比（HyperLPR3 / PaddleOCR / LPRNet）、准确率提升手段 → [docs/车牌识别原理.md](docs/车牌识别原理.md)
+
 ```
 wx.chooseMedia 拍照 → wx.uploadFile → POST /api/v1/ocr/plate
     ├ 腾讯云 LicensePlateOCR（手写 TC3-HMAC-SHA256 签名，零 SDK）
@@ -109,6 +111,16 @@ wx.chooseMedia 拍照 → wx.uploadFile → POST /api/v1/ocr/plate
     └ 一次返回 车牌 + 置信度 + 会员（余额/剩余次数/洗车次数/打蜡次数/最近到店）
 → 结果卡片；未建档一键建档；识别失败弹手输，不挡业务
 ```
+
+识别引擎三选一（`.env` 的 `OCR_ENGINE`，默认 `auto`）：
+
+| 引擎 | 说明 | 成本 |
+| --- | --- | --- |
+| `hyperlpr` | 本地/自建 HyperLPR3 服务（`scripts/hyperlpr_service.py`，`POST /recognize`） | **0 元/次**，隐私不出内网 |
+| `tencent` | 腾讯云 LicensePlateOCR（TC3 签名手写） | 按次计费 |
+| `mock` | 随机演示车牌 | 0 |
+
+`auto` 降级链：本地 HyperLPR → 腾讯云 → mock，任何一环挂了都不影响前台出结果（最差手输车牌）。
 
 ## 四、界面方案：Vant Weapp 打底 + 两个地方做重（预约日历 / 订单状态）
 
@@ -129,6 +141,15 @@ wx.chooseMedia 拍照 → wx.uploadFile → POST /api/v1/ocr/plate
    - 底部给「取消预约」/「再来一次」的下一步动作，减少来回跳页
 
 动态效果只在结果页（打勾描边 + 弹入）和首页公告条用了一点点，不做大面积动效堆砌。
+
+**视觉基调（v1.1 起）**：全局设计变量在 `app.wxss`（墨蓝 `#0f1c2a`、留白 32rpx、卡片 28rpx 圆角、
+`0 12rpx 34rpx` 柔阴影）；车主首页改成「深色会员卡 + 大号余额数字 + 三列统计」的克制版式，
+四宫格入口改用 `van-icon` 线性图标（不再用 emoji 堆砌）。
+
+**「我的」页做减法**：
+- 车主端只剩两组：会员卡/预约/门店 + 更多（解绑、切换身份、关于），其余下沉
+- 门店端把「服务地址 / 口令 / 员工姓名 / openid」收进默认折叠的 **开发者设置**，日常只看到
+  会员名录、项目价目、切换车主端、关于这四项，另附数据库/OCR 状态灯
 
 **预约与订单的数据存在 `backend/data/bookings.json`**（和项目目录一样，不新增表），状态机：
 

@@ -1,13 +1,18 @@
-/* 洁神洗车 · 全局样式 */
+/* 洁神洗车 · 设计基准
+   目标：留白更大、层级更清楚、少用重色彩，靠排版和阴影撑质感 */
 page {
   --brand: #0b7bd8;
-  --brand-deep: #0b2b4a;
+  --brand-deep: #0b2233;
   --mint: #17c3b2;
-  --gold: #e8b23a;
+  --gold: #c99a3c;
+  --ink: #0f1c2a;
   --text: #16232f;
-  --sub: #7b8a9a;
+  --sub: #8a97a6;
+  --line: #edf1f6;
   --card: #ffffff;
-  background: #f4f7fb;
+  --bg: #f5f7fa;
+
+  background: var(--bg);
   color: var(--text);
   font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
   font-size: 28rpx;
@@ -20,9 +25,9 @@ page {
 
 .card {
   background: var(--card);
-  border-radius: 24rpx;
-  padding: 28rpx;
-  box-shadow: 0 8rpx 30rpx rgba(11, 43, 74, 0.06);
+  border-radius: 28rpx;
+  padding: 32rpx;
+  box-shadow: 0 12rpx 34rpx rgba(15, 28, 42, 0.05);
   margin-bottom: 24rpx;
 }
 
@@ -31,44 +36,41 @@ page {
 .col { display: flex; flex-direction: column; }
 .grow { flex: 1; }
 
-.h1 { font-size: 40rpx; font-weight: 700; letter-spacing: 1rpx; }
-.h2 { font-size: 32rpx; font-weight: 700; }
+.h1 { font-size: 42rpx; font-weight: 700; letter-spacing: 1rpx; }
+.h2 { font-size: 32rpx; font-weight: 700; letter-spacing: 0.5rpx; }
 .sub { color: var(--sub); font-size: 24rpx; }
-.small { font-size: 22rpx; color: var(--sub); }
+.small { font-size: 22rpx; color: var(--sub); line-height: 1.6; }
 .mono { font-family: "SF Mono", Menlo, monospace; letter-spacing: 2rpx; }
 
 .btn {
-  height: 88rpx;
-  line-height: 88rpx;
+  height: 92rpx;
+  line-height: 92rpx;
   text-align: center;
-  border-radius: 44rpx;
+  border-radius: 999rpx;
   font-size: 30rpx;
   font-weight: 600;
   color: #fff;
   background: linear-gradient(135deg, #0b7bd8, #17c3b2);
   border: none;
+  box-shadow: 0 12rpx 28rpx rgba(11, 123, 216, 0.22);
 }
 .btn::after { border: none; }
-.btn.ghost {
-  background: #eef5fd;
-  color: var(--brand);
-}
-.btn.warn {
-  background: linear-gradient(135deg, #f08c3a, #e8543a);
-}
+.btn.ghost { background: #eef5fd; color: var(--brand); box-shadow: none; }
+.btn.warn { background: linear-gradient(135deg, #f0913f, #e8543a); }
 .btn.disabled { opacity: 0.5; }
 
 .tag {
   display: inline-block;
   padding: 4rpx 16rpx;
-  border-radius: 20rpx;
+  border-radius: 999rpx;
   font-size: 20rpx;
   background: #eef5fd;
   color: var(--brand);
+  letter-spacing: 0.5rpx;
 }
-.tag.gold { background: #fdf5e3; color: #a97a11; }
-.tag.mint { background: #e6f9f6; color: #0f8d80; }
-.tag.grey { background: #f0f2f5; color: var(--sub); }
+.tag.gold { background: #fbf3e2; color: #9a7220; }
+.tag.mint { background: #e7f8f5; color: #0d8d80; }
+.tag.grey { background: #f1f3f6; color: var(--sub); }
 
 .plate {
   font-family: "SF Mono", Menlo, monospace;
@@ -77,13 +79,19 @@ page {
   letter-spacing: 3rpx;
 }
 
-.divider { height: 1rpx; background: #eef1f5; margin: 24rpx 0; }
-.empty { text-align: center; color: var(--sub); padding: 60rpx 0; font-size: 26rpx; }
+.divider { height: 1rpx; background: var(--line); margin: 26rpx 0; }
+.empty { text-align: center; color: var(--sub); padding: 70rpx 0; font-size: 26rpx; }
 
 .input {
   height: 88rpx;
-  background: #f4f7fb;
-  border-radius: 16rpx;
+  background: #f6f8fb;
+  border-radius: 18rpx;
   padding: 0 24rpx;
   font-size: 28rpx;
+  color: var(--ink);
 }
+
+/* 页面标题区（各页统一） */
+.page-head { padding: 8rpx 4rpx 20rpx; }
+.page-head .t { font-size: 40rpx; font-weight: 700; letter-spacing: 0.5rpx; }
+.page-head .s { font-size: 23rpx; color: var(--sub); margin-top: 8rpx; }

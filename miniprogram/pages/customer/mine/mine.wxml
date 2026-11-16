@@ -1,38 +1,27 @@
-<view class="page cpage">
-  <view class="profile">
+<view class="page">
+  <view class="mine-head">
     <view class="avatar">{{initial}}</view>
-    <view class="col grow" style="margin-left:22rpx">
-      <view class="h2">{{bound ? member.nickname : '车主'}}</view>
-      <view class="small" style="margin-top:6rpx">{{bound ? member.platePretty + ' · ' + member.memberNo : '还没有绑定爱车'}}</view>
+    <view class="col grow" style="margin-left:24rpx">
+      <text class="name">{{bound ? member.nickname : '车主'}}</text>
+      <text class="sub-line">{{bound ? member.platePretty + ' · ' + member.memberNo : '还没有绑定爱车'}}</text>
     </view>
-    <view class="tag {{bound ? 'mint' : 'grey'}}">{{bound ? '已绑定' : '未绑定'}}</view>
+    <text class="tag {{bound ? 'mint' : 'grey'}}">{{bound ? '已绑定' : '未绑定'}}</text>
   </view>
 
-  <view class="card">
-    <view class="rowline" bindtap="goBind" wx:if="{{!bound}}">
-      <text>绑定爱车</text><text class="arrow">›</text>
-    </view>
-    <view class="rowline" bindtap="goHome" wx:if="{{bound}}">
-      <text>我的会员卡</text><text class="arrow">›</text>
-    </view>
-    <view class="rowline" bindtap="unbind" wx:if="{{bound}}">
-      <text style="color:#d9463a">解绑这辆车</text><text class="arrow">›</text>
-    </view>
-    <view class="rowline" bindtap="callStore">
-      <text>联系门店</text><text class="arrow">›</text>
-    </view>
-  </view>
+  <van-cell-group inset>
+    <van-cell wx:if="{{bound}}" title="我的会员卡" icon="card" is-link bind:click="goHome" />
+    <van-cell wx:if="{{bound}}" title="我的预约" icon="orders-o" is-link bind:click="goOrders" />
+    <van-cell wx:if="{{!bound}}" title="绑定爱车" icon="add-o" is-link bind:click="goBind" />
+    <van-cell title="联系门店" icon="phone-o" is-link bind:click="callStore" />
+  </van-cell-group>
 
-  <view class="card">
-    <view class="rowline" bindtap="switchRole">
-      <text>切换到门店员工端</text><text class="arrow">›</text>
-    </view>
-    <view class="rowline" bindtap="about">
-      <text>关于洁神洗车</text><text class="arrow">›</text>
-    </view>
-  </view>
+  <van-cell-group inset title="更多">
+    <van-cell wx:if="{{bound}}" title="解绑这辆车" is-link bind:click="unbind" />
+    <van-cell title="切换身份（员工端）" is-link bind:click="switchRole" />
+    <van-cell title="关于洁神洗车" is-link bind:click="about" />
+  </van-cell-group>
 
-  <view class="foot">车主端 v1.0 · 数据以门店系统为准</view>
-  <view class="tabbar-gap"></view>
+  <view class="ver">洁神洗车 · 车主端 v1.0</view>
+  <view class="gap"></view>
   <customer-tabbar active="mine" />
 </view>

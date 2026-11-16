@@ -2,17 +2,20 @@
   position: fixed;
   left: 0; right: 0; bottom: 0;
   display: flex;
-  background: #fff;
-  box-shadow: 0 -6rpx 24rpx rgba(11, 43, 74, 0.08);
-  padding-bottom: env(safe-area-inset-bottom);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  padding: 14rpx 8rpx calc(10rpx + env(safe-area-inset-bottom));
+  box-shadow: 0 -8rpx 30rpx rgba(15, 28, 42, 0.06);
   z-index: 90;
 }
 .item {
   flex: 1;
   text-align: center;
-  padding: 14rpx 0 10rpx;
-  color: #8a97a6;
+  color: #98a4b2;
+  padding: 8rpx 0;
+  transition: color 0.2s;
 }
 .item.on { color: #0b7bd8; }
-.ico { font-size: 38rpx; line-height: 1.1; }
-.txt { font-size: 20rpx; margin-top: 4rpx; }
+.ico { font-size: 36rpx; line-height: 1.1; }
+.txt { font-size: 20rpx; margin-top: 4rpx; letter-spacing: 0.5rpx; }
+.item.on .txt { font-weight: 600; }

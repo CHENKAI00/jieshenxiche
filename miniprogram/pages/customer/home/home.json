@@ -1,6 +1,8 @@
 {
   "usingComponents": {
     "van-notice-bar": "/miniprogram_npm/@vant/weapp/notice-bar/index",
+    "van-icon": "/miniprogram_npm/@vant/weapp/icon/index",
+    "van-button": "/miniprogram_npm/@vant/weapp/button/index",
     "customer-tabbar": "/components/customer-tabbar/index"
   },
   "navigationBarTitleText": "我的会员卡",

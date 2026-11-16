@@ -39,6 +39,7 @@ router.post('/plate', upload.single('file'), async (req, res, next) => {
       plateValid: v.ok,
       reason: v.ok ? '' : (result.error || v.reason),
       candidates: result.candidates || [],
+      note: result.note || '',
       exists: !!member,
       member,
     });

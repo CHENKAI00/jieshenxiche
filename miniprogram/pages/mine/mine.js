@@ -10,6 +10,7 @@ Page({
     showToken: false,
     health: { db: '—', ocr: '—' },
     openid: '',
+    showDev: false,
   },
 
   onShow() {
@@ -28,6 +29,8 @@ Page({
     const h = await api.health();
     this.setData({ health: { db: h.db || 'down', ocr: h.ocr || '—' } });
   },
+
+  toggleDev() { this.setData({ showDev: !this.data.showDev }); },
 
   onBase(e) { this.setData({ baseUrl: e.detail.value }); },
   onToken(e) { this.setData({ token: e.detail.value }); },

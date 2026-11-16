@@ -27,6 +27,8 @@ Page({
     wx.reLaunch({ url: '/pages/customer/home/home' });
   },
 
+  goOrders() { wx.reLaunch({ url: '/pages/customer/orders/orders' }); },
+
   goBind() {
     wx.navigateTo({ url: '/pages/customer/bind/bind' });
   },

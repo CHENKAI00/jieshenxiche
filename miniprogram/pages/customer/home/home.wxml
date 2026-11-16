@@ -1,110 +1,100 @@
-<view class="page cpage">
-  <van-notice-bar left-icon="volume-o" color="#0b7bd8" background="#eaf4ff"
-    text="到店前先预约，免排队：选项目 → 选时段 → 到店直接开工" />
+<view class="page home">
+  <van-notice-bar left-icon="volume-o" color="#0b7bd8" background="#edf5ff"
+    text="到店前先预约，免排队：选项目 → 选时段 → 直接开工" />
 
-  <view wx:if="{{loading}}" class="loading">正在读取我的会员卡…</view>
+  <view wx:if="{{loading}}" class="loading">正在读取会员卡…</view>
 
-  <block wx:if="{{!loading}}">
-    <!-- 已绑定 -->
-    <block wx:if="{{bound}}">
-      <view class="card-hero">
-        <view class="between">
-          <view class="col">
-            <text class="hero-plate">{{member.platePretty}}</text>
-            <text class="hero-nick">{{member.nickname}} · 会员卡 {{member.memberNo}}</text>
-          </view>
-          <text class="hero-tag">{{member.expireAt ? member.expireAt + ' 到期' : '长期有效'}}</text>
-        </view>
-
-        <view class="hero-nums">
-          <view class="hn">
-            <text class="hn-v">¥{{balanceText}}</text>
-            <text class="hn-l">卡内余额</text>
-          </view>
-          <view class="hn">
-            <text class="hn-v">{{member.remainCount}}<text class="unit">次</text></text>
-            <text class="hn-l">剩余次数</text>
-          </view>
-        </view>
-
-        <view class="hero-counts">
-          <view class="hc"><text class="hc-v">{{member.washCount}}</text><text class="hc-l">洗车</text></view>
-          <view class="hc"><text class="hc-v">{{member.waxCount}}</text><text class="hc-l">打蜡</text></view>
-          <view class="hc wide">
-            <text class="hc-l">{{member.lastItem ? '最近 ' + member.lastItem + ' · ' + lastAgo : '暂无到店记录'}}</text>
-          </view>
-        </view>
+  <block wx:elif="{{bound}}">
+    <!-- 会员卡 -->
+    <view class="hero">
+      <view class="hero-glow"></view>
+      <view class="hero-top">
+        <text class="hero-kicker">洁神洗车 · MEMBER</text>
+        <text class="hero-plate">{{member.platePretty}}</text>
       </view>
 
-      <view class="booking-card" wx:if="{{activeBooking}}" bindtap="goOrders">
-        <view class="between">
-          <view class="col">
-            <text class="bk-title">📅 {{activeBooking.serviceName}} · {{activeBooking.dateText}} {{activeBooking.time}}</text>
-            <text class="small" style="margin-top:6rpx">预约状态：{{activeBooking.statusText}}</text>
-          </view>
-          <text class="bk-go">查看 ›</text>
+      <view class="hero-balance">
+        <text class="cur">¥</text><text class="amount">{{balanceText}}</text>
+        <text class="balance-label">卡内余额</text>
+      </view>
+
+      <view class="hero-meta">
+        <text>{{member.nickname}}</text>
+        <text class="dot">·</text>
+        <text>{{member.expireAt ? member.expireAt + ' 到期' : '长期有效'}}</text>
+      </view>
+
+      <view class="hero-stats">
+        <view class="hs"><text class="hs-n">{{member.washCount}}</text><text class="hs-l">洗车</text></view>
+        <view class="hs-sep"></view>
+        <view class="hs"><text class="hs-n">{{member.waxCount}}</text><text class="hs-l">打蜡</text></view>
+        <view class="hs-sep"></view>
+        <view class="hs"><text class="hs-n">{{member.remainCount}}</text><text class="hs-l">可用次数</text></view>
+      </view>
+    </view>
+
+    <!-- 进行中预约 -->
+    <view class="booking-strip" wx:if="{{activeBooking}}" bindtap="goOrders">
+      <view class="bs-left">
+        <view class="bs-dot"></view>
+        <view class="col">
+          <text class="bs-title">{{activeBooking.serviceName}} · {{activeBooking.dateText}} {{activeBooking.time}}</text>
+          <text class="bs-sub">预约状态：{{activeBooking.statusText}}</text>
         </view>
       </view>
+      <van-icon name="arrow" color="#9db2c6" size="28rpx" />
+    </view>
 
-      <view class="quick">
-        <view class="q" bindtap="goBooking">
-          <view class="q-ico">📅</view>
-          <view class="q-t">预约到店</view>
-          <view class="q-d">选时段免排队</view>
-        </view>
-        <view class="q" bindtap="goServices">
-          <view class="q-ico">🧽</view>
-          <view class="q-t">店内项目</view>
-          <view class="q-d">洗车 / 打蜡 / 抛光</view>
-        </view>
+    <!-- 四宫格 -->
+    <view class="actions">
+      <view class="action" bindtap="goBooking">
+        <view class="a-ico a-blue"><van-icon name="calendar-o" size="40rpx" color="#0b7bd8" /></view>
+        <text class="a-t">预约</text>
       </view>
+      <view class="action" bindtap="goServices">
+        <view class="a-ico a-mint"><van-icon name="shop-o" size="40rpx" color="#0d9a8c" /></view>
+        <text class="a-t">项目</text>
+      </view>
+      <view class="action" bindtap="goOrders">
+        <view class="a-ico a-gold"><van-icon name="orders-o" size="40rpx" color="#a97a11" /></view>
+        <text class="a-t">订单</text>
+      </view>
+      <view class="action" bindtap="callStore">
+        <view class="a-ico a-grey"><van-icon name="phone-o" size="40rpx" color="#5b6b7b" /></view>
+        <text class="a-t">门店</text>
+      </view>
+    </view>
 
-      <view class="quick">
-        <view class="q" bindtap="callStore">
-          <view class="q-ico">📞</view>
-          <view class="q-t">联系门店</view>
-          <view class="q-d">咨询 / 改约</view>
-        </view>
-        <view class="q" bindtap="goOrders">
-          <view class="q-ico">🧾</view>
-          <view class="q-t">我的订单</view>
-          <view class="q-d">进度实时看</view>
-        </view>
+    <!-- 最近一次 -->
+    <view class="card last-card">
+      <view class="between">
+        <text class="last-title">最近一次服务</text>
+        <text class="small">{{lastAgo}}</text>
       </view>
-
-      <view class="card">
-        <view class="h2" style="font-size:30rpx">会员权益</view>
-        <view class="row-line"><text class="k">可用次数</text><text class="v">{{member.remainCount}} 次</text></view>
-        <view class="row-line"><text class="k">次数有效期</text><text class="v">{{member.expireAt || '长期有效'}}</text></view>
-        <view class="row-line"><text class="k">累计洗车</text><text class="v">{{member.washCount}} 次</text></view>
-        <view class="row-line"><text class="k">累计打蜡</text><text class="v">{{member.waxCount}} 次</text></view>
-        <view class="row-line"><text class="k">手机</text><text class="v">{{member.phone || '未登记'}}</text></view>
-        <view wx:if="{{member.remark}}" class="row-line"><text class="k">备注</text><text class="v">{{member.remark}}</text></view>
+      <view class="last-body" wx:if="{{member.lastItem}}">
+        <text class="last-item">{{member.lastItem}}</text>
+        <text class="last-plate">{{member.platePretty}}</text>
       </view>
-
-      <view class="card tip-card">
-        <text class="small">到店出示这辆车即可核销次数；充值、开卡请到店咨询门店。</text>
-      </view>
-    </block>
-
-    <!-- 未绑定 -->
-    <block wx:else>
-      <view class="empty-hero">
-        <view class="eh-ico">🚗</view>
-        <view class="eh-t">绑定我的爱车</view>
-        <view class="eh-d">输入车牌和门店登记的手机号，绑定后就能看到余额、剩余次数和历史服务。</view>
-        <button class="btn" style="margin-top:36rpx" bindtap="goBind">立即绑定</button>
-      </view>
-
-      <view class="card">
-        <view class="h2" style="font-size:30rpx">绑定后可以</view>
-        <view class="row-line"><text class="k">看余额</text><text class="v">卡里还有多少钱</text></view>
-        <view class="row-line"><text class="k">看次数</text><text class="v">还能洗几次 / 打几次蜡</text></view>
-        <view class="row-line"><text class="k">看记录</text><text class="v">最近一次做了什么</text></view>
-      </view>
-    </block>
+      <view class="empty-lite" wx:else>还没有到店记录，约一次试试</view>
+    </view>
   </block>
 
-  <view class="tabbar-gap"></view>
+  <block wx:else>
+    <view class="card bind-card">
+      <view class="bind-ico">🚗</view>
+      <view class="bind-title">绑定我的爱车</view>
+      <view class="bind-desc">填车牌 + 门店登记的手机号（或后 4 位），就能看到余额、剩余次数和到店记录。</view>
+      <van-button type="primary" round block custom-class="bind-btn" bind:click="goBind">立即绑定</van-button>
+    </view>
+
+    <view class="card">
+      <view class="h2" style="font-size:30rpx">绑定后可以</view>
+      <view class="benefit"><van-icon name="passed" color="#0b7bd8" size="32rpx" /><text>看卡内余额与剩余次数</text></view>
+      <view class="benefit"><van-icon name="passed" color="#0b7bd8" size="32rpx" /><text>看累计洗车 / 打蜡次数</text></view>
+      <view class="benefit"><van-icon name="passed" color="#0b7bd8" size="32rpx" /><text>预约到店，免排队</text></view>
+    </view>
+  </block>
+
+  <view class="gap"></view>
   <customer-tabbar active="home" />
 </view>
