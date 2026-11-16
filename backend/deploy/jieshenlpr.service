@@ -1,0 +1,17 @@
+[Unit]
+Description=Jieshen HyperLPR3 plate recognition service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/miniback
+Environment=HOME=/root
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/root/.pyenv/versions/3.11.9/bin/python3 scripts/hyperlpr_service.py
+Restart=always
+RestartSec=3
+StandardOutput=append:/home/miniback/logs/lpr.log
+StandardError=append:/home/miniback/logs/lpr.log
+
+[Install]
+WantedBy=multi-user.target

@@ -1,15 +1,15 @@
-/**
- * 本地车牌识别服务（免费、离线、按次 0 费用）
- *
- * 依赖：pip install hyperlpr3 fastapi uvicorn[standard] opencv-python-headless
- * 启动：python3 scripts/hyperlpr_service.py        # 监听 127.0.0.1:18090
- * 后端：backend/.env 设 OCR_ENGINE=hyperlpr（或 auto + HYPERLPR_URL）
- *
- * 原理：hyperlpr3 内部是两阶段
- *   ① 检测：YOLO 系（HYDET）输出车牌框 + 四角关键点
- *   ② 矫正 + 识别：按关键点做透视变换拉正 → CRNN(CNN+BiLSTM+CTC) 直接出字符序列
- * 这里只做 HTTP 包装，把 base64 图 → 车牌号/颜色/置信度 交给 Node 后端。
- */
+"""
+本地车牌识别服务（免费、离线、按次 0 费用）
+
+依赖：pip install hyperlpr3 opencv-python-headless
+启动：python3 scripts/hyperlpr_service.py        # 监听 127.0.0.1:18090
+后端：backend/.env 设 OCR_ENGINE=hyperlpr（或 auto + HYPERLPR_URL）
+
+原理：hyperlpr3 内部是两阶段
+  ① 检测：YOLO 系（HYDET）输出车牌框 + 四角关键点
+  ② 矫正 + 识别：按关键点做透视变换拉正 → CRNN(CNN+BiLSTM+CTC) 直接出字符序列
+这里只做 HTTP 包装：base64 图 → 车牌号/颜色/置信度 交给 Node 后端。
+"""
 import base64
 import json
 import sys
@@ -78,5 +78,5 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    print(f"HyperLPR3 识别服务: http://127.0.0.1:{PORT}  (POST /recognize)")
+    print(f"HyperLPR3 识别服务: http://127.0.0.1:{PORT}  (POST /recognize)", flush=True)
     ThreadingHTTPServer(("127.0.0.1", PORT), Handler).serve_forever()

@@ -12,6 +12,12 @@ PORT="${PORT:-8099}"
 
 mkdir -p "$APP_DIR/run" "$APP_DIR/logs"
 
+# 装了 systemd 单元就优先用 systemd（能开机自启、崩溃自动拉起）
+USE_SYSTEMD=0
+if command -v systemctl >/dev/null 2>&1 && systemctl list-unit-files 2>/dev/null | grep -q '^jieshenxiche\.service'; then
+  USE_SYSTEMD=1
+fi
+
 is_running() {
   [ -f "$PID_FILE" ] || return 1
   local pid; pid="$(cat "$PID_FILE" 2>/dev/null)"
@@ -74,6 +80,18 @@ status() {
     echo
   fi
 }
+
+if [ "$USE_SYSTEMD" = "1" ]; then
+  case "${1:-}" in
+    start)   systemctl start jieshenxiche && systemctl --no-pager -l status jieshenxiche | head -5 ;;
+    stop)    systemctl stop jieshenxiche ;;
+    restart) systemctl restart jieshenxiche && sleep 1 && systemctl --no-pager -l status jieshenxiche | head -5 ;;
+    status)  systemctl is-active jieshenxiche; curl -s -m 5 "http://127.0.0.1:$PORT/health"; echo ;;
+    logs)    journalctl -u jieshenxiche -n 100 -f ;;
+    *) echo "用法：bash deploy/manage.sh {start|stop|restart|status|logs}"; exit 1 ;;
+  esac
+  exit 0
+fi
 
 case "${1:-}" in
   start)   start ;;

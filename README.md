@@ -122,6 +122,19 @@ wx.chooseMedia 拍照 → wx.uploadFile → POST /api/v1/ocr/plate
 
 `auto` 降级链：本地 HyperLPR → 腾讯云 → mock，任何一环挂了都不影响前台出结果（最差手输车牌）。
 
+**服务器上的部署方式（已在 27.124.46.63 跑通）**
+
+```bash
+pip3 install hyperlpr3 opencv-python-headless        # 一次即可，约 200MB
+systemctl enable --now jieshenlpr                     # 识别服务（127.0.0.1:18090，开机自启）
+sed -i 's/^MOCK_OCR=.*/MOCK_OCR=0/;s/^OCR_ENGINE=.*/OCR_ENGINE=hyperlpr/' .env
+systemctl restart jieshenxiche
+curl -s localhost:8099/health      # → "ocr":"hyperlpr"
+```
+
+实测（服务器 CPU 推理，单帧）：`藏DT5022` 置信度 0.958、`苏ED5172` 0.731；图片不合法时返回「车牌为空」而不是报错。
+`deploy/jieshenlpr.service` 里必须带 `Environment=HOME=/root`（hyperlpr3 会读 `$HOME/.hyperlpr3`，systemd 默认不设 HOME）。
+
 **为了准到接近 100%**：连拍 3 张投票（`POST /ocr/plate-batch`）+ 会员库**闭集校正**（OCR 与会员车牌只差 1 位且唯一命中 → 直接纠到会员库，仅在 ≥2 帧一致或置信度 ≥0.9 时自动改）+ 结果页永远保留「修正车牌」。详见 [docs/车牌识别原理.md](docs/车牌识别原理.md#六怎么逼近100已实现--待做)。
 
 ## 四、界面方案：Vant Weapp 打底 + 两个地方做重（预约日历 / 订单状态）

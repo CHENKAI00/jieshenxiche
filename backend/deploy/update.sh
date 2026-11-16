@@ -45,6 +45,11 @@ npm run migrate:v4 || true
 npm run migrate:v5
 
 echo "== 4. 重启 =="
+# 装了本地车牌识别服务就一起重启（systemd 单元 jieshenlpr）
+if command -v systemctl >/dev/null 2>&1 && systemctl list-unit-files 2>/dev/null | grep -q '^jieshenlpr\.service'; then
+  systemctl restart jieshenlpr || true
+  echo "✅ 已重启 jieshenlpr（本地车牌识别）"
+fi
 bash deploy/manage.sh restart
 
 sleep 2
