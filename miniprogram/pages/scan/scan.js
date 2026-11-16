@@ -36,15 +36,27 @@ Page({
     });
   },
 
+  /** 相册：最多选 3 张，多张走投票识别 */
   chooseAlbum() {
     wx.chooseMedia({
-      count: 1,
+      count: 3,
       mediaType: ['image'],
       sourceType: ['album'],
       sizeType: ['compressed'],
-      success: (res) => {
-        const file = res.tempFiles && res.tempFiles[0];
-        if (file) this.doRecognize(file.tempFilePath);
+      success: async (res) => {
+        const files = (res.tempFiles || []).map((f) => f.tempFilePath).filter(Boolean);
+        if (!files.length) return;
+        if (files.length === 1) return this.doRecognize(files[0]);
+        this.setData({ imagePath: files[0], loading: true });
+        try {
+          const r = await api.uploadPlateBatch(files);
+          this.applyResult({ ...r, rawPlate: r.corrected ? (r.candidates && r.candidates[0] && r.candidates[0].plate) || '' : '' });
+          wx.showToast({ title: r.exists ? `${r.member.nickname} 已到店` : '已识别', icon: 'none' });
+        } catch (e) {
+          this.setData({ showInput: true, plateInput: '' });
+        } finally {
+          this.setData({ loading: false });
+        }
       },
     });
   },

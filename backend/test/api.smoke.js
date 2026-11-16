@@ -294,6 +294,14 @@ function ok(name, cond, extra = '') {
   j = await r.json();
   ok('解绑后 bound=false', j.bound === false);
 
+  // 11.7 车主端识别（拍照 / 相册多选）
+  r = await fetch(`${base}/customer/ocr`, { method: 'POST', headers: { 'x-openid': 'mock_last4', 'content-type': 'application/json' }, body: JSON.stringify({ images: ['a', 'b', 'c'] }) });
+  j = await r.json();
+  ok('车主端识别接口可用（多张走投票）', r.status === 200 && j.ok && !!j.plateNo && j.votes >= 1, `plate=${j.plateNo} votes=${j.votes}`);
+
+  r = await fetch(`${base}/customer/ocr`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ images: ['a'] }) });
+  ok('未登录不能调车主识别 401', r.status === 401);
+
   // 11.8 车主绑定：手机号后 4 位也能绑（不调收费接口）+ 员工口令登录
   r = await fetch(`${base}/customer/bind`, { method: 'POST', headers: { 'x-openid': 'mock_last4b', 'content-type': 'application/json' }, body: JSON.stringify({ plateNo: '粤B12345', phone: '9999' }) });
   ok('后 4 位不匹配 403', r.status === 403);

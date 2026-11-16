@@ -144,6 +144,12 @@ module.exports = {
   customerBind: (payload) => request('/api/v1/customer/bind', { method: 'POST', data: payload, loading: true, tip: '绑定中' }),
   customerUnbind: () => request('/api/v1/customer/unbind', { method: 'POST', loading: true, tip: '解绑中' }),
   customerServices: () => request('/api/v1/customer/services'),
+  /** 车主端识别车牌：传 1~3 张图的临时路径，返回车牌与候选 */
+  customerOcr: async (filePaths) => {
+    const list = (Array.isArray(filePaths) ? filePaths : [filePaths]).filter(Boolean);
+    const images = await Promise.all(list.map(readBase64));
+    return request('/api/v1/customer/ocr', { method: 'POST', data: { images }, loading: true, tip: '识别车牌' });
+  },
   // ===== 预约 =====
   bookingSlots: (date) => request(`/api/v1/customer/slots?date=${encodeURIComponent(date || '')}`),
   createBooking: (payload) => request('/api/v1/customer/bookings', { method: 'POST', data: payload, loading: true, tip: '提交预约' }),

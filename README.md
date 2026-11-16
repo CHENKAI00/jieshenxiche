@@ -248,6 +248,7 @@ v3 迁移时旧的 `total_count` 会一次性折算进 `wash_count`（打蜡从 
 | POST | `/customer/login` | 车主 wx.login 换 openid `{code}` |
 | POST | `/customer/bind` · `/customer/unbind` | 绑定 / 解绑爱车（车牌 + 手机号校验） |
 | GET | `/customer/me` · `/customer/services` | 车主首页数据 / 店内项目 |
+| POST | `/customer/ocr` | 车主端拍照/相册识别车牌（1~3 张投票，不返回会员信息） |
 | POST | `/admin/login` | 后台登录 `{password}` → token |
 | GET | `/admin/overview` | 后台看板 |
 | GET/POST | `/admin/services` | 项目列表 / 新增 |
