@@ -127,7 +127,7 @@ Page({
       title: '连接诊断',
       content: [
         `地址：${base}`,
-        `服务：${health.ok ? '在线' : '不可达'}`,
+        `服务：${health.ok ? '在线' : '不可达（' + (health.errMsg || '无响应') + '）'}`,
         `版本：${health.version || '较旧（无版本号，功能可用）'}`,
         `数据库：${health.db || '未知'}`,
         `识别引擎：${health.ocr || '未知'}`,

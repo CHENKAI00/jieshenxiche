@@ -173,7 +173,7 @@ module.exports = {
       method: 'GET',
       timeout: 8000,
       success: (r) => resolve(r.data || {}),
-      fail: () => resolve({ ok: false, db: 'down' }),
+      fail: (err) => resolve({ ok: false, db: 'down', errMsg: (err && err.errMsg) || '网络失败' }),
     });
   }),
   recent: (limit = 10) => request(`/api/v1/stats/recent?limit=${limit}`),
