@@ -1,0 +1,48 @@
+<view class="wash-field {{errorMessage ? 'is-error' : ''}} {{disabled ? 'is-disabled' : ''}}">
+  <view wx:if="{{label}}" class="wash-field__label">
+    <text>{{label}}</text>
+    <text wx:if="{{required}}" class="wash-field__required">*</text>
+  </view>
+
+  <view class="wash-field__box {{focused ? 'is-focus' : ''}}">
+    <image wx:if="{{prefixIcon && isImageIcon}}" class="wash-field__icon" src="{{prefixIcon}}" mode="aspectFit" />
+    <text wx:elif="{{prefixIcon}}" class="wash-field__icon-text">{{prefixIcon}}</text>
+
+    <input
+      class="wash-field__input {{plate ? 'is-plate' : ''}}"
+      value="{{innerValue}}"
+      type="{{type}}"
+      password="{{password}}"
+      disabled="{{disabled}}"
+      maxlength="{{maxlength}}"
+      focus="{{focusFlag}}"
+      placeholder="{{placeholder}}"
+      placeholder-class="wash-field__ph"
+      confirm-type="{{confirmType}}"
+      bindinput="onInput"
+      bindfocus="onFocus"
+      bindblur="onBlur"
+      bindconfirm="onConfirm"
+    />
+
+    <view
+      wx:if="{{clearable && innerValue && !disabled}}"
+      class="wash-field__clear"
+      hover-class="wash-field__clear--hover"
+      catchtap="onClear"
+    >
+      <text class="wash-field__clear-icon">×</text>
+    </view>
+
+    <view wx:if="{{suffix}}" class="wash-field__suffix" catchtap="onSuffixTap">
+      <slot name="suffix"></slot>
+    </view>
+  </view>
+
+  <view wx:if="{{errorMessage}}" class="wash-field__error">{{errorMessage}}</view>
+  <view wx:elif="{{hint}}" class="wash-field__hint">{{hint}}</view>
+
+  <view wx:if="{{showCount}}" class="wash-field__count {{errorMessage ? 'is-error' : ''}}">
+    {{innerValue.length}}/{{maxlength}}
+  </view>
+</view>

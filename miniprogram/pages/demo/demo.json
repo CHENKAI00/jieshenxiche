@@ -1,0 +1,7 @@
+{
+  "usingComponents": {
+    "wash-button": "/components/wash-button/index",
+    "wash-field": "/components/wash-field/index"
+  },
+  "navigationBarTitleText": "组件与门店展示"
+}

@@ -1,0 +1,139 @@
+/* ============ WashButton ============ */
+.wash-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 1rpx solid transparent;
+  border-radius: var(--radius-md, 16rpx);
+  font-size: 30rpx;
+  font-weight: 600;
+  line-height: 1;
+  transition: background-color 120ms ease-out, color 120ms ease-out,
+    border-color 120ms ease-out, opacity 120ms ease-out;
+}
+
+/* ---- 尺寸 ---- */
+.wash-btn--large {
+  height: 88rpx;
+  padding: 0 40rpx;
+  font-size: 30rpx;
+}
+.wash-btn--medium {
+  height: 72rpx;
+  padding: 0 32rpx;
+  font-size: 28rpx;
+}
+.wash-btn--small {
+  height: 56rpx;
+  padding: 0 24rpx;
+  font-size: 24rpx;
+  border-radius: var(--radius-md, 16rpx);
+}
+
+.wash-btn.is-block {
+  display: flex;
+  width: 100%;
+}
+
+.wash-btn__body {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  transition: opacity 100ms ease-out;
+}
+.wash-btn__body.is-hidden {
+  opacity: 0;
+}
+
+/* ---- 类型 ---- */
+.wash-btn--primary {
+  background: var(--color-primary, #2b7fff);
+  color: #ffffff;
+}
+.wash-btn--secondary {
+  background: var(--color-card, #ffffff);
+  color: var(--color-primary, #2b7fff);
+  border-color: var(--color-primary, #2b7fff);
+}
+.wash-btn--text {
+  background: transparent;
+  color: var(--color-primary, #2b7fff);
+  padding-left: 12rpx;
+  padding-right: 12rpx;
+}
+.wash-btn--danger {
+  background: var(--color-danger, #ef4444);
+  color: #ffffff;
+}
+
+/* ---- 按压：只改背景/透明度，绝不改尺寸 ---- */
+.wash-btn--hover-primary {
+  background: var(--color-primary-pressed, #1f66d9);
+}
+.wash-btn--hover-secondary {
+  background: var(--color-primary-light, #eaf2ff);
+}
+.wash-btn--hover-text {
+  opacity: 0.55;
+}
+.wash-btn--hover-danger {
+  background: #d93636;
+}
+
+/* ---- 禁用 ---- */
+.wash-btn.is-disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  border-color: transparent;
+  opacity: 1;
+}
+.wash-btn--secondary.is-disabled {
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+}
+.wash-btn--text.is-disabled {
+  background: transparent;
+  color: #9ca3af;
+}
+
+/* ---- 加载：绝对定位覆盖，宽度保持 ---- */
+.wash-btn__loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+}
+.wash-btn__loading-text {
+  font-size: inherit;
+  font-weight: 600;
+}
+.wash-btn--secondary .wash-btn__loading-text,
+.wash-btn--text .wash-btn__loading-text {
+  color: var(--color-primary, #2b7fff);
+}
+
+.wash-btn__spinner {
+  width: 28rpx;
+  height: 28rpx;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 3rpx solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  animation: wash-spin 0.8s linear infinite;
+}
+.wash-btn__spinner--secondary,
+.wash-btn__spinner--text {
+  border-color: rgba(43, 127, 255, 0.25);
+  border-top-color: var(--color-primary, #2b7fff);
+}
+
+@keyframes wash-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

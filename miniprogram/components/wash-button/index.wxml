@@ -1,0 +1,17 @@
+<view
+  class="wash-btn wash-btn--{{type}} wash-btn--{{size}} {{block ? 'is-block' : ''}} {{disabled ? 'is-disabled' : ''}} {{loading ? 'is-loading' : ''}} {{customClass}}"
+  hover-class="{{disabled || loading ? 'none' : 'wash-btn--hover-' + type}}"
+  hover-start-time="0"
+  hover-stay-time="80"
+  bindtap="onTap"
+>
+  <view class="wash-btn__body {{loading ? 'is-hidden' : ''}}">
+    <slot></slot>
+    <text wx:if="{{label}}" class="wash-btn__label">{{label}}</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="wash-btn__loading">
+    <view class="wash-btn__spinner wash-btn__spinner--{{type}}"></view>
+    <text class="wash-btn__loading-text">处理中…</text>
+  </view>
+</view>

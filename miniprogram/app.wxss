@@ -177,3 +177,18 @@ page {
   --shadow-float: 0 16rpx 48rpx rgba(20, 40, 70, 0.12);
   --shadow-btn:   0 4rpx 12rpx rgba(20, 111, 224, 0.12);
 }
+
+/* ===== WashButton / WashField 设计令牌 ===== */
+page {
+  --color-primary: #2B7FFF;
+  --color-primary-pressed: #1F66D9;
+  --color-primary-light: #EAF2FF;
+  --color-text: #1F2937;
+  --color-text-secondary: #6B7280;
+  --color-placeholder: #9CA3AF;
+  --color-bg: #F5F7FA;
+  --color-card: #FFFFFF;
+  --color-danger: #EF4444;
+  --radius-md: 16rpx;
+  --radius-full: 999rpx;
+}

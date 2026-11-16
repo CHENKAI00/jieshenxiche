@@ -1,0 +1,160 @@
+<view class="demo-page">
+  <view class="demo-head">
+    <view class="demo-title">组件与门店展示</view>
+    <view class="demo-sub">WashButton / WashField · 原生组件，无第三方库</view>
+  </view>
+
+  <!-- ===================== 按钮 ===================== -->
+  <view class="demo-card">
+    <view class="demo-card__title">按钮 · 类型</view>
+    <view class="demo-row">
+      <wash-button type="primary" size="medium" bindtap="onPrimary">主按钮</wash-button>
+      <wash-button type="secondary" size="medium" bindtap="onSecondary">次按钮</wash-button>
+    </view>
+    <view class="demo-row">
+      <wash-button type="text" size="medium" bindtap="onText">文字按钮</wash-button>
+      <wash-button type="danger" size="medium" bindtap="onDanger">危险操作</wash-button>
+    </view>
+  </view>
+
+  <view class="demo-card">
+    <view class="demo-card__title">按钮 · 尺寸</view>
+    <view class="demo-row demo-row--baseline">
+      <wash-button type="primary" size="large">Large 88</wash-button>
+      <wash-button type="primary" size="medium">Medium 72</wash-button>
+      <wash-button type="primary" size="small">Small 56</wash-button>
+    </view>
+  </view>
+
+  <view class="demo-card">
+    <view class="demo-card__title">按钮 · 状态</view>
+    <wash-button type="primary" size="large" block bindtap="toggleLoading">点我看加载态</wash-button>
+    <view class="demo-gap"></view>
+    <wash-button type="primary" size="large" block loading="{{loadingPrimary}}">确认预约</wash-button>
+    <view class="demo-gap"></view>
+    <wash-button type="primary" size="large" block disabled>已禁用</wash-button>
+    <view class="demo-gap"></view>
+    <wash-button type="secondary" size="large" block loading="{{loadingPrimary}}">次按钮加载</wash-button>
+  </view>
+
+  <!-- ===================== 输入框 ===================== -->
+  <view class="demo-card">
+    <view class="demo-card__title">输入框 · 默认 / 前缀 / 密码</view>
+    <wash-field
+      label="车主称呼"
+      value="{{name}}"
+      placeholder="请输入称呼，如 张先生"
+      prefix-icon="👤"
+      clearable
+      bindinput="onName"
+    />
+    <view class="demo-gap"></view>
+    <wash-field
+      label="手机号"
+      type="number"
+      value="{{phone}}"
+      maxlength="11"
+      placeholder="11 位手机号"
+      prefix-icon="📱"
+      clearable
+      bindinput="onPhone"
+    />
+    <view class="demo-gap"></view>
+    <wash-field
+      label="登录密码"
+      password
+      value="{{password}}"
+      placeholder="请输入密码"
+      prefix-icon="🔒"
+      bindinput="onPassword"
+    />
+  </view>
+
+  <view class="demo-card">
+    <view class="demo-card__title">输入框 · 错误 / 禁用 / 计数</view>
+    <wash-field
+      label="车牌号"
+      value="{{errorValue}}"
+      placeholder="粤B12345"
+      error="车牌格式不正确，请检查"
+      prefix-icon="🚗"
+      bindinput="onErrorInput"
+    />
+    <view class="demo-gap"></view>
+    <wash-field
+      label="门店编号"
+      value="SZ-001"
+      disabled
+      hint="由门店分配，不可修改"
+    />
+    <view class="demo-gap"></view>
+    <wash-field
+      label="备注"
+      value="{{remark}}"
+      placeholder="车况、特殊要求（选填）"
+      maxlength="60"
+      show-count
+      clearable
+      bindinput="onRemark"
+    />
+  </view>
+
+  <!-- 车牌 + 拍照识别 -->
+  <view class="demo-card">
+    <view class="demo-card__title">车牌输入 + 拍照识别</view>
+    <wash-field
+      label="车牌号"
+      plate
+      value="{{plate}}"
+      maxlength="8"
+      placeholder="粤B12345"
+      error="{{plateError}}"
+      clearable
+      bindinput="onPlate"
+      bindclear="onClearPlate"
+    >
+      <view slot="suffix" class="demo-camera {{cameraLoading ? 'is-loading' : ''}}" catchtap="onCamera">
+        <view wx:if="{{cameraLoading}}" class="demo-camera__spinner"></view>
+        <text wx:else class="demo-camera__icon">📷</text>
+      </view>
+    </wash-field>
+    <view class="demo-tip">点右侧相机拍照识别，结果会回填并自动大写</view>
+  </view>
+
+  <!-- ===================== 客户视角：服务与优惠 ===================== -->
+  <view class="demo-card">
+    <view class="demo-card__title">店内服务与优惠（客户视角）</view>
+
+    <view class="promo" bindtap="onPromo">
+      <view class="promo__left">
+        <view class="promo__title">开业优惠</view>
+        <view class="promo__desc">充 500 送 150 · 首次洗车立减 10 元</view>
+      </view>
+      <view class="promo__btn">去看看</view>
+    </view>
+
+    <view class="svc" wx:for="{{services}}" wx:key="id">
+      <view class="svc__main">
+        <view class="svc__head">
+          <text class="svc__name">{{item.name}}</text>
+          <text class="svc__tag {{item.tag === '美容' ? 'is-beauty' : ''}}">{{item.tag}}</text>
+        </view>
+        <view class="svc__desc">{{item.desc}}</view>
+        <view class="svc__meta">
+          <text class="svc__price">¥{{item.price}}</text>
+          <text class="svc__mins">约 {{item.mins}} 分钟</text>
+          <text wx:if="{{item.promo}}" class="svc__promo">{{item.promo}}</text>
+        </view>
+      </view>
+      <wash-button
+        type="secondary"
+        size="small"
+        custom-class="svc__btn"
+        data-name="{{item.name}}"
+        bindtap="onBook"
+      >预约</wash-button>
+    </view>
+  </view>
+
+  <view class="demo-foot">洁神洗车 · 组件规范演示</view>
+</view>

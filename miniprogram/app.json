@@ -15,7 +15,8 @@
     "pages/customer/mine/mine",
     "pages/customer/booking/booking",
     "pages/customer/orders/orders",
-    "pages/customer/result/result"
+    "pages/customer/result/result",
+    "pages/demo/demo"
   ],
   "window": {
     "backgroundTextStyle": "light",
