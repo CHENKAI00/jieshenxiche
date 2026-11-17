@@ -13,7 +13,8 @@
     "align:comments": "node scripts/align-comments.js",
     "migrate:v4": "node scripts/migrate-v4.js",
     "migrate:v5": "node scripts/migrate-v5.js",
-    "keygen": "node scripts/keygen.js"
+    "keygen": "node scripts/keygen.js",
+    "migrate:cloud": "node scripts/migrate-to-cloud.js"
   },
   "keywords": [],
   "author": "",
@@ -25,5 +26,8 @@
     "express": "^5.3.0",
     "multer": "^2.5.0",
     "mysql2": "^3.24.6"
+  },
+  "optionalDependencies": {
+    "@cloudbase/node-sdk": "^2.9.0"
   }
 }

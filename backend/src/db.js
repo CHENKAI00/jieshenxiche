@@ -1,7 +1,9 @@
 const mysql = require('mysql2/promise');
 const cfg = require('./config');
 
-const pool = mysql.createPool(cfg.db);
+// driver 是我们自己的开关，mysql2 不认识，必须剔除
+const { driver, ...mysqlCfg } = cfg.db;
+const pool = mysql.createPool(mysqlCfg);
 
 async function q(sql, params = []) {
   const [rows] = await pool.query(sql, params);

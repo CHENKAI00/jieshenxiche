@@ -137,6 +137,45 @@ curl -s localhost:8099/health      # → "ocr":"hyperlpr"
 
 **为了准到接近 100%**：连拍 3 张投票（`POST /ocr/plate-batch`）+ 会员库**闭集校正**（OCR 与会员车牌只差 1 位且唯一命中 → 直接纠到会员库，仅在 ≥2 帧一致或置信度 ≥0.9 时自动改）+ 结果页永远保留「修正车牌」。详见 [docs/车牌识别原理.md](docs/车牌识别原理.md#六怎么逼近100已实现--待做)。
 
+## 三·五、数据库可切换：MySQL ⇄ 微信云开发数据库
+
+一套接口两种驱动（`src/repo/memberRepo.js`），业务代码不动：
+
+| DB_DRIVER | 说明 |
+| --- | --- |
+| `mysql`（默认） | 现有自建 MySQL，线上正在用 |
+| `cloud` | 微信云开发数据库（文档型），手机号仍是 AES 密文，密钥不变 |
+
+切换步骤：
+
+```bash
+# 1. 装 SDK（可选依赖，mysql 模式不装也能跑）
+npm i @cloudbase/node-sdk
+
+# 2. .env 填三行
+DB_DRIVER=cloud
+TCB_ENV=你的环境ID
+TCB_SECRET_ID=...      # 腾讯云 API 密钥（访问管理 → API 密钥管理）
+TCB_SECRET_KEY=...
+TCB_COLLECTION=js_member
+
+# 3. 建集合 js_member，并加索引（重要）
+#    plate_no 唯一索引、openid 唯一索引、phone_hash / phone_tail_hash 普通索引
+
+# 4. 搬数据（幂等，按 plate_no upsert）
+npm run migrate:cloud -- --dry
+npm run migrate:cloud
+
+# 5. 重启
+bash deploy/manage.sh restart
+```
+
+注意：
+
+- 云数据库没有行锁，`consume/recharge` 用「条件更新 + 最多 5 次重试」保证不超扣
+- 云数据库对集合默认权限是「仅创建者可读写」，后端用密钥访问不受影响，但小程序端直连要另配规则
+- 单集合限 1000 条以内统计走内存汇总（洗车店够用）；量大了换聚合
+
 ## 四、界面方案：Vant Weapp 打底 + 两个地方做重（预约日历 / 订单状态）
 
 > **包体积**：Vant 全量 dist 有 1.9MB，会让主包超过微信 2MB 上限。仓库里的 `miniprogram_npm/@vant/weapp`

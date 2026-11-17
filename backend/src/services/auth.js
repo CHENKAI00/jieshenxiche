@@ -7,7 +7,7 @@
  * - 员工/老板：走员工口令（ADMIN_TOKEN），不依赖手机号
  */
 const cfg = require('../config');
-const { pool } = require('../db');
+const repo = require('../repo/memberRepo');
 const { validatePlate, normalizePlate } = require('../utils/plate');
 const { hashPhone, tailHash, decryptPhone } = require('../utils/crypto');
 
@@ -76,8 +76,7 @@ async function bindMember({ openid, plateNo, phone }) {
     const e = new Error('请填写登记的 11 位手机号，或手机号后 4 位'); e.status = 400; throw e;
   }
 
-  const [rows] = await pool.query('SELECT * FROM `js_member` WHERE plate_no = ? LIMIT 1', [normalizePlate(v.plate)]);
-  const row = rows[0];
+  const row = await repo.findByPlate(normalizePlate(v.plate));
   if (!row) {
     const e = new Error('没有找到这辆车的会员卡，请先到店建档'); e.status = 404; throw e;
   }
@@ -91,7 +90,7 @@ async function bindMember({ openid, plateNo, phone }) {
     const e = new Error('手机号与门店登记的不一致'); e.status = 403; throw e;
   }
   try {
-    await pool.query('UPDATE `js_member` SET openid = ? WHERE id = ?', [openid, row.id]);
+    await repo.setOpenid(row.id, openid);
   } catch (e) {
     if (e.code === 'ER_DUP_ENTRY') {
       const err = new Error('这个微信已经绑定过一辆车，请先在「我的」里解绑'); err.status = 409; throw err;
@@ -103,13 +102,12 @@ async function bindMember({ openid, plateNo, phone }) {
 
 async function findByOpenid(openid) {
   if (!openid) return null;
-  const [rows] = await pool.query('SELECT * FROM `js_member` WHERE openid = ? LIMIT 1', [openid]);
-  return rows[0] || null;
+  return repo.findByOpenid(openid);
 }
 
 async function unbind(openid) {
-  const [r] = await pool.query('UPDATE `js_member` SET openid = NULL WHERE openid = ?', [openid]);
-  return { ok: true, affected: r.affectedRows };
+  const affected = await repo.clearOpenid(openid);
+  return { ok: true, affected };
 }
 
 module.exports = { wxLogin, bindMember, findByOpenid, unbind, phoneMatches };

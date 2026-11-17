@@ -1,12 +1,9 @@
-const { pool } = require('../db');
+const repo = require('../repo/memberRepo');
 const cfg = require('../config');
 const catalog = require('./catalog');
 const auth = require('./auth');
 const { validatePlate, normalizePlate, prettyPlate, genMemberNo } = require('../utils/plate');
 const { encryptPhone, decryptPhone, hashPhone, tailHash, maskPhone } = require('../utils/crypto');
-
-const TABLE = '`js_member`';
-
 
 function toViewModel(row) {
   if (!row) return null;
@@ -37,9 +34,7 @@ function toViewModel(row) {
 }
 
 async function findByPlate(plateNo) {
-  const plate = normalizePlate(plateNo);
-  const [rows] = await pool.query(`SELECT * FROM ${TABLE} WHERE plate_no = ? LIMIT 1`, [plate]);
-  return rows[0] || null;
+  return repo.findByPlate(normalizePlate(plateNo));
 }
 
 async function getMemberView(plateNo) {
@@ -68,19 +63,18 @@ async function createMember({ plateNo, nickname, phone, remark, carModel }) {
 
   const phonePlain = phone ? String(phone).replace(/\D/g, '') : '';
   // 只有车牌是必填，其余（称呼/车型/手机/备注）都可以空
-  const [r] = await pool.query(
-    `INSERT INTO ${TABLE} (plate_no, plate_color, member_no, nickname, car_model, phone, phone_hash, phone_tail_hash, remark)
-     VALUES (?,?,?,?,?,?,?,?,?)`,
-    [
-      v.plate, v.color || '蓝', genMemberNo(), nickname || null, carModel || null,
-      phonePlain ? encryptPhone(phonePlain) : null,
-      phonePlain ? hashPhone(phonePlain) : null,
-      phonePlain ? tailHash(phonePlain) : null,
-      remark || null,
-    ]
-  );
-  const [rows] = await pool.query(`SELECT * FROM ${TABLE} WHERE id = ?`, [r.insertId]);
-  return { created: true, ...toViewModel(rows[0]) };
+  const row = await repo.insert({
+    plate_no: v.plate,
+    plate_color: v.color || '蓝',
+    member_no: genMemberNo(),
+    nickname: nickname || null,
+    car_model: carModel || null,
+    phone: phonePlain ? encryptPhone(phonePlain) : null,
+    phone_hash: phonePlain ? hashPhone(phonePlain) : null,
+    phone_tail_hash: phonePlain ? tailHash(phonePlain) : null,
+    remark: remark || null,
+  });
+  return { created: true, ...toViewModel(row) };
 }
 
 /**
@@ -96,21 +90,14 @@ async function consume({ plateNo, serviceId, useCount = true, operator = '前台
     e.status = 400;
     throw e;
   }
-  const conn = await pool.getConnection();
-  try {
-    await conn.beginTransaction();
-    const [rows] = await conn.query(`SELECT * FROM ${TABLE} WHERE plate_no = ? FOR UPDATE`, [normalizePlate(plateNo)]);
-    const row = rows[0];
-    if (!row) {
-      const e = new Error('未找到该车牌会员，请先建档');
-      e.status = 404;
-      throw e;
-    }
-    const expired = row.expire_at ? new Date(`${row.expire_at}T23:59:59+08:00`).getTime() < Date.now() : false;
-    let payType = '次数';
-    let amount = 0;
-    let remain = row.remain_count;
-    let balance = Number(row.balance);
+
+  let payType = '次数';
+  let amount = 0;
+
+  const { row } = await repo.transact(normalizePlate(plateNo), async (cur) => {
+    const expired = cur.expire_at ? new Date(`${cur.expire_at}T23:59:59+08:00`).getTime() < Date.now() : false;
+    let remain = cur.remain_count;
+    let balance = Number(cur.balance);
 
     if (useCount && remain > 0 && !expired) {
       remain -= 1;
@@ -126,39 +113,33 @@ async function consume({ plateNo, serviceId, useCount = true, operator = '前台
     }
 
     // 按项目计次：洗车 → wash_count，打蜡 → wax_count，其它项目不计数
-    const inc = svc.countKey === 'wash' ? ', wash_count=wash_count+1'
-      : svc.countKey === 'wax' ? ', wax_count=wax_count+1'
-        : '';
+    const inc = {};
+    if (svc.countKey === 'wash') inc.wash_count = 1;
+    if (svc.countKey === 'wax') inc.wax_count = 1;
 
-    await conn.query(
-      `UPDATE ${TABLE}
-         SET balance=?, remain_count=?,
-             last_service_at=NOW(), last_item=?,
-             remark=COALESCE(NULLIF(?,''), remark)${inc}
-       WHERE id=?`,
-      [balance, remain, svc.name, note, row.id]
-    );
-    await conn.commit();
-
-    const [fresh] = await conn.query(`SELECT * FROM ${TABLE} WHERE id = ?`, [row.id]);
     return {
-      ok: true,
-      service: svc.name,
-      price: svc.price,
-      payType,
-      amount,
-      balance,
-      remainCount: remain,
-      washCount: fresh[0].wash_count,
-      waxCount: fresh[0].wax_count,
-      member: await getMemberView(row.plate_no),
+      fields: {
+        balance,
+        remain_count: remain,
+        last_item: svc.name,
+        remark: note || '',
+      },
+      inc,
     };
-  } catch (e) {
-    await conn.rollback();
-    throw e;
-  } finally {
-    conn.release();
-  }
+  });
+
+  return {
+    ok: true,
+    service: svc.name,
+    price: svc.price,
+    payType,
+    amount,
+    balance: Number(row.balance),
+    remainCount: row.remain_count,
+    washCount: row.wash_count,
+    waxCount: row.wax_count,
+    member: await getMemberView(row.plate_no),
+  };
 }
 
 /** 充值 / 买次卡：加余额、加次数、延有效期（不动 last_* 服务字段） */
@@ -169,36 +150,26 @@ async function recharge({ plateNo, amount, giftAmount = 0, times = 0, months = 0
     e.status = 400;
     throw e;
   }
-  const conn = await pool.getConnection();
-  try {
-    await conn.beginTransaction();
-    const [rows] = await conn.query(`SELECT * FROM ${TABLE} WHERE plate_no = ? FOR UPDATE`, [normalizePlate(plateNo)]);
-    const row = rows[0];
-    if (!row) {
-      const e = new Error('未找到该车牌会员，请先建档');
-      e.status = 404;
-      throw e;
-    }
-    const balance = Math.round((Number(row.balance) + amt + Number(giftAmount || 0)) * 100) / 100;
-    const remain = row.remain_count + Number(times || 0);
-    let expireAt = row.expire_at;
+
+  const { row } = await repo.transact(normalizePlate(plateNo), async (cur) => {
+    const balance = Math.round((Number(cur.balance) + amt + Number(giftAmount || 0)) * 100) / 100;
+    const remain = cur.remain_count + Number(times || 0);
+    let expireAt = cur.expire_at;
     if (months > 0) {
-      const base = row.expire_at ? new Date(`${row.expire_at}T00:00:00+08:00`) : new Date();
+      const base = cur.expire_at ? new Date(`${cur.expire_at}T00:00:00+08:00`) : new Date();
       base.setMonth(base.getMonth() + Number(months));
       expireAt = base.toISOString().slice(0, 10);
     }
-    await conn.query(
-      `UPDATE ${TABLE} SET balance=?, remain_count=?, expire_at=?, remark=COALESCE(NULLIF(?,''), remark) WHERE id=?`,
-      [balance, remain, expireAt, note, row.id]
-    );
-    await conn.commit();
-    return { ok: true, balance, remainCount: remain, expireAt, member: await getMemberView(row.plate_no) };
-  } catch (e) {
-    await conn.rollback();
-    throw e;
-  } finally {
-    conn.release();
-  }
+    return { recharge: { balance, remain_count: remain, expire_at: expireAt, remark: note || '' } };
+  });
+
+  return {
+    ok: true,
+    balance: Number(row.balance),
+    remainCount: row.remain_count,
+    expireAt: row.expire_at,
+    member: await getMemberView(row.plate_no),
+  };
 }
 
 /** 员工补登/修改会员资料（车主绑定需要有手机号，常用来补登） */
@@ -211,64 +182,25 @@ async function updateMember({ plateNo, phone, nickname, remark, carModel }) {
     const e = new Error('手机号格式不正确'); e.status = 400; throw e;
   }
   const phonePlain = phone ? String(phone).replace(/\D/g, '') : '';
-  if (phonePlain) {
-    await pool.query(
-      `UPDATE ${TABLE} SET phone=?, phone_hash=?, phone_tail_hash=?,
-              nickname=COALESCE(NULLIF(?,''), nickname),
-              car_model=COALESCE(NULLIF(?,''), car_model),
-              remark=COALESCE(NULLIF(?,''), remark)
-        WHERE id=?`,
-      [encryptPhone(phonePlain), hashPhone(phonePlain), tailHash(phonePlain), nickname || '', carModel || '', remark || '', row.id]
-    );
-  } else {
-    await pool.query(
-      `UPDATE ${TABLE} SET nickname=COALESCE(NULLIF(?,''), nickname),
-              car_model=COALESCE(NULLIF(?,''), car_model),
-              remark=COALESCE(NULLIF(?,''), remark) WHERE id=?`,
-      [nickname || '', carModel || '', remark || '', row.id]
-    );
-  }
+  await repo.updateProfile(row, {
+    phone: phonePlain ? encryptPhone(phonePlain) : null,
+    phone_hash: phonePlain ? hashPhone(phonePlain) : null,
+    phone_tail_hash: phonePlain ? tailHash(phonePlain) : null,
+    nickname: nickname || '',
+    car_model: carModel || '',
+    remark: remark || '',
+  });
   return getMemberView(row.plate_no);
 }
 
 async function listMembers({ keyword = '', page = 1, size = 20 }) {
-  const kw = String(keyword || '').trim();
-  const lim = Math.min(Math.max(Number(size) || 20, 1), 200);
-  const off = (Math.max(Number(page) || 1, 1) - 1) * lim;
-  const like = `%${kw}%`;
-
-  // 手机号已加密：11 位走精确盲索引，4 位走后 4 位盲索引，其它按车牌/称呼/卡号模糊
-  let where; let params;
-  if (/^1[3-9]\d{9}$/.test(kw)) {
-    where = 'phone_hash = ?'; params = [hashPhone(kw)];
-  } else if (/^\d{4}$/.test(kw)) {
-    where = 'phone_tail_hash = ?'; params = [tailHash(kw)];
-  } else {
-    where = "(?='' OR plate_no LIKE ? OR nickname LIKE ? OR member_no LIKE ?)";
-    params = [kw, like, like, like];
-  }
-
-  const [rows] = await pool.query(
-    `SELECT * FROM ${TABLE} WHERE ${where} ORDER BY last_service_at DESC, id DESC LIMIT ? OFFSET ?`,
-    [...params, lim, off]
-  );
-  const [[{ total }]] = await pool.query(`SELECT COUNT(*) total FROM ${TABLE} WHERE ${where}`, params);
-  return { total, page: Number(page) || 1, size: lim, list: rows.map(toViewModel) };
+  const r = await repo.list({ keyword, page, size });
+  return { total: r.total, page: r.page, size: r.size, list: r.rows.map(toViewModel) };
 }
 
 /** 门店看板：会员数、储值总额、待用次数、今日到店、今日新增、累计洗车/打蜡 */
 async function overview() {
-  const [[agg]] = await pool.query(
-    `SELECT COUNT(*) members, SUM(balance) balance, SUM(remain_count) remain,
-            SUM(wash_count) wash, SUM(wax_count) wax
-       FROM ${TABLE}`
-  );
-  const [[today]] = await pool.query(
-    `SELECT COUNT(*) visits FROM ${TABLE} WHERE DATE(last_service_at) = CURDATE()`
-  );
-  const [[fresh]] = await pool.query(
-    `SELECT COUNT(*) c FROM ${TABLE} WHERE DATE(created_at) = CURDATE()`
-  );
+  const { agg, today, fresh } = await repo.overview();
   return {
     date: new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Shanghai' }),
     members: Number(agg.members || 0),
@@ -276,24 +208,21 @@ async function overview() {
     remainSum: Number(agg.remain || 0),
     washSum: Number(agg.wash || 0),
     waxSum: Number(agg.wax || 0),
-    todayVisits: Number(today.visits || 0),
-    todayNew: Number(fresh.c || 0),
+    todayVisits: Number(today || 0),
+    todayNew: Number(fresh || 0),
   };
 }
 
 /** 会员库里的车牌（闭集校正用） */
 async function listPlates() {
-  const [rows] = await pool.query('SELECT plate_no, nickname FROM `js_member` WHERE status = 1');
+  const rows = await repo.listPlates();
   return rows.map((r) => ({ plateNo: r.plate_no, nickname: r.nickname }));
 }
 
 /** 最近到店 */
 async function recentVisits(limit = 10) {
   const lim = Math.min(Math.max(Number(limit) || 10, 1), 100);
-  const [rows] = await pool.query(
-    `SELECT * FROM ${TABLE} WHERE last_service_at IS NOT NULL ORDER BY last_service_at DESC LIMIT ?`,
-    [lim]
-  );
+  const rows = await repo.recentVisits(lim);
   return rows.map(toViewModel);
 }
 
@@ -305,5 +234,7 @@ async function getCustomerView(openid) {
 
 module.exports = {
   getMemberView, createMember, updateMember, consume, recharge, listMembers, overview, recentVisits,
-  getCustomerView, toViewModel, listPlates,
+  getCustomerView, toViewModel, listPlates, repo,
+  driver: repo.driverName,
+  dbDriver: cfg.db.driver,
 };

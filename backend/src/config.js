@@ -8,6 +8,8 @@ module.exports = {
   publicBaseUrl: env.PUBLIC_BASE_URL || 'http://127.0.0.1:8099',
   adminToken: env.ADMIN_TOKEN || '123456', // 生产请改成强口令
   db: {
+    // mysql = 自建 MySQL（默认）；cloud = 微信云开发数据库
+    driver: env.DB_DRIVER || 'mysql',
     host: env.DB_HOST || '127.0.0.1',
     port: Number(env.DB_PORT || 3306),
     user: env.DB_USER || 'root',
@@ -45,6 +47,14 @@ module.exports = {
     '轿车', 'SUV', 'MPV', '两厢车', '跑车', '皮卡', '微面',
     '新能源轿车', '新能源SUV', '新能源MPV', '其他',
   ],
+  /** 云开发数据库（DB_DRIVER=cloud 时生效） */
+  cloudDb: {
+    env: env.TCB_ENV || '',
+    secretId: env.TCB_SECRET_ID || '',
+    secretKey: env.TCB_SECRET_KEY || '',
+    collection: env.TCB_COLLECTION || 'js_member',
+  },
+
   // 充值常用档位（小程序展示，可后端也用来校验）
   rechargePlans: [
     { amount: 100, gift: 0, times: 0 },
