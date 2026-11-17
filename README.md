@@ -397,14 +397,16 @@ cp deploy/jieshenxiche.service /etc/systemd/system/ && systemctl daemon-reload &
 微信**不允许**把 `*.run.tcloudbase.com` 填进 `request 合法域名`（会红字拒绝保存），
 云托管的官方通道是 `wx.cloud.callContainer`，它不走域名白名单。
 
-1. 云托管控制台记下 **环境 ID**（形如 `prod-8gxxxx`）和 **服务名**（如 `jieshen-proxy`）
-2. 改 `miniprogram/config/env.js`：
+1. 云托管控制台确认 **服务名**（如 `jieshen-proxy`）
+2. `miniprogram/config/env.js` 默认已开启：
 
 ```js
 module.exports = {
-  cloud: { enabled: true, env: '你的环境ID', service: 'jieshen-proxy' },
+  cloud: { enabled: true, env: '', service: 'jieshen-proxy' },
 };
 ```
+
+   `env` 留空 = 用小程序绑定的默认环境；环境不止一个时才需要填环境 ID（控制台 → 环境 → 环境ID）
 
 3. 重新编译上传。之后所有 API 走 `callContainer`，`baseUrl` 只用于显示项目图片
 4. 识别图片会自动压到 260KB 以内再 base64（callContainer 的 JSON 有大小限制）

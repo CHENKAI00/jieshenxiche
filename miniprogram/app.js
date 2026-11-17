@@ -18,11 +18,11 @@ App({
 
   onLaunch() {
     // 云托管直连（不需要 request 合法域名）
-    if (envCfg.cloud && envCfg.cloud.enabled && envCfg.cloud.env && wx.cloud) {
+    if (envCfg.cloud && envCfg.cloud.enabled && wx.cloud) {
       try {
-        wx.cloud.init({ env: envCfg.cloud.env, traceUser: true });
+        wx.cloud.init(Object.assign({ traceUser: true }, envCfg.cloud.env ? { env: envCfg.cloud.env } : {}));
         this.globalData.useCloud = true;
-      } catch (e) { /* 低版本基础库忽略 */ }
+      } catch (e) { /* 低版本基础库：退回域名请求 */ }
     }
     // 静默预热：云托管实例可能缩容到 0，先打一枪 /health，减少首屏等待
     setTimeout(() => {

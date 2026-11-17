@@ -20,14 +20,14 @@ let authTipAt = 0;
 function useCloud() {
   const app = getApp();
   const cfg = require('../config/env');
-  return !!(app && app.globalData.useCloud && cfg.cloud && cfg.cloud.enabled && cfg.cloud.env && wx.cloud);
+  return !!(app && app.globalData.useCloud && cfg.cloud && cfg.cloud.enabled && wx.cloud);
 }
 
 function cloudRequestOnce(cfg, path, { method = 'GET', data = {}, loading = false, tip = '处理中' } = {}) {
   if (loading) wx.showLoading({ title: tip, mask: true });
   return new Promise((resolve, reject) => {
     wx.cloud.callContainer({
-      config: { env: cfg.env },
+      config: cfg.env ? { env: cfg.env } : {},
       path,
       method,
       data,
@@ -232,9 +232,9 @@ module.exports = {
     };
 
     out.cloud = await new Promise((resolve) => {
-      if (!wx.cloud || !cfg.env) return resolve('未配置（缺 wx.cloud 或 env）');
+      if (!wx.cloud) return resolve('基础库不支持 wx.cloud（需 2.2+）');
       wx.cloud.callContainer({
-        config: { env: cfg.env },
+        config: cfg.env ? { env: cfg.env } : {},
         path: '/health',
         method: 'GET',
         header: { 'X-WX-SERVICE': cfg.service, 'content-type': 'application/json' },
